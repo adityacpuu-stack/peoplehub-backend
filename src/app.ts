@@ -12,6 +12,10 @@ import { getCacheStats } from './utils/cache';
 
 const app = express();
 
+// Trust proxy - required for Vercel/cloud deployments
+// This allows express-rate-limit to correctly identify users via X-Forwarded-For header
+app.set('trust proxy', 1);
+
 // ==========================================
 // CORE MIDDLEWARE
 // ==========================================

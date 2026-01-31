@@ -1,0 +1,1981 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// AUTH MODEL (Login & Authentication only)
+// ==========================================
+
+model User {
+  id                      Int       @id @default(autoincrement())
+  email                   String    @unique
+  password                String
+
+  // Auth & Security
+  remember_token          String?
+  email_verified_at       DateTime?
+  two_factor_enabled      Boolean   @default(false)
+  two_factor_secret       String?
+  failed_login_attempts   Int       @default(0)
+  account_locked_until    DateTime?
+  last_login_at           DateTime?
+  last_login_ip           String?
+  password_expires_at     DateTime?
+  force_password_change   Boolean   @default(true)
+  last_password_change    DateTime?
+
+  // User Preferences
+  language                String    @default("id")
+  timezone                String    @default("Asia/Jakarta")
+  date_format             String    @default("DD/MM/YYYY")
+  theme                   String    @default("light")
+  notification_preferences Json?
+
+  // System
+  is_active               Boolean   @default(true)
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  // Relationships
+  employee                Employee?
+  auditLogs               AuditLog[]
+  userRoles               UserRole[]
+  userPermissions         UserPermission[]
+  notifications           Notification[]
+
+  @@map("users")
+}
+
+// ==========================================
+// EMPLOYEE MODEL (HR Data)
+// ==========================================
+
+model Employee {
+  id                              Int       @id @default(autoincrement())
+  user_id                         Int       @unique
+  employee_id                     String?   @unique  // NIK / Employee Number
+
+  // Basic Info
+  name                            String
+  nick_name                       String?
+  avatar                          String?
+  date_of_birth                   DateTime?
+  place_of_birth                  String?
+  gender                          String?   // male, female
+  marital_status                  String?   // single, married, divorced, widowed
+  religion                        String?
+  blood_type                      String?
+  nationality                     String?   @default("Indonesian")
+  phone                           String?
+  mobile_number                   String?
+  email                           String?   // Work email (can be different from login email)
+  address                         String?   @db.Text  // Alamat KTP
+  city                            String?              // Kota KTP
+  province                        String?              // Provinsi KTP
+  postal_code                     String?              // Kode Pos KTP
+  current_address                 String?   @db.Text  // Alamat Domisili
+  current_city                    String?              // Kota Domisili
+  current_province                String?              // Provinsi Domisili
+  current_postal_code             String?              // Kode Pos Domisili
+
+  // Identity Documents
+  national_id                     String?   // KTP
+  tax_id                          String?
+  npwp_number                     String?
+  passport_number                 String?
+  passport_expiry                 DateTime?
+
+  // Emergency Contact
+  emergency_contact_name          String?
+  emergency_contact_phone         String?
+  emergency_contact_relationship  String?
+  emergency_contact_address       String?   @db.Text
+
+  // Job Info
+  job_title                       String?
+  department_id                   Int?
+  position_id                     Int?
+  company_id                      Int?
+  work_location_id                Int?
+  division                        String?
+  organizational_level            String?
+  grade_level                     String?
+  salary_grade_id                 Int?
+  cost_center                     String?
+
+  // Manager Hierarchy (self-referential)
+  manager_id                      Int?
+  direct_manager_id               Int?
+  skip_level_manager_id           Int?
+
+  // Approval Assignments (for leave, overtime, etc.)
+  leave_approver_id               Int?      // Who approves leave requests (defaults to manager_id if null)
+  overtime_approver_id            Int?      // Who approves overtime requests (defaults to manager_id if null)
+
+  // Employment Dates
+  hire_date                       DateTime?
+  join_date                       DateTime?
+  probation_start_date            DateTime?
+  probation_end_date              DateTime?
+  confirmation_date               DateTime?
+  contract_start_date             DateTime?
+  contract_end_date               DateTime?
+  resign_date                     DateTime?
+  resign_reason                   String?   @db.Text
+  resign_type                     String?   // voluntary, involuntary, retirement
+  resign_notes                    String?   @db.Text
+  last_working_date               DateTime?
+
+  // Employment Details
+  employment_type                 String?   // permanent, contract, internship, part_time, freelance
+  employment_status               String?   @default("active") // active, inactive, suspended, terminated, resigned
+  work_schedule                   String?   // full_time, part_time, shift
+  assigned_shift                  String?
+
+  // Salary & Compensation
+  basic_salary                    Decimal?  @db.Decimal(15, 2)
+  salary_currency                 String?   @default("IDR")
+  pay_frequency                   String?   // monthly, weekly, bi_weekly
+  pay_type                        String?   // gross, net
+  transport_allowance             Decimal?  @db.Decimal(15, 2)
+  meal_allowance                  Decimal?  @db.Decimal(15, 2)
+  position_allowance              Decimal?  @db.Decimal(15, 2)
+  communication_allowance         Decimal?  @db.Decimal(15, 2)
+  housing_allowance               Decimal?  @db.Decimal(15, 2)
+  performance_bonus               Decimal?  @db.Decimal(15, 2)
+  other_allowances                Json?
+  deductions                      Json?
+
+  // Tax & Insurance
+  tax_status                      String?   // TK/0, TK/1, K/0, K/1, K/2, K/3
+  ptkp_status                     String?
+  bpjs_ketenagakerjaan_number     String?
+  bpjs_kesehatan_number           String?
+  bpjs_ketenagakerjaan_date       DateTime?
+  bpjs_kesehatan_date             DateTime?
+  jht_registered                  Boolean?  @default(false)
+  jp_registered                   Boolean?  @default(false)
+  medical_insurance               Boolean?  @default(false)
+  life_insurance                  Boolean?  @default(false)
+  medical_insurance_plan          String?
+  life_insurance_plan             String?
+  insurance_id                    String?
+  number_of_dependents            Int?      @default(0)
+
+  // Bank Info
+  bank_name                       String?
+  bank_account_number             String?
+  bank_account_holder             String?
+  bank_branch                     String?
+  payroll_bank_name               String?
+  payroll_bank_account            String?
+  payroll_bank_holder             String?
+
+  // Education
+  last_education                  String?   // sd, smp, sma, d1, d2, d3, d4, s1, s2, s3
+  education_major                 String?
+  education_institution           String?
+  graduation_year                 Int?
+  gpa                             Decimal?  @db.Decimal(4, 2)
+
+  // Skills & Certifications (JSON arrays)
+  technical_skills                Json?
+  soft_skills                     Json?
+  language_proficiency            Json?
+  certifications                  Json?
+  licenses                        Json?
+
+  // Health Info
+  medical_history                 String?   @db.Text
+  allergies                       String?   @db.Text
+  current_medications             String?   @db.Text
+  disabilities                    String?   @db.Text
+  last_medical_checkup            DateTime?
+  medical_checkup_results         String?   @db.Text
+  blood_pressure                  String?
+  health_notes                    String?   @db.Text
+
+  // Performance & Career
+  current_performance_rating      Decimal?  @db.Decimal(4, 2)
+  career_path                     String?   @db.Text
+  development_plans               String?   @db.Text
+  potential_assessment            String?   // high, medium, low
+  promotion_eligibility           Boolean?  @default(false)
+
+  // Work Arrangement
+  shift_pattern                   String?
+  flexible_hours                  Boolean?  @default(false)
+  remote_work_allowed             Boolean?  @default(false)
+  remote_work_days                Json?
+
+  // Leave Balances (denormalized for quick access)
+  annual_leave_entitlement        Decimal?  @db.Decimal(5, 2)
+  sick_leave_entitlement          Decimal?  @db.Decimal(5, 2)
+  annual_leave_balance            Decimal?  @db.Decimal(5, 2)
+  sick_leave_balance              Decimal?  @db.Decimal(5, 2)
+
+  // Family Info
+  family_members                  Json?
+  spouse_name                     String?
+  spouse_dob                      DateTime?
+  spouse_occupation               String?
+  children_count                  Int?      @default(0)
+  dependents_info                 Json?
+
+  // History (JSON arrays for tracking)
+  work_experience                 Json?
+  training_history                Json?
+  performance_history             Json?
+  promotion_history               Json?
+  salary_history                  Json?
+
+  // Document Paths
+  ktp_file_path                   String?
+  ktp_uploaded_at                 DateTime?
+  ktp_expiry_date                 DateTime?
+  family_card_file_path           String?
+  family_card_uploaded_at         DateTime?
+  npwp_file_path                  String?
+  npwp_uploaded_at                DateTime?
+  bpjs_tk_file_path               String?
+  bpjs_tk_uploaded_at             DateTime?
+  bpjs_kes_file_path              String?
+  bpjs_kes_uploaded_at            DateTime?
+  bank_account_file_path          String?
+  bank_account_uploaded_at        DateTime?
+  profile_photo                   String?
+  cv_file_path                    String?
+  cv_uploaded_at                  DateTime?
+
+  // ESS (Employee Self Service) Settings
+  ess_access                      Boolean?  @default(true)
+  ess_permissions                 Json?
+  can_view_payslip                Boolean?  @default(true)
+  can_request_leave               Boolean?  @default(true)
+  can_request_overtime            Boolean?  @default(true)
+  can_view_attendance             Boolean?  @default(true)
+
+  // Notifications
+  notify_leave_requests           Boolean?  @default(true)
+  notify_performance_reviews      Boolean?  @default(true)
+  notify_team_updates             Boolean?  @default(true)
+  notify_payroll                  Boolean?  @default(true)
+  browser_notifications           Boolean?  @default(true)
+  email_notifications             Boolean?  @default(true)
+
+  // Privacy
+  profile_visibility              String?   @default("company") // public, company, private
+  show_phone                      Boolean?  @default(false)
+  show_email                      Boolean?  @default(true)
+  show_birthday                   Boolean?  @default(true)
+
+  // Calendar Integration
+  google_calendar_connected       Boolean?  @default(false)
+  google_calendar_token           String?   @db.Text
+  google_calendar_last_sync       DateTime?
+
+  // Notes & Metadata
+  notes                           String?   @db.Text
+  hr_notes                        String?   @db.Text
+  metadata                        Json?
+
+  // Profile Completion Tracking
+  profile_completed               Boolean   @default(false)
+  profile_completed_at            DateTime?
+
+  // Soft Delete & Timestamps
+  deleted_at                      DateTime?
+  created_at                      DateTime  @default(now())
+  updated_at                      DateTime  @updatedAt
+
+  // ========== Relationships ==========
+
+  // Auth
+  user                            User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Organization
+  company                         Company?              @relation(fields: [company_id], references: [id])
+  department                      Department?           @relation("DepartmentEmployee", fields: [department_id], references: [id])
+  position                        Position?             @relation(fields: [position_id], references: [id])
+  salaryGrade                     SalaryGrade?          @relation(fields: [salary_grade_id], references: [id])
+  workLocationRef                 WorkLocation?         @relation(fields: [work_location_id], references: [id])
+
+  // Manager Hierarchy (self-referential)
+  manager                         Employee?             @relation("ManagerSubordinates", fields: [manager_id], references: [id])
+  subordinates                    Employee[]            @relation("ManagerSubordinates")
+  directManager                   Employee?             @relation("DirectManagerReports", fields: [direct_manager_id], references: [id])
+  directReports                   Employee[]            @relation("DirectManagerReports")
+  skipLevelManager                Employee?             @relation("SkipLevelReports", fields: [skip_level_manager_id], references: [id])
+  skipLevelReports                Employee[]            @relation("SkipLevelReports")
+
+  // Approval Assignments
+  leaveApprover                   Employee?             @relation("LeaveApproverAssignees", fields: [leave_approver_id], references: [id])
+  leaveApproverAssignees          Employee[]            @relation("LeaveApproverAssignees")
+  overtimeApprover                Employee?             @relation("OvertimeApproverAssignees", fields: [overtime_approver_id], references: [id])
+  overtimeApproverAssignees       Employee[]            @relation("OvertimeApproverAssignees")
+  managedDepartments              Department[]          @relation("DepartmentManager")
+
+  // Attendance
+  attendances                     Attendance[]
+  overtimes                       Overtime[]            @relation("OvertimeEmployee")
+  approvedOvertimes               Overtime[]            @relation("OvertimeApprover")
+
+  // Leave
+  leaves                          Leave[]               @relation("LeaveEmployee")
+  approvedLeaves                  Leave[]               @relation("LeaveApprover")
+  leaveRequests                   LeaveRequest[]        @relation("LeaveRequestEmployee")
+  approvedLeaveRequests           LeaveRequest[]        @relation("LeaveRequestApprover")
+  leaveBalances                   EmployeeLeaveBalance[]
+
+  // Payroll
+  payrolls                        Payroll[]
+  employeeAllowances              Allowance[]
+  payrollAdjustments              PayrollAdjustment[]   @relation("AdjustmentEmployee")
+
+  // Contracts & Movements
+  contracts                       Contract[]
+  movements                       EmployeeMovement[]    @relation("MovementEmployee")
+  requestedMovements              EmployeeMovement[]    @relation("MovementRequester")
+  approvedMovements               EmployeeMovement[]    @relation("MovementApprover")
+
+  // Documents
+  employeeDocuments               EmployeeDocument[]    @relation("EmployeeDocOwner")
+  uploadedEmployeeDocuments       EmployeeDocument[]    @relation("EmployeeDocUploader")
+  verifiedEmployeeDocuments       EmployeeDocument[]    @relation("EmployeeDocVerifier")
+  documents                       Document[]            @relation("DocumentEmployee")
+  uploadedDocuments               Document[]            @relation("DocumentUploader")
+  reviewedDocuments               Document[]            @relation("DocumentReviewer")
+
+  // Performance
+  performanceReviews              PerformanceReview[]   @relation("ReviewEmployee")
+  conductedReviews                PerformanceReview[]   @relation("ReviewReviewer")
+  approvedReviews                 PerformanceReview[]   @relation("ReviewApprover")
+  goals                           Goal[]                @relation("GoalEmployee")
+  createdGoals                    Goal[]                @relation("GoalCreator")
+  performanceFeedback             PerformanceFeedback[] @relation("FeedbackEmployee")
+  givenFeedback                   PerformanceFeedback[] @relation("FeedbackGiver")
+
+  // HR Staff Assignments
+  hrStaffCompanyAssignments       HrStaffCompanyAssignment[] @relation("HrStaffEmployee")
+  assignedByHr                    HrStaffCompanyAssignment[] @relation("HrStaffAssigner")
+
+  // Templates
+  createdTemplates                Template[] @relation("TemplateCreator")
+
+  // Announcements
+  createdAnnouncements            Announcement[] @relation("AnnouncementCreator")
+
+  @@map("employees")
+}
+
+// ==========================================
+// ORGANIZATION MODELS
+// ==========================================
+
+model Company {
+  id                      Int       @id @default(autoincrement())
+  parent_company_id       Int?
+  company_type            String?   // holding, subsidiary, branch
+  group_name              String?
+  name                    String
+  code                    String?   @unique
+  legal_name              String?
+  tax_id                  String?   // NPWP Perusahaan
+  business_registration   String?   // NIB
+  email                   String?
+  phone                   String?
+  fax                     String?
+  address                 String?   @db.Text
+  city                    String?
+  province                String?
+  postal_code             String?
+  country                 String?   @default("Indonesia")
+  website                 String?
+  logo                    String?
+  industry                String?
+  employee_count          Int?
+  founded_date            DateTime?
+  status                  String?   @default("active")
+  settings                Json?
+
+  // Feature toggles
+  attendance_enabled      Boolean   @default(true)
+  leave_enabled           Boolean   @default(true)
+  payroll_enabled         Boolean   @default(true)
+  performance_enabled     Boolean   @default(true)
+
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  // Relationships
+  parent                  Company?  @relation("CompanyHierarchy", fields: [parent_company_id], references: [id])
+  subsidiaries            Company[] @relation("CompanyHierarchy")
+  departments             Department[]
+  positions               Position[]
+  employees               Employee[]
+  workLocations           WorkLocation[]
+  attendanceSettings      AttendanceSetting[]
+  attendanceSecurityRules AttendanceSecurityRule[]
+  leaveTypes              LeaveType[]
+  leaveEntitlements       LeaveEntitlement[]
+  holidays                Holiday[]
+  payrollSettings         PayrollSetting[]
+  salaryComponents        SalaryComponent[]
+  taxBrackets             TaxBracket[]
+  ptkp                    PTKP[]
+  benefits                Benefit[]
+  hrStaffAssignments      HrStaffCompanyAssignment[]
+  templates               Template[]
+  announcements           Announcement[]
+
+  @@map("companies")
+}
+
+model Department {
+  id                Int       @id @default(autoincrement())
+  name              String
+  code              String?
+  description       String?   @db.Text
+  company_id        Int
+  parent_id         Int?      // For sub-departments
+  manager_id        Int?
+  status            String?   @default("active")
+  budget            Decimal?  @db.Decimal(15, 2)
+  location          String?
+  contact_person    String?
+  contact_email     String?
+  contact_phone     String?
+  established_date  DateTime?
+  department_type   String?
+  headcount_limit   Int?
+  cost_center       String?
+  sort_order        Int?      @default(0)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relationships
+  company           Company     @relation(fields: [company_id], references: [id])
+  parent            Department? @relation("DepartmentHierarchy", fields: [parent_id], references: [id])
+  children          Department[] @relation("DepartmentHierarchy")
+  manager           Employee?   @relation("DepartmentManager", fields: [manager_id], references: [id])
+  positions         Position[]
+  employees         Employee[]  @relation("DepartmentEmployee")
+  overtimes         Overtime[]
+  kpis              KPI[]
+
+  @@map("departments")
+}
+
+model Position {
+  id                Int       @id @default(autoincrement())
+  name              String
+  code              String?
+  description       String?   @db.Text
+  company_id        Int
+  department_id     Int?
+  level             Int?      // 1 = Entry, 2 = Junior, 3 = Mid, 4 = Senior, 5 = Lead, 6 = Manager, 7 = Director
+  min_salary        Decimal?  @db.Decimal(15, 2)
+  max_salary        Decimal?  @db.Decimal(15, 2)
+  requirements      String?   @db.Text
+  responsibilities  String?   @db.Text
+  qualifications    String?   @db.Text
+  headcount         Int?
+  status            String?   @default("active")
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relationships
+  company           Company     @relation(fields: [company_id], references: [id])
+  department        Department? @relation(fields: [department_id], references: [id])
+  employees         Employee[]
+  kpis              KPI[]
+
+  @@map("positions")
+}
+
+model HrStaffCompanyAssignment {
+  id              Int       @id @default(autoincrement())
+  employee_id     Int
+  company_id      Int
+  status          String    @default("active") // active, inactive, expired
+  permissions     Json?     // Granular permissions per company
+  notes           String?   @db.Text
+  assigned_by     Int?
+  assigned_at     DateTime?
+  expires_at      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relationships
+  employee        Employee  @relation("HrStaffEmployee", fields: [employee_id], references: [id])
+  company         Company   @relation(fields: [company_id], references: [id])
+  assigner        Employee? @relation("HrStaffAssigner", fields: [assigned_by], references: [id])
+
+  @@unique([employee_id, company_id])
+  @@map("hr_staff_company_assignments")
+}
+
+// ==========================================
+// ATTENDANCE MODELS
+// ==========================================
+
+model Attendance {
+  id                        Int       @id @default(autoincrement())
+  employee_id               Int
+  date                      DateTime  @db.Date
+  check_in                  DateTime?
+  check_out                 DateTime?
+  break_start               DateTime?
+  break_end                 DateTime?
+  total_hours               Decimal?  @db.Decimal(5, 2)
+  overtime_hours            Decimal?  @db.Decimal(5, 2)
+  status                    String?   // present, absent, late, half_day, on_leave, holiday
+  shift_type                String?   // morning, afternoon, night, flexible
+  shift_start_time          DateTime?
+  shift_end_time            DateTime?
+  notes                     String?   @db.Text
+
+  // Location Info
+  check_in_location         String?
+  check_out_location        String?
+  check_in_latitude         Decimal?  @db.Decimal(12, 8)
+  check_in_longitude        Decimal?  @db.Decimal(12, 8)
+  check_out_latitude        Decimal?  @db.Decimal(12, 8)
+  check_out_longitude       Decimal?  @db.Decimal(12, 8)
+  check_in_address          String?   @db.Text
+  check_out_address         String?   @db.Text
+  location_accuracy_meters  Decimal?  @db.Decimal(10, 2)
+  work_location_id          Int?
+
+  // Approval
+  approved_by               Int?
+  approved_at               DateTime?
+  approval_notes            String?   @db.Text
+
+  // Anti-fraud Fields
+  check_in_photo            String?
+  check_out_photo           String?
+  device_id                 String?
+  device_type               String?   // mobile, desktop, tablet
+  browser                   String?
+  os                        String?
+  ip_address                String?
+  user_agent                String?   @db.Text
+  location_verified         Boolean?  @default(false)
+  photo_verified            Boolean?  @default(false)
+  device_verified           Boolean?  @default(false)
+  suspicion_score           Int?      @default(0)
+  security_flags            Json?
+
+  // Expected times
+  expected_check_in         DateTime?
+  expected_check_out        DateTime?
+  late_minutes              Int?      @default(0)
+  early_leave_minutes       Int?      @default(0)
+  clock_history             Json?
+
+  // Audit
+  last_modified_by          Int?
+  last_modified_at          DateTime?
+
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+
+  // Relationships
+  employee                  Employee      @relation(fields: [employee_id], references: [id])
+  workLocation              WorkLocation? @relation(fields: [work_location_id], references: [id])
+
+  @@unique([employee_id, date])
+  @@map("attendances")
+}
+
+model WorkLocation {
+  id                              Int       @id @default(autoincrement())
+  name                            String
+  code                            String?
+  description                     String?   @db.Text
+  address                         String?   @db.Text
+  city                            String?
+  province                        String?
+  postal_code                     String?
+  country                         String?   @default("Indonesia")
+  latitude                        Decimal?  @db.Decimal(12, 8)
+  longitude                       Decimal?  @db.Decimal(12, 8)
+  radius_meters                   Int?      @default(100)
+  enable_attendance               Boolean?  @default(true)
+  enable_shift_system             Boolean?  @default(false)
+  shift_schedules                 Json?
+  require_location_verification   Boolean?  @default(true)
+  require_photo                   Boolean?  @default(false)
+  strict_location_check           Boolean?  @default(false)
+  location_check_interval_minutes Int?
+  work_start_time                 DateTime? @db.Time(0)
+  work_end_time                   DateTime? @db.Time(0)
+  break_start_time                DateTime? @db.Time(0)
+  break_end_time                  DateTime? @db.Time(0)
+  late_tolerance_minutes          Int?      @default(15)
+  is_active                       Boolean?  @default(true)
+  company_id                      Int
+  created_by                      Int?
+  settings                        Json?
+  created_at                      DateTime  @default(now())
+  updated_at                      DateTime  @updatedAt
+
+  // Relationships
+  company                         Company      @relation(fields: [company_id], references: [id])
+  attendances                     Attendance[]
+  employees                       Employee[]
+
+  @@map("work_locations")
+}
+
+model AttendanceSetting {
+  id                                    Int       @id @default(autoincrement())
+  company_id                            Int       @unique
+  work_start_time                       DateTime? @db.Time(0)
+  work_end_time                         DateTime? @db.Time(0)
+  break_start_time                      DateTime? @db.Time(0)
+  break_end_time                        DateTime? @db.Time(0)
+  working_hours_per_day                 Decimal?  @db.Decimal(4, 2)
+  working_days_per_week                 Int?      @default(5)
+  working_days                          Json?     // ["monday", "tuesday", ...]
+  check_in_tolerance_minutes            Int?      @default(15)
+  check_out_tolerance_minutes           Int?      @default(15)
+  require_check_out                     Boolean?  @default(true)
+  allow_remote_check_in                 Boolean?  @default(false)
+  max_remote_distance_km                Decimal?  @db.Decimal(10, 2)
+
+  // Late Settings
+  late_threshold_minutes                Int?      @default(15)
+  late_affects_salary                   Boolean?  @default(false)
+  late_deduction_per_minute             Decimal?  @db.Decimal(15, 2)
+  late_deduction_percentage             Decimal?  @db.Decimal(10, 4)
+  max_late_minutes_per_month            Int?
+  accumulate_late_minutes               Boolean?  @default(false)
+
+  // Absent Settings
+  absent_affects_salary                 Boolean?  @default(true)
+  absent_deduction_per_day              Decimal?  @db.Decimal(15, 2)
+  absent_deduction_percentage           Decimal?  @db.Decimal(10, 4)
+  allow_half_day_absent                 Boolean?  @default(true)
+  half_day_threshold_hours              Decimal?  @db.Decimal(4, 2)
+
+  // Overtime Settings
+  allow_overtime                        Boolean?  @default(true)
+  overtime_threshold_minutes            Int?      @default(30)
+  weekday_overtime_rate                 Decimal?  @db.Decimal(4, 2) @default(1.5)
+  weekend_overtime_rate                 Decimal?  @db.Decimal(4, 2) @default(2.0)
+  holiday_overtime_rate                 Decimal?  @db.Decimal(4, 2) @default(3.0)
+  max_overtime_hours_per_day            Decimal?  @db.Decimal(4, 2)
+  max_overtime_hours_per_week           Decimal?  @db.Decimal(4, 2)
+  max_overtime_hours_per_month          Decimal?  @db.Decimal(5, 2)
+  require_overtime_approval             Boolean?  @default(true)
+
+  // Rounding Settings
+  enable_time_rounding                  Boolean?  @default(false)
+  rounding_interval_minutes             Int?      @default(15)
+  rounding_method                       String?   // up, down, nearest
+  round_check_in                        Boolean?  @default(false)
+  round_check_out                       Boolean?  @default(false)
+
+  // Location Settings
+  enable_location_tracking              Boolean?  @default(true)
+  office_latitude                       Decimal?  @db.Decimal(12, 8)
+  office_longitude                      Decimal?  @db.Decimal(12, 8)
+  location_radius_meters                Int?      @default(100)
+  enable_geofencing                     Boolean?  @default(false)
+  geofence_locations                    Json?
+
+  // Photo Settings
+  require_photo_check_in                Boolean?  @default(false)
+  require_photo_check_out               Boolean?  @default(false)
+
+  // Break Settings
+  track_break_time                      Boolean?  @default(true)
+  break_duration_minutes                Int?      @default(60)
+  require_break                         Boolean?  @default(false)
+  max_break_minutes                     Int?
+
+  // Payroll Integration
+  attendance_affects_payroll            Boolean?  @default(true)
+  prorate_salary_for_partial_attendance Boolean?  @default(true)
+
+  // Notifications
+  auto_generate_attendance_report       Boolean?  @default(false)
+  attendance_report_frequency           String?   // daily, weekly, monthly
+  notify_late_employees                 Boolean?  @default(true)
+  notify_absent_employees               Boolean?  @default(true)
+  notify_manager_on_late                Boolean?  @default(true)
+  notify_hr_on_absent                   Boolean?  @default(true)
+
+  created_at                            DateTime  @default(now())
+  updated_at                            DateTime  @updatedAt
+
+  // Relationships
+  company                               Company   @relation(fields: [company_id], references: [id])
+
+  @@map("attendance_settings")
+}
+
+model AttendanceSecurityRule {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  type        String    // location_radius, time_window, photo_required, device_verification, ip_whitelist
+  config      Json?
+  action      String?   // warn, block, flag
+  is_active   Boolean?  @default(true)
+  priority    Int?      @default(0)
+  company_id  Int?
+  created_by  Int?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  // Relationships
+  company     Company?  @relation(fields: [company_id], references: [id])
+
+  @@map("attendance_security_rules")
+}
+
+model Overtime {
+  id                Int       @id @default(autoincrement())
+  employee_id       Int
+  date              DateTime  @db.Date
+  start_time        DateTime?
+  end_time          DateTime?
+  hours             Decimal   @db.Decimal(5, 2)
+  break_duration    Int?      @default(0) // minutes
+  reason            String?   @db.Text
+  task_description  String?   @db.Text
+  status            String    @default("pending") // pending, approved, rejected, cancelled
+  approved_by       Int?
+  approved_at       DateTime?
+  rejection_reason  String?   @db.Text
+  approval_notes    String?   @db.Text
+  company_id        Int?
+  department_id     Int?
+  overtime_type     String?   // regular, weekend, holiday
+  rate_multiplier   Decimal?  @db.Decimal(4, 2)
+  rate_per_hour     Decimal?  @db.Decimal(15, 2)
+  total_amount      Decimal?  @db.Decimal(15, 2)
+  urgency_level     String?   // low, medium, high, critical
+  task_completed    Boolean?  @default(false)
+  submitted_at      DateTime?
+  cancelled_at      DateTime?
+  deleted_at        DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relationships
+  employee          Employee    @relation("OvertimeEmployee", fields: [employee_id], references: [id])
+  approver          Employee?   @relation("OvertimeApprover", fields: [approved_by], references: [id])
+  department        Department? @relation(fields: [department_id], references: [id])
+
+  @@map("overtimes")
+}
+
+// ==========================================
+// LEAVE MODELS
+// ==========================================
+
+model LeaveType {
+  id                    Int       @id @default(autoincrement())
+  company_id            Int?
+  name                  String
+  code                  String?
+  description           String?   @db.Text
+  default_days          Int?
+  max_days_per_request  Int?
+  min_days_per_request  Decimal?  @db.Decimal(3, 1) @default(0.5)
+  is_paid               Boolean?  @default(true)
+  requires_document     Boolean?  @default(false)
+  document_types        Json?     // ["medical_certificate", "family_document"]
+  requires_approval     Boolean?  @default(true)
+  min_notice_days       Int?      @default(1)
+  max_advance_days      Int?      // How far in advance can be requested
+  approval_flow         Json?     // ["manager", "hr"]
+  is_active             Boolean?  @default(true)
+  sort_order            Int?      @default(0)
+  color                 String?   // For calendar display
+  icon                  String?
+  can_carry_forward     Boolean?  @default(false)
+  max_carry_forward_days Int?
+  carry_forward_expiry_months Int?
+  prorate_on_join       Boolean?  @default(true)
+  eligibility_rules     Json?     // Min service months, employment types, etc.
+  gender_specific       String?   // male, female, null for all
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  // Relationships
+  company               Company?              @relation(fields: [company_id], references: [id])
+  leaves                Leave[]
+  leaveRequests         LeaveRequest[]
+  entitlements          LeaveEntitlement[]
+  employeeBalances      EmployeeLeaveBalance[]
+
+  @@map("leave_types")
+}
+
+model Leave {
+  id                Int       @id @default(autoincrement())
+  employee_id       Int
+  leave_type_id     Int?
+  start_date        DateTime  @db.Date
+  end_date          DateTime  @db.Date
+  start_half_day    Boolean?  @default(false) // Start from afternoon
+  end_half_day      Boolean?  @default(false) // End at morning
+  total_days        Decimal?  @db.Decimal(5, 2)
+  reason            String?   @db.Text
+  document_path     String?
+  document_name     String?
+  status            String    @default("pending") // pending, approved, rejected, cancelled
+  approved_by       Int?
+  approved_at       DateTime?
+  approval_notes    String?   @db.Text
+  rejected_by       Int?
+  rejected_at       DateTime?
+  rejection_reason  String?   @db.Text
+  cancelled_at      DateTime?
+  cancelled_reason  String?   @db.Text
+  is_emergency      Boolean?  @default(false)
+  contact_during_leave String?
+  work_handover     String?   @db.Text
+  deduction_amount  Decimal?  @db.Decimal(15, 2)
+  deleted_at        DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relationships
+  employee          Employee   @relation("LeaveEmployee", fields: [employee_id], references: [id])
+  approver          Employee?  @relation("LeaveApprover", fields: [approved_by], references: [id])
+  leaveType         LeaveType? @relation(fields: [leave_type_id], references: [id])
+
+  @@map("leaves")
+}
+
+model LeaveRequest {
+  id                    Int       @id @default(autoincrement())
+  employee_id           Int
+  leave_type_id         Int?
+  start_date            DateTime  @db.Date
+  end_date              DateTime  @db.Date
+  start_half_day        Boolean?  @default(false)
+  end_half_day          Boolean?  @default(false)
+  days_requested        Decimal?  @db.Decimal(5, 2)
+  total_days            Decimal?  @db.Decimal(5, 2)
+  reason                String?   @db.Text
+  document_path         String?
+  contact_during_leave  String?
+  work_handover_notes   String?   @db.Text
+  delegate_to           Int?
+  status                String    @default("pending") // pending, approved, rejected, cancelled, returned
+  current_approver      Int?
+  approval_level        Int?      @default(1)
+  approved_by           Int?
+  approved_at           DateTime?
+  approval_notes        String?   @db.Text
+  rejected_by           Int?
+  rejected_at           DateTime?
+  rejection_reason      String?   @db.Text
+  returned_by           Int?
+  returned_at           DateTime?
+  return_reason         String?   @db.Text
+  requested_at          DateTime?
+  cancelled_at          DateTime?
+  deleted_at            DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  // Relationships
+  employee              Employee   @relation("LeaveRequestEmployee", fields: [employee_id], references: [id])
+  approver              Employee?  @relation("LeaveRequestApprover", fields: [approved_by], references: [id])
+  leaveType             LeaveType? @relation(fields: [leave_type_id], references: [id])
+
+  @@map("leave_requests")
+}
+
+model LeaveEntitlement {
+  id                          Int       @id @default(autoincrement())
+  company_id                  Int?
+  leave_type_id               Int?
+  name                        String
+  description                 String?   @db.Text
+  quota_type                  String?   // fixed, accrual, service_based
+  quota_days                  Decimal?  @db.Decimal(5, 2)
+  accrual_frequency           String?   // monthly, quarterly, yearly
+  accrual_rate                Decimal?  @db.Decimal(5, 2)
+  accrual_cap                 Decimal?  @db.Decimal(5, 2) // Max accruable days
+  allow_carry_forward         Boolean?  @default(false)
+  max_carry_forward           Decimal?  @db.Decimal(5, 2)
+  carry_forward_expiry_months Int?
+  allow_negative_balance      Boolean?  @default(false)
+  max_negative_balance        Decimal?  @db.Decimal(5, 2)
+  prorate_on_join             Boolean?  @default(true)
+  prorate_on_resign           Boolean?  @default(true)
+  min_service_months          Int?      @default(0)
+  applicable_departments      Json?
+  applicable_positions        Json?
+  applicable_employment_types Json?
+  effective_from              DateTime? @db.Date
+  effective_until             DateTime? @db.Date
+  is_active                   Boolean?  @default(true)
+  created_at                  DateTime  @default(now())
+  updated_at                  DateTime  @updatedAt
+
+  // Relationships
+  company                     Company?   @relation(fields: [company_id], references: [id])
+  leaveType                   LeaveType? @relation(fields: [leave_type_id], references: [id])
+
+  @@map("leave_entitlements")
+}
+
+model EmployeeLeaveBalance {
+  id                    Int       @id @default(autoincrement())
+  employee_id           Int
+  leave_type_id         Int?
+  year                  Int
+  allocated_days        Decimal?  @db.Decimal(5, 2)
+  used_days             Decimal?  @db.Decimal(5, 2) @default(0)
+  pending_days          Decimal?  @db.Decimal(5, 2) @default(0)
+  remaining_days        Decimal?  @db.Decimal(5, 2)
+  carried_forward_days  Decimal?  @db.Decimal(5, 2) @default(0)
+  adjustment_days       Decimal?  @db.Decimal(5, 2) @default(0)
+  adjustment_reason     String?   @db.Text
+  expires_at            DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  // Relationships
+  employee              Employee   @relation(fields: [employee_id], references: [id])
+  leaveType             LeaveType? @relation(fields: [leave_type_id], references: [id])
+
+  @@unique([employee_id, leave_type_id, year])
+  @@map("employee_leave_balances")
+}
+
+model Holiday {
+  id            Int       @id @default(autoincrement())
+  company_id    Int?
+  name          String
+  date          DateTime  @db.Date
+  type          String    // national, company, religious, cuti_bersama
+  description   String?   @db.Text
+  is_recurring  Boolean?  @default(false)
+  source        String?   @default("manual") // manual, api, import
+  is_active     Boolean?  @default(true)
+  created_by    Int?
+  deleted_at    DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // Relationships
+  company       Company?  @relation(fields: [company_id], references: [id])
+
+  @@map("holidays")
+}
+
+// ==========================================
+// PAYROLL MODELS
+// ==========================================
+
+model Payroll {
+  id                              Int       @id @default(autoincrement())
+  employee_id                     Int
+  company_id                      Int?
+  payroll_number                  String?   @unique
+  period                          String?   // 2024-01, 2024-02
+  period_start                    DateTime? @db.Date
+  period_end                      DateTime? @db.Date
+  pay_type                        String?   // gross, net, gross_up
+
+  // Earnings
+  basic_salary                    Decimal?  @db.Decimal(15, 2)
+  gross_salary                    Decimal?  @db.Decimal(15, 2)
+  transport_allowance             Decimal?  @db.Decimal(15, 2)
+  meal_allowance                  Decimal?  @db.Decimal(15, 2)
+  position_allowance              Decimal?  @db.Decimal(15, 2)
+  other_allowances                Decimal?  @db.Decimal(15, 2)
+  allowances_detail               Json?
+  overtime_hours                  Decimal?  @db.Decimal(5, 2)
+  overtime_rate                   Decimal?  @db.Decimal(15, 2)
+  overtime_pay                    Decimal?  @db.Decimal(15, 2)
+  bonus                           Decimal?  @db.Decimal(15, 2)
+  thr                             Decimal?  @db.Decimal(15, 2) // Tunjangan Hari Raya
+  incentive                       Decimal?  @db.Decimal(15, 2)
+  commission                      Decimal?  @db.Decimal(15, 2)
+  back_pay                        Decimal?  @db.Decimal(15, 2)
+
+  // Deductions
+  total_deductions                Decimal?  @db.Decimal(15, 2)
+  deductions_detail               Json?
+  loan_deduction                  Decimal?  @db.Decimal(15, 2)
+  absence_deduction               Decimal?  @db.Decimal(15, 2)
+  late_deduction                  Decimal?  @db.Decimal(15, 2)
+  other_deductions                Decimal?  @db.Decimal(15, 2)
+
+  // Tax (PPh21) & Gross Up Calculation
+  taxable_income                  Decimal?  @db.Decimal(15, 2)
+  pph21                           Decimal?  @db.Decimal(15, 2)
+  pph21_paid_by_company           Boolean?  @default(false)
+  ter_rate                        Decimal?  @db.Decimal(10, 6)
+  ter_rate_initial                Decimal?  @db.Decimal(10, 6)
+  ter_category                    String?   // A, B, C (Golongan)
+  ptkp_status                     String?   // TK/0, K/1, etc.
+  ptkp_amount                     Decimal?  @db.Decimal(15, 2)
+  // Gross Up values (for NET pay type)
+  gross_up_initial                Decimal?  @db.Decimal(15, 2)
+  final_gross_up                  Decimal?  @db.Decimal(15, 2)
+  total_gross                     Decimal?  @db.Decimal(15, 2)
+  bpjs_object_pph21               Decimal?  @db.Decimal(15, 2)
+  thp                             Decimal?  @db.Decimal(15, 2)
+  total_cost_company              Decimal?  @db.Decimal(15, 2)
+
+  // BPJS Employee
+  bpjs_kes_employee               Decimal?  @db.Decimal(15, 2)
+  bpjs_jht_employee               Decimal?  @db.Decimal(15, 2)
+  bpjs_jp_employee                Decimal?  @db.Decimal(15, 2)
+  bpjs_employee_total             Decimal?  @db.Decimal(15, 2)
+
+  // BPJS Company
+  bpjs_kes_company                Decimal?  @db.Decimal(15, 2)
+  bpjs_jht_company                Decimal?  @db.Decimal(15, 2)
+  bpjs_jp_company                 Decimal?  @db.Decimal(15, 2)
+  bpjs_jkk_company                Decimal?  @db.Decimal(15, 2)
+  bpjs_jkm_company                Decimal?  @db.Decimal(15, 2)
+  bpjs_company_total              Decimal?  @db.Decimal(15, 2)
+
+  // Totals
+  net_salary                      Decimal?  @db.Decimal(15, 2)
+  take_home_pay                   Decimal?  @db.Decimal(15, 2)
+  total_cost_to_company           Decimal?  @db.Decimal(15, 2)
+
+  // Attendance Data
+  working_days                    Int?
+  actual_working_days             Int?
+  absent_days                     Int?
+  late_days                       Int?
+  leave_days                      Decimal?  @db.Decimal(5, 2)
+
+  // Status & Approval
+  status                          String    @default("draft") // draft, processing, validated, submitted, approved, rejected, paid, cancelled
+  validated_by                    Int?
+  validated_at                    DateTime?
+  submitted_by                    Int?
+  submitted_at                    DateTime?
+  approved_by                     Int?
+  approved_at                     DateTime?
+  rejected_by                     Int?
+  rejected_at                     DateTime?
+  rejection_reason                String?   @db.Text
+  paid_by                         Int?
+  paid_at                         DateTime?
+  payment_reference               String?
+  payment_method                  String?   // bank_transfer, cash, check
+
+  // Notes
+  notes                           String?   @db.Text
+  hr_notes                        String?   @db.Text
+  finance_notes                   String?   @db.Text
+  metadata                        Json?
+
+  // Prorate
+  is_prorated                     Boolean?  @default(false)
+  prorate_factor                  Decimal?  @db.Decimal(10, 4)
+  prorate_reason                  String?
+
+  created_at                      DateTime  @default(now())
+  updated_at                      DateTime  @updatedAt
+
+  // Relationships
+  employee                        Employee        @relation(fields: [employee_id], references: [id])
+  details                         PayrollDetail[]
+
+  @@map("payrolls")
+}
+
+model PayrollDetail {
+  id                        Int       @id @default(autoincrement())
+  payroll_id                Int
+  component_type            String    // earning, deduction, tax, bpjs
+  component_name            String
+  component_code            String?
+  description               String?   @db.Text
+  amount                    Decimal   @db.Decimal(15, 2)
+  is_taxable                Boolean?  @default(true)
+  is_bpjs_object            Boolean?  @default(false)
+  calculation_base          String?   // fixed, percentage, formula
+  calculation_value         Decimal?  @db.Decimal(15, 4)
+  reference_amount          Decimal?  @db.Decimal(15, 2)
+  sort_order                Int?      @default(0)
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+
+  // Relationships
+  payroll                   Payroll   @relation(fields: [payroll_id], references: [id], onDelete: Cascade)
+
+  @@map("payroll_details")
+}
+
+model SalaryComponent {
+  id              Int       @id @default(autoincrement())
+  company_id      Int?
+  name            String
+  code            String?
+  type            String    // earning, deduction
+  category        String?   // basic, allowance, bonus, tax, bpjs, other
+  amount          Decimal?  @db.Decimal(15, 2)
+  percentage      Decimal?  @db.Decimal(10, 4)
+  formula         String?   @db.Text
+  calculation_base String?  // fixed, basic_salary, gross_salary, custom
+  is_taxable      Boolean?  @default(true)
+  is_bpjs_object  Boolean?  @default(false)
+  is_active       Boolean?  @default(true)
+  is_recurring    Boolean?  @default(true)
+  effective_from  DateTime? @db.Date
+  effective_until DateTime? @db.Date
+  applicable_to   Json?     // Employment types, departments, etc.
+  description     String?   @db.Text
+  sort_order      Int?      @default(0)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relationships
+  company         Company?  @relation(fields: [company_id], references: [id])
+
+  @@map("salary_components")
+}
+
+model SalaryGrade {
+  id              Int       @id @default(autoincrement())
+  grade_code      String    @unique
+  grade_name      String
+  level           Int?
+  min_salary      Decimal?  @db.Decimal(15, 2)
+  max_salary      Decimal?  @db.Decimal(15, 2)
+  mid_salary      Decimal?  @db.Decimal(15, 2)
+  allowances      Json?     // Default allowances for this grade
+  description     String?   @db.Text
+  status          String?   @default("active")
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relationships
+  employees       Employee[]
+
+  @@map("salary_grades")
+}
+
+model Allowance {
+  id              Int       @id @default(autoincrement())
+  employee_id     Int?
+  company_id      Int?
+  name            String
+  type            String    // transport, meal, housing, communication, medical, position, other
+  amount          Decimal?  @db.Decimal(15, 2)
+  percentage      Decimal?  @db.Decimal(10, 4)
+  calculation_base String?  // fixed, basic_salary, gross_salary
+  formula         String?   @db.Text
+  frequency       String?   // monthly, weekly, daily, one_time
+  effective_date  DateTime? @db.Date
+  end_date        DateTime? @db.Date
+  status          String    @default("active")
+  description     String?   @db.Text
+  notes           String?   @db.Text
+  approved_by     Int?
+  approved_at     DateTime?
+  rejection_reason String?  @db.Text
+  is_taxable      Boolean?  @default(true)
+  is_bpjs_object  Boolean?  @default(false)
+  is_recurring    Boolean?  @default(true)
+  metadata        Json?
+  deleted_at      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relationships
+  employee        Employee? @relation(fields: [employee_id], references: [id])
+
+  @@map("allowances")
+}
+
+model Benefit {
+  id                Int       @id @default(autoincrement())
+  name              String
+  type              String    // insurance, allowance, facility, membership, other
+  category          String?   // health, wellness, financial, lifestyle
+  amount            Decimal?  @db.Decimal(15, 2)
+  coverage          String?   @db.Text
+  description       String?   @db.Text
+  provider          String?
+  is_active         Boolean?  @default(true)
+  is_taxable        Boolean?  @default(true)
+  applicable_to_all Boolean?  @default(false)
+  eligibility_rules Json?
+  company_id        Int?
+  created_by        Int?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relationships
+  company           Company?  @relation(fields: [company_id], references: [id])
+
+  @@map("benefits")
+}
+
+model PayrollAdjustment {
+  id                  Int       @id @default(autoincrement())
+  employee_id         Int
+  type                String    // bonus, allowance, reimbursement, deduction, penalty, loan, advance
+  category            String?
+  amount              Decimal   @db.Decimal(15, 2)
+  description         String?   @db.Text
+  reason              String?   @db.Text
+  effective_date      DateTime? @db.Date
+  pay_period          String?
+  status              String    @default("pending") // pending, approved, rejected, processed
+  approved_by         Int?
+  approved_at         DateTime?
+  rejection_reason    String?   @db.Text
+  is_recurring        Boolean?  @default(false)
+  recurring_frequency String?   // monthly, quarterly, yearly
+  recurring_end_date  DateTime? @db.Date
+  is_taxable          Boolean?  @default(true)
+  is_bpjs_object      Boolean?  @default(false)
+  reference_number    String?
+  attachment_path     String?
+  company_id          Int?
+  created_by          Int?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  // Relationships
+  employee            Employee  @relation("AdjustmentEmployee", fields: [employee_id], references: [id])
+
+  @@map("payroll_adjustments")
+}
+
+model PayrollSetting {
+  id                            Int       @id @default(autoincrement())
+  company_id                    Int       @unique
+
+  // BPJS Kesehatan Rates
+  bpjs_kes_employee_rate        Decimal?  @db.Decimal(10, 4) @default(0.01)   // 1%
+  bpjs_kes_company_rate         Decimal?  @db.Decimal(10, 4) @default(0.04)   // 4%
+  bpjs_kes_max_salary           Decimal?  @db.Decimal(15, 2) @default(12000000)
+
+  // BPJS Ketenagakerjaan Rates
+  bpjs_jht_employee_rate        Decimal?  @db.Decimal(10, 4) @default(0.02)   // 2%
+  bpjs_jht_company_rate         Decimal?  @db.Decimal(10, 4) @default(0.037)  // 3.7%
+  bpjs_jp_employee_rate         Decimal?  @db.Decimal(10, 4) @default(0.01)   // 1%
+  bpjs_jp_company_rate          Decimal?  @db.Decimal(10, 4) @default(0.02)   // 2%
+  bpjs_jp_max_salary            Decimal?  @db.Decimal(15, 2) @default(10042300)
+  bpjs_jkk_rate                 Decimal?  @db.Decimal(10, 4) @default(0.0024) // 0.24% (varies by risk)
+  bpjs_jkm_rate                 Decimal?  @db.Decimal(10, 4) @default(0.003)  // 0.3%
+
+  // Tax Settings
+  use_ter_method                Boolean?  @default(true) // TER vs Progressive
+  position_cost_rate            Decimal?  @db.Decimal(10, 4) @default(0.05)
+  position_cost_max             Decimal?  @db.Decimal(15, 2) @default(500000)
+
+  // Overtime Settings
+  overtime_rate_weekday         Decimal?  @db.Decimal(4, 2) @default(1.5)
+  overtime_rate_weekend         Decimal?  @db.Decimal(4, 2) @default(2.0)
+  overtime_rate_holiday         Decimal?  @db.Decimal(4, 2) @default(3.0)
+  overtime_base                 String?   // basic_salary, basic_allowance
+
+  // Payroll Settings
+  payroll_cutoff_date           Int?      @default(25)
+  payment_date                  Int?      @default(28)
+  prorate_method                String?   // calendar_days, working_days
+  currency                      String?   @default("IDR")
+
+  // Rounding
+  enable_rounding               Boolean?  @default(true)
+  rounding_method               String?   // up, down, nearest
+  rounding_precision            Int?      @default(0) // decimal places
+
+  is_active                     Boolean?  @default(true)
+  created_at                    DateTime  @default(now())
+  updated_at                    DateTime  @updatedAt
+
+  // Relationships
+  company                       Company   @relation(fields: [company_id], references: [id])
+
+  @@map("payroll_settings")
+}
+
+model TaxConfiguration {
+  id              Int       @id @default(autoincrement())
+  tax_category    String    // TER_A, TER_B, TER_C, Progressive
+  description     String?   @db.Text
+  min_income      Decimal?  @db.Decimal(15, 2)
+  max_income      Decimal?  @db.Decimal(15, 2)
+  tax_rate        Decimal?  @db.Decimal(10, 6)
+  tax_amount      Decimal?  @db.Decimal(15, 2)
+  is_active       Boolean?  @default(true)
+  effective_from  DateTime? @db.Date
+  effective_until DateTime? @db.Date
+  notes           String?   @db.Text
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@map("tax_configurations")
+}
+
+model TaxBracket {
+  id           Int       @id @default(autoincrement())
+  bracket_name String
+  rate         Decimal   @db.Decimal(10, 4)
+  min_income   Decimal   @db.Decimal(15, 2)
+  max_income   Decimal?  @db.Decimal(15, 2)
+  is_active    Boolean?  @default(true)
+  company_id   Int?
+  created_by   Int?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  // Relationships
+  company      Company?  @relation(fields: [company_id], references: [id])
+
+  @@map("tax_brackets")
+}
+
+model PTKP {
+  id          Int       @id @default(autoincrement())
+  status      String    @unique // TK/0, TK/1, TK/2, TK/3, K/0, K/1, K/2, K/3
+  description String?   @db.Text
+  amount      Decimal   @db.Decimal(15, 2)
+  is_active   Boolean?  @default(true)
+  company_id  Int?
+  created_by  Int?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  // Relationships
+  company     Company?  @relation(fields: [company_id], references: [id])
+
+  @@map("ptkp")
+}
+
+// ==========================================
+// EMPLOYEE LIFECYCLE MODELS
+// ==========================================
+
+model Contract {
+  id                Int       @id @default(autoincrement())
+  employee_id       Int
+  contract_number   String?   @unique
+  contract_type     String    // permanent, contract, probation, internship, part_time
+  start_date        DateTime  @db.Date
+  end_date          DateTime? @db.Date
+  duration_months   Int?
+  salary            Decimal?  @db.Decimal(15, 2)
+  position          String?
+  department        String?
+  terms             String?   @db.Text
+  benefits          Json?
+  notes             String?   @db.Text
+  attachment_path   String?
+  status            String    @default("active") // draft, pending, active, expired, terminated, renewed
+  signed_date       DateTime?
+  signed_by_employee Boolean? @default(false)
+  signed_by_company  Boolean? @default(false)
+  termination_date  DateTime?
+  termination_reason String?  @db.Text
+  renewed_from      Int?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relationships
+  employee          Employee  @relation(fields: [employee_id], references: [id])
+
+  @@map("contracts")
+}
+
+model EmployeeMovement {
+  id                     Int       @id @default(autoincrement())
+  employee_id            Int
+  company_id             Int?
+  movement_type          String    // promotion, demotion, transfer, mutation, salary_adjustment, grade_change, status_change
+  effective_date         DateTime  @db.Date
+
+  // Previous State
+  previous_position_id   Int?
+  previous_position_name String?
+  previous_department_id Int?
+  previous_department_name String?
+  previous_company_id    Int?
+  previous_company_name  String?
+  previous_salary        Decimal?  @db.Decimal(15, 2)
+  previous_grade         String?
+  previous_status        String?
+
+  // New State
+  new_position_id        Int?
+  new_position_name      String?
+  new_department_id      Int?
+  new_department_name    String?
+  new_company_id         Int?
+  new_company_name       String?
+  new_salary             Decimal?  @db.Decimal(15, 2)
+  new_grade              String?
+  new_status             String?
+
+  // Details
+  salary_change          Decimal?  @db.Decimal(15, 2)
+  salary_change_percentage Decimal? @db.Decimal(10, 2)
+  reason                 String?   @db.Text
+  attachment             String?
+  notes                  String?   @db.Text
+
+  // Approval
+  status                 String    @default("pending") // pending, approved, rejected, cancelled
+  requested_by           Int?
+  requested_at           DateTime?
+  approved_by            Int?
+  approved_at            DateTime?
+  rejected_by            Int?
+  rejected_at            DateTime?
+  approval_notes         String?   @db.Text
+  rejection_reason       String?   @db.Text
+
+  // Application
+  is_applied             Boolean?  @default(false)
+  applied_at             DateTime?
+
+  deleted_at             DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+
+  // Relationships
+  employee               Employee  @relation("MovementEmployee", fields: [employee_id], references: [id])
+  requester              Employee? @relation("MovementRequester", fields: [requested_by], references: [id])
+  approver               Employee? @relation("MovementApprover", fields: [approved_by], references: [id])
+
+  @@map("employee_movements")
+}
+
+model EmployeeDocument {
+  id              Int       @id @default(autoincrement())
+  employee_id     Int
+  uploaded_by     Int?
+  document_name   String
+  document_type   String    // ktp, family_card, npwp, bpjs_tk, bpjs_kes, bank_account, cv, ijazah, certificate, contract, other
+  document_number String?
+  file_path       String
+  file_name       String?
+  file_size       BigInt?
+  mime_type       String?
+  description     String?   @db.Text
+  issue_date      DateTime? @db.Date
+  expiry_date     DateTime? @db.Date
+  issuing_authority String?
+  is_verified     Boolean?  @default(false)
+  verified_at     DateTime?
+  verified_by     Int?
+  verification_notes String? @db.Text
+  is_required     Boolean?  @default(false)
+  is_confidential Boolean?  @default(false)
+  tags            Json?
+  deleted_at      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relationships
+  employee        Employee  @relation("EmployeeDocOwner", fields: [employee_id], references: [id])
+  uploader        Employee? @relation("EmployeeDocUploader", fields: [uploaded_by], references: [id])
+  verifier        Employee? @relation("EmployeeDocVerifier", fields: [verified_by], references: [id])
+
+  @@map("employee_documents")
+}
+
+// ==========================================
+// PERFORMANCE MODELS
+// ==========================================
+
+model PerformanceReview {
+  id                      Int       @id @default(autoincrement())
+  employee_id             Int
+  reviewer_id             Int?
+  cycle_id                Int?
+  review_period_start     DateTime? @db.Date
+  review_period_end       DateTime? @db.Date
+  review_type             String    // annual, mid_year, quarterly, probation, promotion, 360_feedback
+  status                  String    @default("draft") // draft, self_assessment, manager_review, hr_review, calibration, completed, cancelled
+
+  // Scores
+  overall_rating          Decimal?  @db.Decimal(4, 2)
+  final_score             Decimal?  @db.Decimal(4, 2)
+  goal_achievement_score  Decimal?  @db.Decimal(4, 2)
+  competency_score        Decimal?  @db.Decimal(4, 2)
+
+  // Comments
+  strengths               String?   @db.Text
+  areas_for_improvement   String?   @db.Text
+  goals_achievement       String?   @db.Text
+  development_needs       String?   @db.Text
+  manager_comments        String?   @db.Text
+  employee_comments       String?   @db.Text
+  hr_comments             String?   @db.Text
+  calibration_notes       String?   @db.Text
+
+  // Recommendations
+  recommendations         String?   @db.Text
+  promotion_eligible      Boolean?  @default(false)
+  salary_increase_eligible Boolean? @default(false)
+  suggested_increase_percentage Decimal? @db.Decimal(5, 2)
+
+  // Dates
+  self_assessment_due     DateTime?
+  manager_review_due      DateTime?
+  next_review_date        DateTime? @db.Date
+  completed_at            DateTime?
+
+  // Approval
+  approved_by             Int?
+  approved_at             DateTime?
+
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  // Relationships
+  employee                Employee              @relation("ReviewEmployee", fields: [employee_id], references: [id])
+  reviewer                Employee?             @relation("ReviewReviewer", fields: [reviewer_id], references: [id])
+  approver                Employee?             @relation("ReviewApprover", fields: [approved_by], references: [id])
+  cycle                   PerformanceCycle?     @relation(fields: [cycle_id], references: [id])
+  feedback                PerformanceFeedback[]
+  goals                   Goal[]
+
+  @@map("performance_reviews")
+}
+
+model PerformanceFeedback {
+  id                    Int       @id @default(autoincrement())
+  performance_review_id Int?
+  employee_id           Int
+  feedback_from         Int
+  feedback_type         String?   // self, manager, peer, subordinate, external
+  relationship          String?   // How feedback giver relates to employee
+  rating                Decimal?  @db.Decimal(4, 2)
+  comments              String?   @db.Text
+  strengths             String?   @db.Text
+  improvements          String?   @db.Text
+  is_anonymous          Boolean?  @default(false)
+  submitted_at          DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  // Relationships
+  performanceReview     PerformanceReview? @relation(fields: [performance_review_id], references: [id])
+  employee              Employee           @relation("FeedbackEmployee", fields: [employee_id], references: [id])
+  giver                 Employee           @relation("FeedbackGiver", fields: [feedback_from], references: [id])
+
+  @@map("performance_feedback")
+}
+
+model PerformanceCycle {
+  id                  Int       @id @default(autoincrement())
+  name                String
+  description         String?   @db.Text
+  year                Int
+  cycle_type          String?   // annual, semi_annual, quarterly
+  start_date          DateTime  @db.Date
+  end_date            DateTime  @db.Date
+  self_assessment_start DateTime?
+  self_assessment_end DateTime?
+  manager_review_start DateTime?
+  manager_review_end  DateTime?
+  calibration_start   DateTime?
+  calibration_end     DateTime?
+  status              String    @default("draft") // draft, active, in_progress, calibration, completed
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  // Relationships
+  reviews             PerformanceReview[]
+
+  @@map("performance_cycles")
+}
+
+model Goal {
+  id                    Int       @id @default(autoincrement())
+  employee_id           Int
+  performance_review_id Int?
+  kpi_id                Int?
+  parent_goal_id        Int?
+  title                 String
+  description           String?   @db.Text
+  category              String?   // performance, development, behavioral, strategic, team
+  priority              String?   // low, medium, high, critical
+  target_value          Decimal?  @db.Decimal(15, 2)
+  current_value         Decimal?  @db.Decimal(15, 2)
+  unit_of_measure       String?
+  start_date            DateTime? @db.Date
+  target_date           DateTime? @db.Date
+  completed_date        DateTime?
+  status                String    @default("active") // draft, active, in_progress, completed, cancelled, deferred
+  progress_percentage   Int?      @default(0)
+  achievement_notes     String?   @db.Text
+  manager_feedback      String?   @db.Text
+  employee_comments     String?   @db.Text
+  blockers              String?   @db.Text
+  weight                Decimal?  @db.Decimal(5, 2)
+  score                 Decimal?  @db.Decimal(5, 2)
+  is_stretch_goal       Boolean?  @default(false)
+  created_by            Int?
+  updated_by            Int?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  // Relationships
+  employee              Employee           @relation("GoalEmployee", fields: [employee_id], references: [id])
+  creator               Employee?          @relation("GoalCreator", fields: [created_by], references: [id])
+  performanceReview     PerformanceReview? @relation(fields: [performance_review_id], references: [id])
+  kpi                   KPI?               @relation(fields: [kpi_id], references: [id])
+  parent                Goal?              @relation("GoalHierarchy", fields: [parent_goal_id], references: [id])
+  children              Goal[]             @relation("GoalHierarchy")
+
+  @@map("goals")
+}
+
+model KPI {
+  id                  Int       @id @default(autoincrement())
+  name                String
+  code                String?
+  description         String?   @db.Text
+  category            String?   // financial, customer, process, learning, quality, productivity
+  department_id       Int?
+  position_id         Int?
+  unit_of_measure     String?
+  target_frequency    String?   // daily, weekly, monthly, quarterly, annually
+  target_type         String?   // higher_better, lower_better, target_range
+  weight              Decimal?  @db.Decimal(5, 2)
+  calculation_method  String?   // sum, average, percentage, ratio, count, custom
+  formula             String?   @db.Text
+  data_source         String?
+  benchmark_value     Decimal?  @db.Decimal(15, 2)
+  threshold_red       Decimal?  @db.Decimal(15, 2)
+  threshold_yellow    Decimal?  @db.Decimal(15, 2)
+  threshold_green     Decimal?  @db.Decimal(15, 2)
+  is_active           Boolean?  @default(true)
+  effective_from      DateTime? @db.Date
+  effective_until     DateTime? @db.Date
+  created_by          Int?
+  updated_by          Int?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  // Relationships
+  department          Department? @relation(fields: [department_id], references: [id])
+  position            Position?   @relation(fields: [position_id], references: [id])
+  goals               Goal[]
+
+  @@map("kpis")
+}
+
+// ==========================================
+// DOCUMENT MODELS
+// ==========================================
+
+model Document {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?   @db.Text
+  file_path     String
+  file_name     String?
+  file_size     BigInt?
+  file_type     String?
+  mime_type     String?
+  document_type String?   // policy, form, template, report, other
+  category_id   Int?
+  employee_id   Int?
+  uploaded_by   Int?
+  assigned_to   Int?
+  version       Int?      @default(1)
+  expiry_date   DateTime? @db.Date
+  tags          Json?
+  status        String    @default("active") // active, archived, deleted
+  visibility    String?   @default("company") // public, company, department, private
+  source        String?   @default("upload")
+  reviewed_by   Int?
+  reviewed_at   DateTime?
+  is_required   Boolean?  @default(false)
+  is_verified   Boolean?  @default(false)
+  verified_at   DateTime?
+  download_count Int?     @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // Relationships
+  category      DocumentCategory? @relation(fields: [category_id], references: [id])
+  employee      Employee?         @relation("DocumentEmployee", fields: [employee_id], references: [id])
+  uploader      Employee?         @relation("DocumentUploader", fields: [uploaded_by], references: [id])
+  reviewer      Employee?         @relation("DocumentReviewer", fields: [reviewed_by], references: [id])
+
+  @@map("documents")
+}
+
+model DocumentCategory {
+  id          Int       @id @default(autoincrement())
+  name        String
+  code        String?
+  description String?   @db.Text
+  parent_id   Int?
+  is_active   Boolean?  @default(true)
+  sort_order  Int?      @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  // Relationships
+  parent      DocumentCategory?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children    DocumentCategory[] @relation("CategoryHierarchy")
+  documents   Document[]
+
+  @@map("document_categories")
+}
+
+model FormTemplate {
+  id          Int       @id @default(autoincrement())
+  name        String
+  code        String?
+  description String?   @db.Text
+  content     String?   @db.LongText
+  type        String?   // policy, form, letter, certificate, contract
+  category    String?
+  variables   Json?     // Available merge fields
+  is_active   Boolean?  @default(true)
+  version     Int?      @default(1)
+  created_by  Int?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("form_templates")
+}
+
+model Template {
+  id            Int       @id @default(autoincrement())
+  company_id    Int
+  name          String
+  description   String?   @db.Text
+  category      String    // contract, letter, policy, form, report, other
+  file_type     String    // docx, pdf, xlsx, pptx, other
+  file_path     String
+  file_name     String?
+  file_size     BigInt?   // in bytes
+  mime_type     String?
+  version       String?   @default("1.0")
+  is_active     Boolean   @default(true)
+  download_count Int?     @default(0)
+  created_by    Int?
+  deleted_at    DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // Relationships
+  company       Company   @relation(fields: [company_id], references: [id])
+  creator       Employee? @relation("TemplateCreator", fields: [created_by], references: [id])
+
+  @@map("templates")
+}
+
+model Announcement {
+  id                 Int       @id @default(autoincrement())
+  company_id         Int?      // Nullable for global announcements
+  title              String
+  content            String    @db.Text
+  category           String    // general, policy, event, hr, urgent
+  priority           String    @default("normal") // low, normal, high, urgent
+  visibility         String    @default("all") // all, department, role
+  target_audience    String?   // department name or role name if visibility is not 'all'
+  target_ids         Json?     // Array of department_ids or role_ids for targeting
+  target_company_ids Json?     // Array of company_ids for multi-company announcements
+  is_global          Boolean   @default(false) // True = visible to all companies
+  is_pinned          Boolean   @default(false)
+  is_published       Boolean   @default(false)
+  published_at       DateTime?
+  expires_at         DateTime?
+  views_count        Int       @default(0)
+  created_by         Int?
+  deleted_at         DateTime?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  // Relationships
+  company            Company?  @relation(fields: [company_id], references: [id])
+  creator            Employee? @relation("AnnouncementCreator", fields: [created_by], references: [id])
+
+  @@map("announcements")
+}
+
+// ==========================================
+// SETTINGS & AUDIT MODELS
+// ==========================================
+
+model Setting {
+  id          Int       @id @default(autoincrement())
+  key         String    @unique
+  value       String?   @db.Text
+  group       String?   @default("general")
+  type        String?   @default("text") // text, number, boolean, json, select
+  options     Json?     // For select type
+  description String?   @db.Text
+  is_public   Boolean?  @default(false)
+  is_system   Boolean?  @default(false)
+  sort_order  Int?      @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("settings")
+}
+
+model SystemSetting {
+  id          Int       @id @default(autoincrement())
+  key         String    @unique
+  value       String?   @db.Text
+  type        String?
+  description String?   @db.Text
+  is_editable Boolean?  @default(true)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  user_email    String?
+  employee_name String?
+  action        String    // create, update, delete, login, logout, view, export, etc.
+  model         String?
+  model_id      Int?
+  description   String?   @db.Text
+  old_values    Json?
+  new_values    Json?
+  ip_address    String?
+  user_agent    String?   @db.Text
+  url           String?
+  method        String?   // GET, POST, PUT, DELETE
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // Relationships
+  user          User?     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([model, model_id])
+  @@index([action])
+  @@index([created_at])
+  @@map("audit_logs")
+}
+
+// ==========================================
+// ROLE & PERMISSION MODELS (Spatie-like)
+// ==========================================
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String
+  guard_name  String    @default("web")
+  description String?   @db.Text
+  level       Int?      // 1=Super Admin, 2=Group CEO, 3=CEO, 4=HR Manager, 5=HR Staff, 6=Manager, 7=Employee
+  is_system   Boolean?  @default(false) // System roles cannot be deleted
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  // Relationships
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@unique([name, guard_name])
+  @@map("roles")
+}
+
+model Permission {
+  id          Int       @id @default(autoincrement())
+  name        String    // e.g., "employee.view", "payroll.approve"
+  guard_name  String    @default("web")
+  group       String?   // e.g., "employee", "payroll", "attendance"
+  description String?   @db.Text
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  // Relationships
+  userPermissions UserPermission[]
+  rolePermissions RolePermission[]
+
+  @@unique([name, guard_name])
+  @@map("permissions")
+}
+
+model UserRole {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  role_id     Int
+  created_at  DateTime  @default(now())
+
+  // Relationships
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role        Role      @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, role_id])
+  @@map("user_roles")
+}
+
+model UserPermission {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  permission_id Int
+  created_at    DateTime  @default(now())
+
+  // Relationships
+  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, permission_id])
+  @@map("user_permissions")
+}
+
+model RolePermission {
+  id            Int       @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+  created_at    DateTime  @default(now())
+
+  // Relationships
+  role          Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+// ==========================================
+// NOTIFICATION MODEL
+// ==========================================
+
+model Notification {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  type            String    // announcement, leave_request, leave_approved, leave_rejected, document_verified, etc.
+  title           String
+  message         String    @db.Text
+  data            Json?     // Additional data (e.g., announcement_id, leave_request_id)
+  link            String?   // URL to navigate when clicked
+  is_read         Boolean   @default(false)
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  // Relationships
+  user            User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read])
+  @@index([user_id, created_at])
+  @@map("notifications")
+}

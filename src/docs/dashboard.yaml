@@ -1,0 +1,132 @@
+paths:
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard overview
+      description: Get complete dashboard with all summaries
+      responses:
+        '200':
+          description: Dashboard overview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/DashboardOverview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/my:
+    get:
+      tags:
+        - Dashboard
+      summary: Get my dashboard
+      description: Get personal dashboard for current employee
+      responses:
+        '200':
+          description: Personal dashboard
+
+  /dashboard/team:
+    get:
+      tags:
+        - Dashboard
+      summary: Get team dashboard
+      description: Get team dashboard for managers
+      responses:
+        '200':
+          description: Team dashboard
+
+  /dashboard/quick-stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Get quick statistics
+      description: Get summary statistics for dashboard widgets
+      responses:
+        '200':
+          description: Quick stats
+
+  /dashboard/alerts:
+    get:
+      tags:
+        - Dashboard
+      summary: Get alerts
+      description: Get notifications and alerts
+      responses:
+        '200':
+          description: Alerts list
+
+  /dashboard/calendar:
+    get:
+      tags:
+        - Dashboard
+      summary: Get calendar events
+      description: Get events for calendar view
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Calendar events
+
+  /dashboard/employee:
+    get:
+      tags:
+        - Dashboard
+      summary: Get employee summary
+      description: Get employee statistics
+      responses:
+        '200':
+          description: Employee summary
+
+  /dashboard/attendance:
+    get:
+      tags:
+        - Dashboard
+      summary: Get attendance summary
+      description: Get today's attendance statistics
+      responses:
+        '200':
+          description: Attendance summary
+
+  /dashboard/leave:
+    get:
+      tags:
+        - Dashboard
+      summary: Get leave summary
+      description: Get leave request statistics
+      responses:
+        '200':
+          description: Leave summary
+
+  /dashboard/payroll:
+    get:
+      tags:
+        - Dashboard
+      summary: Get payroll summary
+      description: Get current payroll statistics
+      responses:
+        '200':
+          description: Payroll summary
+
+  /dashboard/performance:
+    get:
+      tags:
+        - Dashboard
+      summary: Get performance summary
+      description: Get performance review statistics
+      responses:
+        '200':
+          description: Performance summary

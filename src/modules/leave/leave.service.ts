@@ -463,7 +463,8 @@ export class LeaveService {
       year: 'numeric',
     });
 
-    await emailService.sendLeaveRequestEmail(approver.user.email, {
+    // Fire and forget - don't wait for SMTP
+    emailService.sendLeaveRequestEmail(approver.user.email, {
       employeeName,
       leaveType: leaveTypeName,
       startDate,
@@ -472,7 +473,7 @@ export class LeaveService {
       reason: leave.reason || undefined,
       approverName: approver.name,
       approvalUrl: `${config.app.url}/leave-approval`,
-    });
+    }).catch(err => console.error('Failed to send leave request email:', err));
   }
 
   async update(id: number, data: UpdateLeaveDTO, user: AuthUser) {
@@ -721,7 +722,8 @@ export class LeaveService {
       year: 'numeric',
     });
 
-    await emailService.sendLeaveApprovalEmail(employeeEmail, {
+    // Fire and forget - don't wait for SMTP
+    emailService.sendLeaveApprovalEmail(employeeEmail, {
       employeeName: leave.employee?.name || 'Karyawan',
       leaveType: leave.leaveType?.name || 'Cuti',
       startDate,
@@ -730,7 +732,7 @@ export class LeaveService {
       status,
       approverName,
       rejectionReason,
-    });
+    }).catch(err => console.error('Failed to send leave approval email:', err));
   }
 
   async getPendingApprovals(user: AuthUser) {

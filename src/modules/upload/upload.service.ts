@@ -22,9 +22,10 @@ export type UploadFolder = 'templates' | 'documents' | 'avatars' | 'attachments'
 interface UploadResult {
   key: string;
   url: string;
-  filename: string;
-  size: number;
-  mimetype: string;
+  file_path: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
 }
 
 class UploadService {
@@ -49,12 +50,14 @@ class UploadService {
 
     await s3Client.send(command);
 
+    const url = `${CDN_URL}/${key}`;
     return {
       key,
-      url: `${CDN_URL}/${key}`,
-      filename: file.originalname,
-      size: file.size,
-      mimetype: file.mimetype,
+      url,
+      file_path: url,
+      file_name: file.originalname,
+      file_size: file.size,
+      mime_type: file.mimetype,
     };
   }
 

@@ -323,16 +323,19 @@ export class AuthService {
       },
     });
 
-    // Send reset email
+    // Send reset email (fire and forget - don't wait for SMTP)
     const resetUrl = `${config.app.url}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
-    await emailService.sendResetPasswordEmail(email, {
+    // Non-blocking email send
+    emailService.sendResetPasswordEmail(email, {
       name: user.employee?.name || email,
       resetUrl,
       expiresIn: '1 jam',
-    });
+    }).catch(err => console.error('Failed to send reset email:', err));
 
-    await this.logAudit(user.id, 'forgot_password', 'Password reset requested', ipAddress);
+    // Non-blocking audit log
+    this.logAudit(user.id, 'forgot_password', 'Password reset requested', ipAddress)
+      .catch(err => console.error('Failed to log audit:', err));
   }
 
   /**

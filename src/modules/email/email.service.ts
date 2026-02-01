@@ -30,9 +30,11 @@ class EmailService {
   private initTransporter(): void {
     const { host, port, secure, user, password } = config.email;
 
+    console.log('[EMAIL] Initializing with config:', { host, port, secure, user: user ? '***' : 'NOT SET', password: password ? '***' : 'NOT SET' });
+
     // Check if SMTP is configured
     if (!host || !user || !password) {
-      console.warn('Email service not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASSWORD in .env');
+      console.warn('[EMAIL] Not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASSWORD');
       this.isConfigured = false;
       return;
     }
@@ -48,7 +50,7 @@ class EmailService {
     });
 
     this.isConfigured = true;
-    console.log('Email service initialized successfully');
+    console.log('[EMAIL] Service initialized successfully');
   }
 
   /**
@@ -80,8 +82,10 @@ class EmailService {
    * Send email
    */
   public async sendEmail(options: EmailOptions): Promise<boolean> {
+    console.log('[EMAIL] Attempting to send email to:', options.to, '| Subject:', options.subject);
+
     if (!this.transporter || !this.isConfigured) {
-      console.warn('Email not sent: SMTP not configured');
+      console.warn('[EMAIL] SKIPPED - SMTP not configured. isConfigured:', this.isConfigured);
       return false;
     }
 
@@ -97,11 +101,12 @@ class EmailService {
         attachments,
       };
 
+      console.log('[EMAIL] Sending via SMTP...');
       const result = await this.transporter.sendMail(mailOptions);
-      console.log(`Email sent successfully to ${to}: ${result.messageId}`);
+      console.log(`[EMAIL] SUCCESS - Sent to ${to}: ${result.messageId}`);
       return true;
-    } catch (error) {
-      console.error('Failed to send email:', error);
+    } catch (error: any) {
+      console.error('[EMAIL] FAILED -', error.message || error);
       return false;
     }
   }

@@ -29,7 +29,7 @@ function baseTemplate(content: string): string {
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, ${primaryColor} 0%, #1e293b 100%); padding: 24px 40px; border-radius: 12px 12px 0 0; text-align: center;">
-              <img src="${logoUrl}" alt="${appName}" style="height: 48px; width: auto;" />
+              <img src="${logoUrl}" alt="${appName}" style="height: 80px; width: auto;" />
             </td>
           </tr>
           <!-- Content -->

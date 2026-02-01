@@ -10,6 +10,19 @@ import { AuthUser } from '../../middlewares/auth.middleware';
 
 const prisma = new PrismaClient();
 
+// Helper to convert BigInt to Number for JSON serialization
+function serializeTemplate(template: any) {
+  if (!template) return template;
+  return {
+    ...template,
+    file_size: template.file_size ? Number(template.file_size) : null,
+  };
+}
+
+function serializeTemplates(templates: any[]) {
+  return templates.map(serializeTemplate);
+}
+
 export class TemplateService {
   /**
    * List templates with pagination and filtering
@@ -72,7 +85,7 @@ export class TemplateService {
     ]);
 
     return {
-      data,
+      data: serializeTemplates(data),
       pagination: {
         page,
         limit,
@@ -101,7 +114,7 @@ export class TemplateService {
       throw new Error('Template not found');
     }
 
-    return template;
+    return serializeTemplate(template);
   }
 
   /**
@@ -113,7 +126,7 @@ export class TemplateService {
       throw new Error('Access denied to this company');
     }
 
-    return prisma.template.findMany({
+    const templates = await prisma.template.findMany({
       where: {
         company_id: companyId,
         is_active: true,
@@ -122,6 +135,7 @@ export class TemplateService {
       select: TEMPLATE_LIST_SELECT,
       orderBy: [{ category: 'asc' }, { name: 'asc' }],
     });
+    return serializeTemplates(templates);
   }
 
   /**
@@ -140,11 +154,12 @@ export class TemplateService {
       where.company_id = { in: user.accessibleCompanyIds };
     }
 
-    return prisma.template.findMany({
+    const templates = await prisma.template.findMany({
       where,
       select: TEMPLATE_LIST_SELECT,
       orderBy: { name: 'asc' },
     });
+    return serializeTemplates(templates);
   }
 
   /**
@@ -171,7 +186,7 @@ export class TemplateService {
 
     const employeeId = user.employee?.id;
 
-    return prisma.template.create({
+    const template = await prisma.template.create({
       data: {
         company_id: data.company_id,
         name: data.name,
@@ -188,6 +203,7 @@ export class TemplateService {
       },
       select: TEMPLATE_SELECT,
     });
+    return serializeTemplate(template);
   }
 
   /**
@@ -223,7 +239,7 @@ export class TemplateService {
       }
     }
 
-    return prisma.template.update({
+    const template = await prisma.template.update({
       where: { id },
       data: {
         name: data.name,
@@ -239,6 +255,7 @@ export class TemplateService {
       },
       select: TEMPLATE_SELECT,
     });
+    return serializeTemplate(template);
   }
 
   /**
@@ -284,7 +301,7 @@ export class TemplateService {
 
     const employeeId = user.employee?.id;
 
-    return prisma.template.create({
+    const template = await prisma.template.create({
       data: {
         company_id: existing.company_id,
         name: `${existing.name} (Copy)`,
@@ -301,6 +318,7 @@ export class TemplateService {
       },
       select: TEMPLATE_SELECT,
     });
+    return serializeTemplate(template);
   }
 
   /**

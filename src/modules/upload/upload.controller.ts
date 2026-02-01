@@ -18,17 +18,30 @@ export class UploadController {
         return;
       }
 
-      // Validate folder
+      // Normalize folder name (accept singular or plural)
+      const folderMap: Record<string, UploadFolder> = {
+        'template': 'templates',
+        'templates': 'templates',
+        'document': 'documents',
+        'documents': 'documents',
+        'avatar': 'avatars',
+        'avatars': 'avatars',
+        'attachment': 'attachments',
+        'attachments': 'attachments',
+      };
+
+      const normalizedFolder = folderMap[folder] || folder;
       const validFolders: UploadFolder[] = ['templates', 'documents', 'avatars', 'attachments'];
-      if (!validFolders.includes(folder)) {
+
+      if (!validFolders.includes(normalizedFolder as UploadFolder)) {
         res.status(400).json({
           success: false,
-          message: 'Invalid folder. Must be one of: ' + validFolders.join(', '),
+          message: 'Invalid folder. Must be one of: template, document, avatar, attachment',
         });
         return;
       }
 
-      const result = await uploadService.uploadFile(file, folder);
+      const result = await uploadService.uploadFile(file, normalizedFolder as UploadFolder);
 
       res.json({
         success: true,

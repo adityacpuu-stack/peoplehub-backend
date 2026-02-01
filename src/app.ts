@@ -97,6 +97,7 @@ import companyAssignmentRoutes from './modules/company-assignment/company-assign
 import userRoutes from './modules/user/user.routes';
 import orgChartRoutes from './modules/org-chart/org-chart.routes';
 import notificationRoutes from './modules/notification/notification.routes';
+import uploadRoutes from './modules/upload/upload.routes';
 
 // Health check
 app.get('/', (req, res) => {
@@ -183,6 +184,7 @@ app.use('/api/v1/rbac', rbacRoutes);
 app.use('/api/v1/audit-logs', auditLogRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/upload', uploadRoutes);
 
 // ==========================================
 // ERROR HANDLING

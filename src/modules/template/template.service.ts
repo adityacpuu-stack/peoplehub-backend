@@ -45,11 +45,10 @@ export class TemplateService {
       deleted_at: null,
     };
 
-    // Filter by company
+    // Filter by company (only if explicitly requested)
+    // Templates are visible to all employees by default
     if (company_id) {
       where.company_id = company_id;
-    } else if (user.accessibleCompanyIds && user.accessibleCompanyIds.length > 0) {
-      where.company_id = { in: user.accessibleCompanyIds };
     }
 
     // Search

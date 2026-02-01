@@ -28,6 +28,6 @@ export const config = {
     },
     app: {
         name: process.env.APP_NAME || 'PeopleHub',
-        url: process.env.APP_URL || 'http://localhost:5173',
+        url: process.env.APP_URL || process.env.FRONTEND_URL || 'http://localhost:5173',
     },
 };

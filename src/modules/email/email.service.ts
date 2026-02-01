@@ -1,4 +1,4 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from '../../config/env';
 import {
   EmailOptions,
@@ -17,93 +17,77 @@ import {
 } from './email.templates';
 
 class EmailService {
-  private transporter: Transporter | null = null;
+  private resend: Resend | null = null;
   private isConfigured: boolean = false;
+  private fromEmail: string = 'noreply@pathfinder.co.id';
 
   constructor() {
-    this.initTransporter();
+    this.init();
   }
 
   /**
-   * Initialize email transporter
+   * Initialize Resend client
    */
-  private initTransporter(): void {
-    const { host, port, secure, user, password } = config.email;
+  private init(): void {
+    const apiKey = process.env.RESEND_API_KEY;
 
-    console.log('[EMAIL] Initializing with config:', { host, port, secure, user: user ? '***' : 'NOT SET', password: password ? '***' : 'NOT SET' });
+    console.log('[EMAIL] Initializing Resend...', { apiKey: apiKey ? '***' : 'NOT SET' });
 
-    // Check if SMTP is configured
-    if (!host || !user || !password) {
-      console.warn('[EMAIL] Not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASSWORD');
+    if (!apiKey) {
+      console.warn('[EMAIL] Not configured. Set RESEND_API_KEY environment variable');
       this.isConfigured = false;
       return;
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: {
-        user,
-        pass: password,
-      },
-    });
-
+    this.resend = new Resend(apiKey);
     this.isConfigured = true;
-    console.log('[EMAIL] Service initialized successfully');
+
+    // Use custom from email if configured
+    if (config.email.from) {
+      this.fromEmail = config.email.from;
+    }
+
+    console.log('[EMAIL] Resend initialized successfully');
   }
 
   /**
    * Check if email service is configured
    */
   public isReady(): boolean {
-    return this.isConfigured && this.transporter !== null;
+    return this.isConfigured && this.resend !== null;
   }
 
   /**
-   * Verify SMTP connection
-   */
-  public async verifyConnection(): Promise<boolean> {
-    if (!this.transporter) {
-      return false;
-    }
-
-    try {
-      await this.transporter.verify();
-      console.log('SMTP connection verified');
-      return true;
-    } catch (error) {
-      console.error('SMTP connection failed:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Send email
+   * Send email via Resend
    */
   public async sendEmail(options: EmailOptions): Promise<boolean> {
-    console.log('[EMAIL] Attempting to send email to:', options.to, '| Subject:', options.subject);
+    console.log('[EMAIL] Attempting to send to:', options.to, '| Subject:', options.subject);
 
-    if (!this.transporter || !this.isConfigured) {
-      console.warn('[EMAIL] SKIPPED - SMTP not configured. isConfigured:', this.isConfigured);
+    if (!this.resend || !this.isConfigured) {
+      console.warn('[EMAIL] SKIPPED - Resend not configured');
       return false;
     }
 
     try {
-      const { to, subject, html, text, attachments } = options;
+      const { to, subject, html, text } = options;
+      const toAddresses = Array.isArray(to) ? to : [to];
 
-      const mailOptions = {
-        from: `"${config.email.fromName}" <${config.email.from}>`,
-        to: Array.isArray(to) ? to.join(', ') : to,
+      const fromName = config.email.fromName || 'PeopleHub';
+
+      const { data, error } = await this.resend.emails.send({
+        from: `${fromName} <${this.fromEmail}>`,
+        to: toAddresses,
         subject,
         html,
         text: text || this.htmlToText(html),
-        attachments,
-      };
+      });
 
-      console.log('[EMAIL] Sending via SMTP...');
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log(`[EMAIL] SUCCESS - Sent to ${to}: ${result.messageId}`);
+      if (error) {
+        console.error('[EMAIL] FAILED -', error.message);
+        return false;
+      }
+
+      console.log(`[EMAIL] SUCCESS - Sent to ${to}: ${data?.id}`);
       return true;
     } catch (error: any) {
       console.error('[EMAIL] FAILED -', error.message || error);

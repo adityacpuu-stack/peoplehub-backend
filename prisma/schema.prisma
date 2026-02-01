@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -1745,7 +1745,7 @@ model FormTemplate {
   name        String
   code        String?
   description String?   @db.Text
-  content     String?   @db.LongText
+  content     String?   @db.Text
   type        String?   // policy, form, letter, certificate, contract
   category    String?
   variables   Json?     // Available merge fields

@@ -9,6 +9,7 @@ import {
 
 const appName = config.app.name;
 const primaryColor = '#334155'; // slate-700
+const logoUrl = 'https://peoplehub-frontend.vercel.app/images/logo/logo.png';
 
 // Base template wrapper
 function baseTemplate(content: string): string {
@@ -27,8 +28,8 @@ function baseTemplate(content: string): string {
         <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, ${primaryColor} 0%, #1e293b 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">${appName}</h1>
+            <td style="background: linear-gradient(135deg, ${primaryColor} 0%, #1e293b 100%); padding: 24px 40px; border-radius: 12px 12px 0 0; text-align: center;">
+              <img src="${logoUrl}" alt="${appName}" style="height: 48px; width: auto;" />
             </td>
           </tr>
           <!-- Content -->

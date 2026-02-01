@@ -42,12 +42,7 @@ class EmailService {
     this.resend = new Resend(apiKey);
     this.isConfigured = true;
 
-    // Use custom from email if configured
-    if (config.email.from) {
-      this.fromEmail = config.email.from;
-    }
-
-    console.log('[EMAIL] Resend initialized successfully');
+    console.log('[EMAIL] Resend initialized successfully with from:', this.fromEmail);
   }
 
   /**

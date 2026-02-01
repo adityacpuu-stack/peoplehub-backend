@@ -5,25 +5,27 @@ export class UploadController {
   /**
    * Upload single file
    */
-  async uploadFile(req: Request, res: Response) {
+  async uploadFile(req: Request, res: Response): Promise<void> {
     try {
       const file = req.file;
       const folder = (req.params.folder || req.body.folder || 'attachments') as UploadFolder;
 
       if (!file) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'No file uploaded',
         });
+        return;
       }
 
       // Validate folder
       const validFolders: UploadFolder[] = ['templates', 'documents', 'avatars', 'attachments'];
       if (!validFolders.includes(folder)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid folder. Must be one of: ' + validFolders.join(', '),
         });
+        return;
       }
 
       const result = await uploadService.uploadFile(file, folder);
@@ -45,16 +47,17 @@ export class UploadController {
   /**
    * Upload multiple files
    */
-  async uploadFiles(req: Request, res: Response) {
+  async uploadFiles(req: Request, res: Response): Promise<void> {
     try {
       const files = req.files as Express.Multer.File[];
       const folder = (req.params.folder || req.body.folder || 'attachments') as UploadFolder;
 
       if (!files || files.length === 0) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'No files uploaded',
         });
+        return;
       }
 
       const results = await uploadService.uploadFiles(files, folder);
@@ -76,17 +79,18 @@ export class UploadController {
   /**
    * Delete file
    */
-  async deleteFile(req: Request, res: Response) {
+  async deleteFile(req: Request, res: Response): Promise<void> {
     try {
       const { key, url } = req.body;
 
       const fileKey = key || uploadService.extractKeyFromUrl(url);
 
       if (!fileKey) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'File key or URL is required',
         });
+        return;
       }
 
       await uploadService.deleteFile(fileKey);
@@ -107,15 +111,16 @@ export class UploadController {
   /**
    * Get presigned URL for direct upload
    */
-  async getPresignedUrl(req: Request, res: Response) {
+  async getPresignedUrl(req: Request, res: Response): Promise<void> {
     try {
       const { folder, filename, contentType } = req.body;
 
       if (!folder || !filename || !contentType) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'folder, filename, and contentType are required',
         });
+        return;
       }
 
       const result = await uploadService.getPresignedUrl(

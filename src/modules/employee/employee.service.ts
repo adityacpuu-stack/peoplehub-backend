@@ -62,13 +62,15 @@ export class EmployeeService {
       where.position_id = position_id;
     }
 
-    if (employment_status) {
+    // Default to active employees unless explicitly requesting inactive or all
+    if (employment_status === 'inactive') {
       // 'inactive' means all non-active statuses (inactive, terminated, resigned, retired)
-      if (employment_status === 'inactive') {
-        where.employment_status = { not: 'active' };
-      } else {
-        where.employment_status = employment_status;
-      }
+      where.employment_status = { not: 'active' };
+    } else if (employment_status === 'all') {
+      // Show all employees (no filter)
+    } else {
+      // Default to active employees
+      where.employment_status = 'active';
     }
 
     if (employment_type) {

@@ -21,6 +21,19 @@ import { AuthUser, hasCompanyAccess, canAccessEmployee, getHighestRoleLevel, ROL
 
 const prisma = new PrismaClient();
 
+// Helper to convert BigInt to Number for JSON serialization
+function serializeDocument(doc: any) {
+  if (!doc) return doc;
+  return {
+    ...doc,
+    file_size: doc.file_size ? Number(doc.file_size) : null,
+  };
+}
+
+function serializeDocuments(docs: any[]) {
+  return docs.map(serializeDocument);
+}
+
 export class DocumentService {
   // ==========================================
   // DOCUMENT METHODS (Company Documents)
@@ -79,7 +92,7 @@ export class DocumentService {
     ]);
 
     return {
-      data: documents,
+      data: serializeDocuments(documents),
       pagination: {
         page,
         limit,
@@ -113,7 +126,7 @@ export class DocumentService {
       data: { download_count: { increment: 1 } },
     });
 
-    return document;
+    return serializeDocument(document);
   }
 
   async createDocument(data: CreateDocumentDTO, user: AuthUser) {
@@ -125,7 +138,7 @@ export class DocumentService {
       }
     }
 
-    return prisma.document.create({
+    const doc = await prisma.document.create({
       data: {
         title: data.title,
         description: data.description,
@@ -146,6 +159,7 @@ export class DocumentService {
       },
       select: DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async updateDocument(id: number, data: UpdateDocumentDTO, user: AuthUser) {
@@ -162,7 +176,7 @@ export class DocumentService {
       }
     }
 
-    return prisma.document.update({
+    const doc = await prisma.document.update({
       where: { id },
       data: {
         ...data,
@@ -170,6 +184,7 @@ export class DocumentService {
       },
       select: DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async deleteDocument(id: number, user: AuthUser) {
@@ -199,11 +214,12 @@ export class DocumentService {
       throw new Error('Document not found');
     }
 
-    return prisma.document.update({
+    const doc = await prisma.document.update({
       where: { id },
       data: { status: DOCUMENT_STATUS.ARCHIVED },
       select: DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async verifyDocument(id: number, user: AuthUser) {
@@ -217,7 +233,7 @@ export class DocumentService {
       throw new Error('Only HR can verify documents');
     }
 
-    return prisma.document.update({
+    const doc = await prisma.document.update({
       where: { id },
       data: {
         is_verified: true,
@@ -227,6 +243,7 @@ export class DocumentService {
       },
       select: DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   // ==========================================
@@ -300,7 +317,7 @@ export class DocumentService {
     ]);
 
     return {
-      data: documents,
+      data: serializeDocuments(documents),
       pagination: {
         page,
         limit,
@@ -328,7 +345,7 @@ export class DocumentService {
       throw new Error('Access denied');
     }
 
-    return document;
+    return serializeDocument(document);
   }
 
   async getMyDocuments(user: AuthUser) {
@@ -336,7 +353,7 @@ export class DocumentService {
       throw new Error('No employee profile found');
     }
 
-    return prisma.employeeDocument.findMany({
+    const docs = await prisma.employeeDocument.findMany({
       where: {
         employee_id: user.employee.id,
         deleted_at: null,
@@ -344,6 +361,7 @@ export class DocumentService {
       select: EMPLOYEE_DOCUMENT_LIST_SELECT,
       orderBy: { created_at: 'desc' },
     });
+    return serializeDocuments(docs);
   }
 
   async uploadMyDocument(data: CreateEmployeeDocumentDTO, user: AuthUser) {
@@ -352,7 +370,7 @@ export class DocumentService {
     }
 
     // Force employee_id to be the current user's employee ID
-    return prisma.employeeDocument.create({
+    const doc = await prisma.employeeDocument.create({
       data: {
         employee_id: user.employee.id,
         document_name: data.document_name,
@@ -373,6 +391,7 @@ export class DocumentService {
       },
       select: EMPLOYEE_DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async deleteMyDocument(id: number, user: AuthUser) {
@@ -412,7 +431,7 @@ export class DocumentService {
       throw new Error('Access denied to this employee');
     }
 
-    return prisma.employeeDocument.create({
+    const doc = await prisma.employeeDocument.create({
       data: {
         employee_id: data.employee_id,
         document_name: data.document_name,
@@ -433,6 +452,7 @@ export class DocumentService {
       },
       select: EMPLOYEE_DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async updateEmployeeDocument(id: number, data: UpdateEmployeeDocumentDTO, user: AuthUser) {
@@ -450,7 +470,7 @@ export class DocumentService {
       throw new Error('Access denied');
     }
 
-    return prisma.employeeDocument.update({
+    const doc = await prisma.employeeDocument.update({
       where: { id },
       data: {
         ...data,
@@ -459,6 +479,7 @@ export class DocumentService {
       },
       select: EMPLOYEE_DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async deleteEmployeeDocument(id: number, user: AuthUser) {
@@ -499,7 +520,7 @@ export class DocumentService {
       throw new Error('Only HR can verify documents');
     }
 
-    return prisma.employeeDocument.update({
+    const doc = await prisma.employeeDocument.update({
       where: { id },
       data: {
         is_verified: true,
@@ -509,6 +530,7 @@ export class DocumentService {
       },
       select: EMPLOYEE_DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async unverifyEmployeeDocument(id: number, user: AuthUser) {
@@ -525,7 +547,7 @@ export class DocumentService {
       throw new Error('Only HR can unverify documents');
     }
 
-    return prisma.employeeDocument.update({
+    const doc = await prisma.employeeDocument.update({
       where: { id },
       data: {
         is_verified: false,
@@ -535,6 +557,7 @@ export class DocumentService {
       },
       select: EMPLOYEE_DOCUMENT_DETAIL_SELECT,
     });
+    return serializeDocument(doc);
   }
 
   async getExpiringDocuments(days: number, companyId: number | undefined, user: AuthUser) {
@@ -558,11 +581,12 @@ export class DocumentService {
       where.employee = { company_id: user.employee.company_id };
     }
 
-    return prisma.employeeDocument.findMany({
+    const docs = await prisma.employeeDocument.findMany({
       where,
       select: EMPLOYEE_DOCUMENT_LIST_SELECT,
       orderBy: { expiry_date: 'asc' },
     });
+    return serializeDocuments(docs);
   }
 
   async getExpiredDocuments(companyId: number | undefined, user: AuthUser) {
@@ -580,11 +604,12 @@ export class DocumentService {
       where.employee = { company_id: user.employee.company_id };
     }
 
-    return prisma.employeeDocument.findMany({
+    const docs = await prisma.employeeDocument.findMany({
       where,
       select: EMPLOYEE_DOCUMENT_LIST_SELECT,
       orderBy: { expiry_date: 'asc' },
     });
+    return serializeDocuments(docs);
   }
 
   async getDocumentStatistics(companyId: number | undefined, user: AuthUser) {

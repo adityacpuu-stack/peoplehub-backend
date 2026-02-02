@@ -13,6 +13,9 @@ import { AuthUser } from '../../types/auth.types';
 // Company order for employee_id sorting
 const COMPANY_ORDER = ['PFI', 'GDI', 'LFS', 'UOR', 'BCI', 'PDR'];
 
+// Hidden system accounts (Super Admin, etc.) - excluded from all listings
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001'];
+
 export class EmployeeService {
   /**
    * Get paginated list of employees with filters
@@ -38,6 +41,8 @@ export class EmployeeService {
 
     // Build where clause
     const where: Prisma.EmployeeWhereInput = {
+      // Exclude hidden system accounts from listing
+      employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
       // Company scoping based on user access
       ...(user.roles.includes('Super Admin')
         ? {}
@@ -525,7 +530,10 @@ export class EmployeeService {
     }
 
     const employees = await prisma.employee.findMany({
-      where: { company_id: companyId },
+      where: {
+        company_id: companyId,
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
+      },
       select: EMPLOYEE_LIST_SELECT,
     });
 
@@ -549,6 +557,7 @@ export class EmployeeService {
     const employees = await prisma.employee.findMany({
       where: {
         department_id: departmentId,
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
         ...(user.roles.includes('Super Admin')
           ? {}
           : { company_id: { in: user.accessibleCompanyIds } }),
@@ -579,6 +588,7 @@ export class EmployeeService {
           { manager_id: managerId },
           { direct_manager_id: managerId },
         ],
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
         ...(user.roles.includes('Super Admin')
           ? {}
           : { company_id: { in: user.accessibleCompanyIds } }),
@@ -844,6 +854,7 @@ export class EmployeeService {
       where: {
         ...companyFilter,
         employment_status: 'active',
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
         OR: [
           { subordinates: { some: {} } },
           { directReports: { some: {} } },

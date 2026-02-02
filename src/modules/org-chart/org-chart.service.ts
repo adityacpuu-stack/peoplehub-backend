@@ -8,6 +8,9 @@ import {
   OrgChartEmployee,
 } from './org-chart.types';
 
+// Hidden system accounts (Super Admin, etc.) - excluded from all listings
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001'];
+
 // Select fields for org chart employees
 const ORG_CHART_SELECT = {
   id: true,
@@ -46,6 +49,7 @@ export class OrgChartService {
     // Build where clause for filtered employees
     const where: any = {
       employment_status: { in: ['active', 'probation'] },
+      employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
     };
 
     // Company scoping based on user access
@@ -80,6 +84,7 @@ export class OrgChartService {
       // Find the Group CEO and all managers in the chain
       const topLevelWhere: any = {
         employment_status: { in: ['active', 'probation'] },
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
         manager_id: null,
         direct_manager_id: null,
       };
@@ -184,6 +189,7 @@ export class OrgChartService {
     // Get all employees that could be in this subtree
     const where: any = {
       employment_status: { in: ['active', 'probation'] },
+      employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
     };
 
     if (!user.roles.includes('Super Admin')) {

@@ -19,6 +19,9 @@ import {
 
 const prisma = new PrismaClient();
 
+// Hidden system accounts (Super Admin, etc.) - excluded from all listings
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001'];
+
 export class DashboardService {
   // ==========================================
   // MAIN DASHBOARD
@@ -848,6 +851,7 @@ export class DashboardService {
           { direct_manager_id: managerId },
         ],
         employment_status: 'active',
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
       },
       select: {
         id: true,
@@ -1307,6 +1311,7 @@ export class DashboardService {
     const recentEmployees = await prisma.employee.findMany({
       where: {
         ...companyFilter,
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
         OR: [
           { join_date: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
           {
@@ -2154,6 +2159,7 @@ export class DashboardService {
     const recentExitsData = await prisma.employee.findMany({
       where: {
         ...companyFilter,
+        employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
         employment_status: { in: ['resigned', 'terminated'] },
         resign_date: { not: null },
       },

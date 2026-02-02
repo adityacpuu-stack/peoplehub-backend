@@ -1,9 +1,9 @@
-import { redis } from '../config/redis';
+import { redis, isRedisEnabled } from '../config/redis';
 import { config } from '../config/env';
 import { logger } from './logger';
 
 // ==========================================
-// CACHE SERVICE
+// CACHE SERVICE (OPTIONAL - works without Redis)
 // ==========================================
 
 // Default TTL in seconds
@@ -37,12 +37,14 @@ export const CacheKeys = {
  * Get value from cache
  */
 export const cacheGet = async <T>(key: string): Promise<T | null> => {
+  if (!isRedisEnabled() || !redis) return null;
+
   try {
     const data = await redis.get(withPrefix(key));
     if (!data) return null;
     return JSON.parse(data) as T;
   } catch (error) {
-    logger.error({ error, key }, 'Cache get error');
+    logger.warn({ error, key }, 'Cache get error');
     return null;
   }
 };
@@ -55,6 +57,8 @@ export const cacheSet = async <T>(
   value: T,
   ttlSeconds: number = DEFAULT_TTL
 ): Promise<boolean> => {
+  if (!isRedisEnabled() || !redis) return false;
+
   try {
     const data = JSON.stringify(value);
     if (ttlSeconds > 0) {
@@ -64,7 +68,7 @@ export const cacheSet = async <T>(
     }
     return true;
   } catch (error) {
-    logger.error({ error, key }, 'Cache set error');
+    logger.warn({ error, key }, 'Cache set error');
     return false;
   }
 };
@@ -73,11 +77,13 @@ export const cacheSet = async <T>(
  * Delete value from cache
  */
 export const cacheDel = async (key: string): Promise<boolean> => {
+  if (!isRedisEnabled() || !redis) return false;
+
   try {
     await redis.del(withPrefix(key));
     return true;
   } catch (error) {
-    logger.error({ error, key }, 'Cache delete error');
+    logger.warn({ error, key }, 'Cache delete error');
     return false;
   }
 };
@@ -86,12 +92,14 @@ export const cacheDel = async (key: string): Promise<boolean> => {
  * Delete multiple keys matching a pattern
  */
 export const cacheDelPattern = async (pattern: string): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     const keys = await redis.keys(withPrefix(pattern));
     if (keys.length === 0) return 0;
     return await redis.del(keys);
   } catch (error) {
-    logger.error({ error, pattern }, 'Cache delete pattern error');
+    logger.warn({ error, pattern }, 'Cache delete pattern error');
     return 0;
   }
 };
@@ -100,11 +108,13 @@ export const cacheDelPattern = async (pattern: string): Promise<number> => {
  * Check if key exists in cache
  */
 export const cacheExists = async (key: string): Promise<boolean> => {
+  if (!isRedisEnabled() || !redis) return false;
+
   try {
     const exists = await redis.exists(withPrefix(key));
     return exists === 1;
   } catch (error) {
-    logger.error({ error, key }, 'Cache exists error');
+    logger.warn({ error, key }, 'Cache exists error');
     return false;
   }
 };
@@ -113,10 +123,12 @@ export const cacheExists = async (key: string): Promise<boolean> => {
  * Get TTL of a key
  */
 export const cacheTTL = async (key: string): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return -1;
+
   try {
     return await redis.ttl(withPrefix(key));
   } catch (error) {
-    logger.error({ error, key }, 'Cache TTL error');
+    logger.warn({ error, key }, 'Cache TTL error');
     return -1;
   }
 };
@@ -133,7 +145,7 @@ export const cacheGetOrSet = async <T>(
   fetchFn: () => Promise<T>,
   ttlSeconds: number = DEFAULT_TTL
 ): Promise<T> => {
-  // Try to get from cache first
+  // Try to get from cache first (if Redis available)
   const cached = await cacheGet<T>(key);
   if (cached !== null) {
     return cached;
@@ -142,7 +154,7 @@ export const cacheGetOrSet = async <T>(
   // Fetch fresh data
   const data = await fetchFn();
 
-  // Cache the result
+  // Cache the result (if Redis available)
   await cacheSet(key, data, ttlSeconds);
 
   return data;
@@ -160,11 +172,13 @@ export const cacheHSet = async (
   field: string,
   value: any
 ): Promise<boolean> => {
+  if (!isRedisEnabled() || !redis) return false;
+
   try {
     await redis.hSet(withPrefix(key), field, JSON.stringify(value));
     return true;
   } catch (error) {
-    logger.error({ error, key, field }, 'Cache hset error');
+    logger.warn({ error, key, field }, 'Cache hset error');
     return false;
   }
 };
@@ -176,12 +190,14 @@ export const cacheHGet = async <T>(
   key: string,
   field: string
 ): Promise<T | null> => {
+  if (!isRedisEnabled() || !redis) return null;
+
   try {
     const data = await redis.hGet(withPrefix(key), field);
     if (!data) return null;
     return JSON.parse(data) as T;
   } catch (error) {
-    logger.error({ error, key, field }, 'Cache hget error');
+    logger.warn({ error, key, field }, 'Cache hget error');
     return null;
   }
 };
@@ -192,6 +208,8 @@ export const cacheHGet = async <T>(
 export const cacheHGetAll = async <T extends Record<string, any>>(
   key: string
 ): Promise<T | null> => {
+  if (!isRedisEnabled() || !redis) return null;
+
   try {
     const data = await redis.hGetAll(withPrefix(key));
     if (!data || Object.keys(data).length === 0) return null;
@@ -201,7 +219,7 @@ export const cacheHGetAll = async <T extends Record<string, any>>(
     }
     return result as T;
   } catch (error) {
-    logger.error({ error, key }, 'Cache hgetall error');
+    logger.warn({ error, key }, 'Cache hgetall error');
     return null;
   }
 };
@@ -213,10 +231,12 @@ export const cacheHDel = async (
   key: string,
   ...fields: string[]
 ): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.hDel(withPrefix(key), fields);
   } catch (error) {
-    logger.error({ error, key, fields }, 'Cache hdel error');
+    logger.warn({ error, key, fields }, 'Cache hdel error');
     return 0;
   }
 };
@@ -229,11 +249,13 @@ export const cacheHDel = async (
  * Push to list (right)
  */
 export const cacheLPush = async (key: string, ...values: any[]): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     const data = values.map((v) => JSON.stringify(v));
     return await redis.rPush(withPrefix(key), data);
   } catch (error) {
-    logger.error({ error, key }, 'Cache lpush error');
+    logger.warn({ error, key }, 'Cache lpush error');
     return 0;
   }
 };
@@ -242,12 +264,14 @@ export const cacheLPush = async (key: string, ...values: any[]): Promise<number>
  * Pop from list (left)
  */
 export const cacheLPop = async <T>(key: string): Promise<T | null> => {
+  if (!isRedisEnabled() || !redis) return null;
+
   try {
     const data = await redis.lPop(withPrefix(key));
     if (!data) return null;
     return JSON.parse(data) as T;
   } catch (error) {
-    logger.error({ error, key }, 'Cache lpop error');
+    logger.warn({ error, key }, 'Cache lpop error');
     return null;
   }
 };
@@ -256,10 +280,12 @@ export const cacheLPop = async <T>(key: string): Promise<T | null> => {
  * Get list length
  */
 export const cacheLLen = async (key: string): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.lLen(withPrefix(key));
   } catch (error) {
-    logger.error({ error, key }, 'Cache llen error');
+    logger.warn({ error, key }, 'Cache llen error');
     return 0;
   }
 };
@@ -272,10 +298,12 @@ export const cacheLLen = async (key: string): Promise<number> => {
  * Add to set
  */
 export const cacheSAdd = async (key: string, ...members: string[]): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.sAdd(withPrefix(key), members);
   } catch (error) {
-    logger.error({ error, key }, 'Cache sadd error');
+    logger.warn({ error, key }, 'Cache sadd error');
     return 0;
   }
 };
@@ -284,11 +312,13 @@ export const cacheSAdd = async (key: string, ...members: string[]): Promise<numb
  * Check if member exists in set
  */
 export const cacheSIsMember = async (key: string, member: string): Promise<boolean> => {
+  if (!isRedisEnabled() || !redis) return false;
+
   try {
     const result = await redis.sIsMember(withPrefix(key), member);
     return Boolean(result);
   } catch (error) {
-    logger.error({ error, key, member }, 'Cache sismember error');
+    logger.warn({ error, key, member }, 'Cache sismember error');
     return false;
   }
 };
@@ -297,10 +327,12 @@ export const cacheSIsMember = async (key: string, member: string): Promise<boole
  * Get all set members
  */
 export const cacheSMembers = async (key: string): Promise<string[]> => {
+  if (!isRedisEnabled() || !redis) return [];
+
   try {
     return await redis.sMembers(withPrefix(key));
   } catch (error) {
-    logger.error({ error, key }, 'Cache smembers error');
+    logger.warn({ error, key }, 'Cache smembers error');
     return [];
   }
 };
@@ -309,10 +341,12 @@ export const cacheSMembers = async (key: string): Promise<string[]> => {
  * Remove from set
  */
 export const cacheSRem = async (key: string, ...members: string[]): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.sRem(withPrefix(key), members);
   } catch (error) {
-    logger.error({ error, key }, 'Cache srem error');
+    logger.warn({ error, key }, 'Cache srem error');
     return 0;
   }
 };
@@ -325,10 +359,12 @@ export const cacheSRem = async (key: string, ...members: string[]): Promise<numb
  * Increment a counter
  */
 export const cacheIncr = async (key: string): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.incr(withPrefix(key));
   } catch (error) {
-    logger.error({ error, key }, 'Cache incr error');
+    logger.warn({ error, key }, 'Cache incr error');
     return 0;
   }
 };
@@ -337,10 +373,12 @@ export const cacheIncr = async (key: string): Promise<number> => {
  * Increment by specific amount
  */
 export const cacheIncrBy = async (key: string, amount: number): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.incrBy(withPrefix(key), amount);
   } catch (error) {
-    logger.error({ error, key }, 'Cache incrby error');
+    logger.warn({ error, key }, 'Cache incrby error');
     return 0;
   }
 };
@@ -349,10 +387,12 @@ export const cacheIncrBy = async (key: string, amount: number): Promise<number> 
  * Decrement a counter
  */
 export const cacheDecr = async (key: string): Promise<number> => {
+  if (!isRedisEnabled() || !redis) return 0;
+
   try {
     return await redis.decr(withPrefix(key));
   } catch (error) {
-    logger.error({ error, key }, 'Cache decr error');
+    logger.warn({ error, key }, 'Cache decr error');
     return 0;
   }
 };
@@ -365,6 +405,8 @@ export const cacheDecr = async (key: string): Promise<number> => {
  * Flush all keys with the app prefix
  */
 export const cacheFlushAll = async (): Promise<boolean> => {
+  if (!isRedisEnabled() || !redis) return false;
+
   try {
     const keys = await redis.keys(`${PREFIX}*`);
     if (keys.length > 0) {
@@ -372,7 +414,7 @@ export const cacheFlushAll = async (): Promise<boolean> => {
     }
     return true;
   } catch (error) {
-    logger.error({ error }, 'Cache flush error');
+    logger.warn({ error }, 'Cache flush error');
     return false;
   }
 };
@@ -381,10 +423,15 @@ export const cacheFlushAll = async (): Promise<boolean> => {
  * Get cache stats
  */
 export const getCacheStats = async (): Promise<{
+  enabled: boolean;
   keys: number;
   memory: string;
   uptime: number;
 }> => {
+  if (!isRedisEnabled() || !redis) {
+    return { enabled: false, keys: 0, memory: 'N/A', uptime: 0 };
+  }
+
   try {
     const info = await redis.info();
     const keys = await redis.dbSize();
@@ -394,12 +441,13 @@ export const getCacheStats = async (): Promise<{
     const uptimeMatch = info.match(/uptime_in_seconds:(\d+)/);
 
     return {
+      enabled: true,
       keys,
       memory: memoryMatch ? memoryMatch[1] : 'unknown',
       uptime: uptimeMatch ? parseInt(uptimeMatch[1]) : 0,
     };
   } catch (error) {
-    logger.error({ error }, 'Get cache stats error');
-    return { keys: 0, memory: 'unknown', uptime: 0 };
+    logger.warn({ error }, 'Get cache stats error');
+    return { enabled: false, keys: 0, memory: 'error', uptime: 0 };
   }
 };

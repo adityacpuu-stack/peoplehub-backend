@@ -736,21 +736,29 @@ export class LeaveService {
   }
 
   async getPendingApprovals(user: AuthUser) {
+    return this.getTeamLeaves(user, 'pending');
+  }
+
+  async getTeamLeaves(user: AuthUser, status?: string) {
     if (!user.employee) {
       throw new Error('No employee profile found');
     }
 
     const where: Prisma.LeaveWhereInput = {
-      status: LEAVE_STATUS.PENDING,
       deleted_at: null,
     };
 
-    // Check role level to determine what approvals to show
+    // Filter by status
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    // Check role level to determine what leaves to show
     const roleLevel = getHighestRoleLevel(user.roles);
 
     // Super Admin sees all
     if (user.roles.includes('Super Admin')) {
-      // No filter, see all pending
+      // No filter, see all
     }
     // Group CEO sees requests from all their accessible companies
     else if (user.roles.includes('Group CEO')) {
@@ -786,7 +794,7 @@ export class LeaveService {
     return prisma.leave.findMany({
       where,
       select: LEAVE_DETAIL_SELECT,
-      orderBy: { created_at: 'asc' },
+      orderBy: { created_at: 'desc' },
     });
   }
 

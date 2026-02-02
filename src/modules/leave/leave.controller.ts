@@ -436,10 +436,11 @@ export const getPendingApprovals = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const leaves = await leaveService.getPendingApprovals(req.user);
+    const status = req.query.status as string | undefined;
+    const leaves = await leaveService.getTeamLeaves(req.user, status);
 
     res.status(200).json({
-      message: 'Pending approvals retrieved successfully',
+      message: 'Team leaves retrieved successfully',
       data: leaves,
     });
   } catch (error: any) {

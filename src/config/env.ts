@@ -11,10 +11,10 @@ export const config = {
     },
     jwtSecret: process.env.JWT_SECRET || 'secret',
     redis: {
-        host: process.env.REDIS_HOST || 'redis-12703.fcrce261.ap-seast-1-1.ec2.cloud.redislabs.com',
-        port: parseInt(process.env.REDIS_PORT || '12703'),
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
         username: process.env.REDIS_USERNAME || 'default',
-        password: process.env.REDIS_PASSWORD || 'P38Ylt1ZeD10NKoXJK3KEXJkVdeqSE73',
+        password: process.env.REDIS_PASSWORD || '',
         keyPrefix: process.env.REDIS_PREFIX || 'hr:',
     },
     email: {

@@ -827,6 +827,11 @@ export class LeaveService {
 
     const where: Prisma.EmployeeLeaveBalanceWhereInput = {
       year: currentYear,
+      // Only show balances for active employees
+      employee: {
+        employment_status: 'active',
+        deleted_at: null,
+      },
     };
 
     if (employee_id) {
@@ -834,9 +839,9 @@ export class LeaveService {
     }
 
     if (company_id) {
-      where.employee = { company_id };
+      where.employee = { ...where.employee as object, company_id };
     } else if (user.employee?.company_id && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
-      where.employee = { company_id: user.employee.company_id };
+      where.employee = { ...where.employee as object, company_id: user.employee.company_id };
     }
 
     if (department_id) {

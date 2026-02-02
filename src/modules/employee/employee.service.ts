@@ -63,7 +63,12 @@ export class EmployeeService {
     }
 
     if (employment_status) {
-      where.employment_status = employment_status;
+      // 'inactive' means all non-active statuses (inactive, terminated, resigned, retired)
+      if (employment_status === 'inactive') {
+        where.employment_status = { not: 'active' };
+      } else {
+        where.employment_status = employment_status;
+      }
     }
 
     if (employment_type) {

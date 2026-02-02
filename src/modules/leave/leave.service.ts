@@ -785,7 +785,7 @@ export class LeaveService {
 
     return prisma.leave.findMany({
       where,
-      select: LEAVE_LIST_SELECT,
+      select: LEAVE_DETAIL_SELECT,
       orderBy: { created_at: 'asc' },
     });
   }

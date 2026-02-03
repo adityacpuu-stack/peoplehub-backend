@@ -15,7 +15,7 @@ export interface CreateDepartmentDTO {
   name: string;
   code?: string;
   description?: string;
-  company_id: number;
+  company_id?: number; // Optional - departments are now global
   parent_id?: number;
   manager_id?: number;
   status?: string;

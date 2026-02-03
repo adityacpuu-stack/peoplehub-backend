@@ -91,10 +91,7 @@ export const create = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ message: 'Name is required' });
       return;
     }
-    if (!data.company_id) {
-      res.status(400).json({ message: 'Company ID is required' });
-      return;
-    }
+    // Note: company_id is now optional since departments are global
 
     const department = await departmentService.create(data, req.user);
 

@@ -300,18 +300,13 @@ export class PositionService {
    * Get positions by department
    */
   async getByDepartment(departmentId: number, user: AuthUser) {
-    // Verify department access
+    // Verify department exists (departments are now global)
     const department = await prisma.department.findUnique({
       where: { id: departmentId },
-      select: { company_id: true },
     });
 
     if (!department) {
       throw new Error('Department not found');
-    }
-
-    if (!user.accessibleCompanyIds.includes(department.company_id)) {
-      throw new Error('Access denied to this department');
     }
 
     const positions = await prisma.position.findMany({

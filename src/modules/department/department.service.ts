@@ -31,15 +31,8 @@ export class DepartmentService {
     // Build where clause
     const where: Prisma.DepartmentWhereInput = {};
 
-    // Company filter - restrict to accessible companies
-    if (company_id) {
-      if (!user.accessibleCompanyIds.includes(company_id)) {
-        throw new Error('Access denied to this company');
-      }
-      where.company_id = company_id;
-    } else {
-      where.company_id = { in: user.accessibleCompanyIds };
-    }
+    // Departments are now global (company_id is NULL)
+    // No company filter needed
 
     // Parent filter
     if (parent_id !== undefined) {
@@ -96,33 +89,22 @@ export class DepartmentService {
       throw new Error('Department not found');
     }
 
-    // Check company access
-    if (!user.accessibleCompanyIds.includes(department.company.id)) {
-      throw new Error('Access denied to this department');
-    }
+    // Departments are now global - no company access check needed
 
     return department;
   }
 
   /**
-   * Create new department
+   * Create new department (global - no company required)
    */
   async create(data: CreateDepartmentDTO, user: AuthUser) {
-    // Check company access
-    if (!user.accessibleCompanyIds.includes(data.company_id)) {
-      throw new Error('Access denied to create department in this company');
-    }
-
-    // Check for duplicate code within company
+    // Check for duplicate code globally
     if (data.code) {
       const existing = await prisma.department.findFirst({
-        where: {
-          code: data.code,
-          company_id: data.company_id,
-        },
+        where: { code: data.code },
       });
       if (existing) {
-        throw new Error('Department code already exists in this company');
+        throw new Error('Department code already exists');
       }
     }
 
@@ -130,13 +112,9 @@ export class DepartmentService {
     if (data.parent_id) {
       const parent = await prisma.department.findUnique({
         where: { id: data.parent_id },
-        select: { company_id: true },
       });
       if (!parent) {
         throw new Error('Parent department not found');
-      }
-      if (parent.company_id !== data.company_id) {
-        throw new Error('Parent department must be in the same company');
       }
     }
 
@@ -144,13 +122,9 @@ export class DepartmentService {
     if (data.manager_id) {
       const manager = await prisma.employee.findUnique({
         where: { id: data.manager_id },
-        select: { company_id: true },
       });
       if (!manager) {
         throw new Error('Manager not found');
-      }
-      if (manager.company_id !== data.company_id) {
-        throw new Error('Manager must be in the same company');
       }
     }
 
@@ -170,7 +144,6 @@ export class DepartmentService {
         headcount_limit: data.headcount_limit,
         cost_center: data.cost_center,
         sort_order: data.sort_order ?? 0,
-        company: { connect: { id: data.company_id } },
         ...(data.parent_id && { parent: { connect: { id: data.parent_id } } }),
         ...(data.manager_id && { manager: { connect: { id: data.manager_id } } }),
       },
@@ -181,22 +154,16 @@ export class DepartmentService {
   }
 
   /**
-   * Update department
+   * Update department (global - no company check)
    */
   async update(id: number, data: UpdateDepartmentDTO, user: AuthUser) {
     // Get existing department
     const existing = await prisma.department.findUnique({
       where: { id },
-      select: { company_id: true },
     });
 
     if (!existing) {
       throw new Error('Department not found');
-    }
-
-    // Check company access
-    if (!user.accessibleCompanyIds.includes(existing.company_id)) {
-      throw new Error('Access denied to update this department');
     }
 
     // Check for duplicate code if changing
@@ -204,12 +171,11 @@ export class DepartmentService {
       const duplicate = await prisma.department.findFirst({
         where: {
           code: data.code,
-          company_id: existing.company_id,
           id: { not: id },
         },
       });
       if (duplicate) {
-        throw new Error('Department code already exists in this company');
+        throw new Error('Department code already exists');
       }
     }
 
@@ -220,13 +186,9 @@ export class DepartmentService {
       }
       const parent = await prisma.department.findUnique({
         where: { id: data.parent_id },
-        select: { company_id: true },
       });
       if (!parent) {
         throw new Error('Parent department not found');
-      }
-      if (parent.company_id !== existing.company_id) {
-        throw new Error('Parent department must be in the same company');
       }
     }
 
@@ -234,13 +196,9 @@ export class DepartmentService {
     if (data.manager_id) {
       const manager = await prisma.employee.findUnique({
         where: { id: data.manager_id },
-        select: { company_id: true },
       });
       if (!manager) {
         throw new Error('Manager not found');
-      }
-      if (manager.company_id !== existing.company_id) {
-        throw new Error('Manager must be in the same company');
       }
     }
 
@@ -288,15 +246,11 @@ export class DepartmentService {
   async delete(id: number, user: AuthUser) {
     const department = await prisma.department.findUnique({
       where: { id },
-      select: { company_id: true, _count: { select: { employees: true, children: true } } },
+      select: { _count: { select: { employees: true, children: true } } },
     });
 
     if (!department) {
       throw new Error('Department not found');
-    }
-
-    if (!user.accessibleCompanyIds.includes(department.company_id)) {
-      throw new Error('Access denied to delete this department');
     }
 
     // Check for active employees
@@ -318,16 +272,11 @@ export class DepartmentService {
   }
 
   /**
-   * Get departments by company
+   * Get all departments (global)
    */
-  async getByCompany(companyId: number, user: AuthUser) {
-    if (!user.accessibleCompanyIds.includes(companyId)) {
-      throw new Error('Access denied to this company');
-    }
-
+  async getAll(user: AuthUser) {
     const departments = await prisma.department.findMany({
       where: {
-        company_id: companyId,
         status: 'active',
       },
       select: DEPARTMENT_LIST_SELECT,
@@ -338,17 +287,19 @@ export class DepartmentService {
   }
 
   /**
+   * Get departments by company (legacy - returns all global departments)
+   */
+  async getByCompany(companyId: number, user: AuthUser) {
+    return this.getAll(user);
+  }
+
+  /**
    * Get department hierarchy (tree structure)
    */
   async getHierarchy(companyId: number, user: AuthUser) {
-    if (!user.accessibleCompanyIds.includes(companyId)) {
-      throw new Error('Access denied to this company');
-    }
-
-    // Get all departments for the company
+    // Get all global departments
     const departments = await prisma.department.findMany({
       where: {
-        company_id: companyId,
         status: 'active',
       },
       select: {

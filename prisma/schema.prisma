@@ -441,7 +441,7 @@ model Department {
   name              String
   code              String?
   description       String?   @db.Text
-  company_id        Int
+  company_id        Int?      // Now optional - departments are global
   parent_id         Int?      // For sub-departments
   manager_id        Int?
   status            String?   @default("active")
@@ -459,7 +459,7 @@ model Department {
   updated_at        DateTime  @updatedAt
 
   // Relationships
-  company           Company     @relation(fields: [company_id], references: [id])
+  company           Company?    @relation(fields: [company_id], references: [id])
   parent            Department? @relation("DepartmentHierarchy", fields: [parent_id], references: [id])
   children          Department[] @relation("DepartmentHierarchy")
   manager           Employee?   @relation("DepartmentManager", fields: [manager_id], references: [id])

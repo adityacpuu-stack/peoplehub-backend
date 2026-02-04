@@ -840,8 +840,9 @@ export class LeaveService {
 
     if (company_id) {
       where.employee = { ...where.employee as object, company_id };
-    } else if (user.employee?.company_id && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
-      where.employee = { ...where.employee as object, company_id: user.employee.company_id };
+    } else if (user.accessibleCompanyIds && user.accessibleCompanyIds.length > 0 && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
+      // Use accessibleCompanyIds to allow HR to see all accessible companies
+      where.employee = { ...where.employee as object, company_id: { in: user.accessibleCompanyIds } };
     }
 
     if (department_id) {

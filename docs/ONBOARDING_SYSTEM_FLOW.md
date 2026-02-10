@@ -1,6 +1,6 @@
 # Employee Onboarding System - Full Flow Documentation
 
-> **Version**: 1.0
+> **Version**: 1.1
 > **Last Updated**: February 2025
 > **Author**: PeopleHub Development Team
 
@@ -20,7 +20,9 @@
 10. [API Endpoints](#api-endpoints)
 11. [Frontend Pages](#frontend-pages)
 12. [Microsoft 365 Integration](#microsoft-365-integration)
-13. [Implementation Phases](#implementation-phases)
+13. [Email Notification System](#email-notification-system)
+14. [Data Mapping (Onboarding → Employee)](#data-mapping-onboarding--employee)
+15. [Implementation Phases](#implementation-phases)
 
 ---
 
@@ -1666,6 +1668,688 @@ DEFAULT_M365_LICENSE_SKU=3b555118-da6a-4418-894f-7df1e2096870
 
 ---
 
+## Email Notification System
+
+### Complete Notification Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        EMAIL NOTIFICATION FLOW                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. HR Creates Invitation                                                    │
+│     └── 📧 Email to: CANDIDATE (invitation link)                            │
+│                                                                              │
+│  2. Candidate Opens Link                                                     │
+│     └── (no email)                                                          │
+│                                                                              │
+│  3. Candidate Submits Form ⭐                                                │
+│     ├── 📧 Email to: CANDIDATE (confirmation - "terima kasih sudah submit") │
+│     └── 📧 Email to: HR MANAGER (notification - "ada submission baru")      │
+│                                                                              │
+│  4. HR Reviews                                                               │
+│     ├── If APPROVE:                                                         │
+│     │   └── 📧 Email to: CANDIDATE (credentials + first day info)           │
+│     ├── If REJECT:                                                          │
+│     │   └── 📧 Email to: CANDIDATE (rejection notice)                       │
+│     └── If REQUEST REVISION:                                                │
+│         └── 📧 Email to: CANDIDATE (revision needed + link)                 │
+│                                                                              │
+│  5. Reminder Emails (Automated)                                              │
+│     ├── 📧 to CANDIDATE: 3 days before expiry (if not submitted)            │
+│     └── 📧 to HR: Daily digest of pending reviews                           │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### HR Notification Email (When Candidate Submits)
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│  📧 EMAIL TO: hr.manager@pfigroups.com                                      │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  Subject: [Action Required] New Onboarding Submission - John Doe           │
+│                                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                      │  │
+│  │                    [COMPANY LOGO]                                   │  │
+│  │                                                                      │  │
+│  │  New Onboarding Submission Received                                 │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │  A new employee has completed their onboarding form and is          │  │
+│  │  waiting for your review.                                           │  │
+│  │                                                                      │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │                                                                      │  │
+│  │  👤 Candidate Details                                               │  │
+│  │                                                                      │  │
+│  │  Name        : John Doe                                             │  │
+│  │  Position    : Software Engineer                                    │  │
+│  │  Department  : IT Department                                        │  │
+│  │  Company     : PT PFI Mega Life Insurance                           │  │
+│  │  Start Date  : 1 February 2025                                      │  │
+│  │  Submitted   : 25 January 2025, 14:30 WIB                           │  │
+│  │                                                                      │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │                                                                      │  │
+│  │           ┌─────────────────────────────────────┐                   │  │
+│  │           │      REVIEW SUBMISSION      →       │                   │  │
+│  │           └─────────────────────────────────────┘                   │  │
+│  │                                                                      │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │                                                                      │  │
+│  │  📊 Current Pending Reviews: 3                                      │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │  This is an automated notification from PeopleHub HRIS.             │  │
+│  │                                                                      │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Candidate Confirmation Email (After Submit)
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│  📧 EMAIL TO: johndoe@gmail.com                                             │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  Subject: Onboarding Form Submitted - PT PFI Mega Life Insurance           │
+│                                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                      │  │
+│  │                    [COMPANY LOGO]                                   │  │
+│  │                                                                      │  │
+│  │  Dear John Doe,                                                     │  │
+│  │                                                                      │  │
+│  │  Terima kasih telah melengkapi formulir onboarding Anda.            │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │  📋 Submission Summary                                              │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │  Submitted At  : 25 January 2025, 14:30 WIB                         │  │
+│  │  Position      : Software Engineer                                  │  │
+│  │  Department    : IT Department                                      │  │
+│  │  Start Date    : 1 February 2025                                    │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │  ⏳ What's Next?                                                    │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │  1. Tim HR akan mereview data yang Anda submit                      │  │
+│  │  2. Anda akan menerima email berisi kredensial login                │  │
+│  │  3. Pada hari pertama kerja, silakan lapor ke HR Department         │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │  Jika ada pertanyaan, silakan hubungi:                              │  │
+│  │  📧 hr@pfigroups.com | 📞 +62 21 1234 5678                          │  │
+│  │                                                                      │  │
+│  │  Salam hangat,                                                      │  │
+│  │  HR Team - PT PFI Mega Life Insurance                               │  │
+│  │                                                                      │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Daily Digest Email (For HR Managers)
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│  📧 EMAIL TO: hr.manager@pfigroups.com                                      │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  Subject: [Daily Digest] Onboarding Status - 25 January 2025               │
+│                                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                      │  │
+│  │  📊 ONBOARDING DAILY DIGEST                                         │  │
+│  │  25 January 2025                                                    │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │  🟡 PENDING REVIEW (3)                                              │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │  • John Doe - Software Engineer (submitted 2 days ago)              │  │
+│  │  • Jane Smith - Marketing Staff (submitted 1 day ago)               │  │
+│  │  • Bob Wilson - Accountant (submitted today)                        │  │
+│  │                                                                      │  │
+│  │  🔵 WAITING FOR CANDIDATE (2)                                       │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │  • Alice Brown - HR Staff (expires in 5 days)                       │  │
+│  │  • Charlie Lee - Designer (expires in 2 days) ⚠️                    │  │
+│  │                                                                      │  │
+│  │  🟠 REVISION REQUESTED (1)                                          │  │
+│  │  ─────────────────────────────────────────────────────────          │  │
+│  │  • David Kim - Sales Rep (waiting 3 days)                           │  │
+│  │                                                                      │  │
+│  │  ═══════════════════════════════════════════════════════════════    │  │
+│  │                                                                      │  │
+│  │           ┌─────────────────────────────────────┐                   │  │
+│  │           │      VIEW ALL ONBOARDING     →      │                   │  │
+│  │           └─────────────────────────────────────┘                   │  │
+│  │                                                                      │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Email Recipients Configuration
+
+```typescript
+// Notification Settings per Company
+interface OnboardingNotificationSettings {
+  // When candidate submits
+  on_submission: {
+    notify_creator: boolean;      // HR yang buat invitation
+    notify_hr_managers: boolean;  // Semua HR Manager di company
+    notify_custom_emails: string[];  // Custom email list
+  };
+
+  // When HR takes action (approve/reject/revision)
+  on_hr_action: {
+    notify_candidate: boolean;    // Always true
+    cc_creator: boolean;          // CC HR yang buat invitation
+  };
+
+  // Daily digest
+  daily_digest: {
+    enabled: boolean;
+    send_time: string;            // "09:00" (WIB)
+    recipients: string[];         // HR Manager emails
+    include_summary: boolean;     // Include statistics
+  };
+
+  // Reminders
+  reminders: {
+    candidate_before_expiry_days: number;  // Default: 3
+    hr_pending_review_days: number;        // Default: 2
+  };
+}
+```
+
+### Default Notification Recipients
+
+| Event | Recipients | Email Template |
+|-------|------------|----------------|
+| HR Creates Invitation | Candidate | `onboarding-invitation` |
+| 3 days before expiry | Candidate | `onboarding-reminder` |
+| Candidate Submits | Candidate | `onboarding-submitted-candidate` |
+| Candidate Submits | HR Creator + HR Managers | `onboarding-submitted-hr` |
+| HR Requests Revision | Candidate | `onboarding-revision` |
+| HR Approves | Candidate | `onboarding-approved` |
+| HR Rejects | Candidate | `onboarding-rejected` |
+| Accounts Created | Candidate | `onboarding-credentials` |
+| Daily (if pending > 0) | HR Managers | `onboarding-daily-digest` |
+
+### Email Service Implementation
+
+```typescript
+// src/modules/onboarding/services/onboarding-email.service.ts
+
+class OnboardingEmailService {
+
+  /**
+   * Send notification to HR when candidate submits
+   */
+  async notifyHROnSubmission(submission: OnboardingSubmission): Promise<void> {
+    const invitation = submission.invitation;
+    const company = invitation.company;
+    const settings = await this.getNotificationSettings(company.id);
+
+    const recipients: string[] = [];
+
+    // Add invitation creator
+    if (settings.on_submission.notify_creator && invitation.creator) {
+      recipients.push(invitation.creator.email);
+    }
+
+    // Add all HR Managers in company
+    if (settings.on_submission.notify_hr_managers) {
+      const hrManagers = await this.getHRManagers(company.id);
+      recipients.push(...hrManagers.map(hr => hr.email));
+    }
+
+    // Add custom emails
+    if (settings.on_submission.notify_custom_emails?.length) {
+      recipients.push(...settings.on_submission.notify_custom_emails);
+    }
+
+    // Remove duplicates
+    const uniqueRecipients = [...new Set(recipients)];
+
+    // Get pending count for context
+    const pendingCount = await this.getPendingReviewCount(company.id);
+
+    // Send email to each recipient
+    for (const email of uniqueRecipients) {
+      await this.emailService.send({
+        to: email,
+        subject: `[Action Required] New Onboarding Submission - ${invitation.full_name}`,
+        template: 'onboarding-submitted-hr',
+        data: {
+          candidate_name: invitation.full_name,
+          position: invitation.position,
+          department: invitation.department.name,
+          company_name: company.name,
+          company_logo: company.logo_url,
+          start_date: formatDate(invitation.start_date),
+          submitted_at: formatDateTime(submission.submitted_at),
+          review_url: `${process.env.FRONTEND_URL}/onboarding/review/${submission.id}`,
+          pending_count: pendingCount,
+        }
+      });
+    }
+
+    // Log activity
+    await this.logActivity(invitation.id, 'hr_notified', {
+      recipients: uniqueRecipients,
+      submission_id: submission.id,
+    });
+  }
+
+  /**
+   * Send confirmation to candidate after submission
+   */
+  async notifyCandidateOnSubmission(submission: OnboardingSubmission): Promise<void> {
+    const invitation = submission.invitation;
+    const company = invitation.company;
+
+    await this.emailService.send({
+      to: invitation.personal_email,
+      subject: `Onboarding Form Submitted - ${company.name}`,
+      template: 'onboarding-submitted-candidate',
+      data: {
+        candidate_name: invitation.full_name,
+        position: invitation.position,
+        department: invitation.department.name,
+        company_name: company.name,
+        company_logo: company.logo_url,
+        start_date: formatDate(invitation.start_date),
+        submitted_at: formatDateTime(submission.submitted_at),
+        hr_email: company.hr_email,
+        hr_phone: company.hr_phone,
+      }
+    });
+
+    await this.logActivity(invitation.id, 'candidate_notified_submission', {
+      email: invitation.personal_email,
+    });
+  }
+
+  /**
+   * Send daily digest to HR Managers
+   */
+  async sendDailyDigest(companyId: number): Promise<void> {
+    const settings = await this.getNotificationSettings(companyId);
+
+    if (!settings.daily_digest.enabled) return;
+
+    const [pendingReview, waitingCandidate, revisionRequested] = await Promise.all([
+      this.getSubmissionsByStatus(companyId, 'submitted'),
+      this.getSubmissionsByStatus(companyId, 'pending'),
+      this.getSubmissionsByStatus(companyId, 'revision_required'),
+    ]);
+
+    // Skip if nothing to report
+    if (pendingReview.length === 0 && waitingCandidate.length === 0 && revisionRequested.length === 0) {
+      return;
+    }
+
+    const company = await this.getCompany(companyId);
+
+    for (const email of settings.daily_digest.recipients) {
+      await this.emailService.send({
+        to: email,
+        subject: `[Daily Digest] Onboarding Status - ${formatDate(new Date())}`,
+        template: 'onboarding-daily-digest',
+        data: {
+          date: formatDate(new Date()),
+          company_name: company.name,
+          company_logo: company.logo_url,
+          pending_review: pendingReview,
+          waiting_candidate: waitingCandidate,
+          revision_requested: revisionRequested,
+          dashboard_url: `${process.env.FRONTEND_URL}/onboarding`,
+        }
+      });
+    }
+  }
+
+  /**
+   * Send reminder to candidate before invitation expires
+   */
+  async sendExpiryReminder(invitation: OnboardingInvitation): Promise<void> {
+    const daysUntilExpiry = differenceInDays(invitation.expires_at, new Date());
+
+    await this.emailService.send({
+      to: invitation.personal_email,
+      subject: `Reminder: Complete Your Onboarding - Expires in ${daysUntilExpiry} days`,
+      template: 'onboarding-reminder',
+      data: {
+        candidate_name: invitation.full_name,
+        company_name: invitation.company.name,
+        company_logo: invitation.company.logo_url,
+        position: invitation.position,
+        days_until_expiry: daysUntilExpiry,
+        expiry_date: formatDateTime(invitation.expires_at),
+        onboarding_url: `${process.env.FRONTEND_URL}/onboarding/complete/${invitation.token}`,
+        hr_email: invitation.company.hr_email,
+        hr_phone: invitation.company.hr_phone,
+      }
+    });
+
+    await this.logActivity(invitation.id, 'reminder_sent', {
+      days_until_expiry: daysUntilExpiry,
+    });
+  }
+}
+
+export const onboardingEmailService = new OnboardingEmailService();
+```
+
+### Cron Jobs for Automated Emails
+
+```typescript
+// src/jobs/onboarding-notifications.job.ts
+
+import cron from 'node-cron';
+import { onboardingEmailService } from '../modules/onboarding/services/onboarding-email.service';
+
+// Send daily digest every day at 9:00 AM WIB (2:00 AM UTC)
+cron.schedule('0 2 * * *', async () => {
+  console.log('Running onboarding daily digest job...');
+
+  const companies = await prisma.company.findMany({
+    where: { is_active: true }
+  });
+
+  for (const company of companies) {
+    try {
+      await onboardingEmailService.sendDailyDigest(company.id);
+    } catch (error) {
+      console.error(`Failed to send digest for company ${company.id}:`, error);
+    }
+  }
+});
+
+// Check for expiring invitations every day at 8:00 AM WIB (1:00 AM UTC)
+cron.schedule('0 1 * * *', async () => {
+  console.log('Running expiry reminder job...');
+
+  const reminderDays = 3; // Send reminder 3 days before expiry
+  const targetDate = addDays(new Date(), reminderDays);
+
+  const expiringInvitations = await prisma.onboardingInvitation.findMany({
+    where: {
+      status: 'pending',
+      expires_at: {
+        gte: startOfDay(targetDate),
+        lte: endOfDay(targetDate),
+      },
+    },
+    include: {
+      company: true,
+    },
+  });
+
+  for (const invitation of expiringInvitations) {
+    try {
+      await onboardingEmailService.sendExpiryReminder(invitation);
+    } catch (error) {
+      console.error(`Failed to send reminder for invitation ${invitation.id}:`, error);
+    }
+  }
+});
+```
+
+### Database Schema for Notification Settings
+
+```sql
+-- Add to existing schema
+CREATE TABLE onboarding_notification_settings (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+
+  -- On submission
+  notify_creator BOOLEAN DEFAULT true,
+  notify_hr_managers BOOLEAN DEFAULT true,
+  notify_custom_emails TEXT[], -- Array of emails
+
+  -- Daily digest
+  daily_digest_enabled BOOLEAN DEFAULT true,
+  daily_digest_time TIME DEFAULT '09:00:00',
+  daily_digest_recipients TEXT[],
+
+  -- Reminders
+  candidate_reminder_days INTEGER DEFAULT 3,
+  hr_pending_reminder_days INTEGER DEFAULT 2,
+
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE(company_id)
+);
+```
+
+---
+
+## Data Mapping (Onboarding → Employee)
+
+When HR approves an onboarding submission, data is automatically mapped to create the employee record.
+
+### Mapping Table
+
+| Source (Onboarding) | Target (Employee) | Notes |
+|---------------------|-------------------|-------|
+| **From Invitation** | | |
+| `full_name` | `name` | |
+| `work_email` | `email` | |
+| `phone` | `phone` | Can be overwritten by submission |
+| `company_id` | `company_id` | |
+| `department_id` | `department_id` | |
+| `position` | `position` | |
+| `employment_type` | `employment_type` | |
+| `start_date` | `join_date` | |
+| `manager_id` | `manager_id` | |
+| `basic_salary` | `basic_salary` | |
+| **From Submission** | | |
+| `nik` | `nik` | |
+| `place_of_birth` | `place_of_birth` | |
+| `date_of_birth` | `date_of_birth` | |
+| `gender` | `gender` | |
+| `religion` | `religion` | |
+| `marital_status` | `marital_status` | |
+| `blood_type` | `blood_type` | |
+| `npwp` | `npwp` | |
+| `bpjs_kesehatan` | `bpjs_kesehatan` | |
+| `bpjs_ketenagakerjaan` | `bpjs_ketenagakerjaan` | |
+| `photo_path` | `avatar` | Copied to employee folder |
+| `ktp_address` | `address` | |
+| `ktp_city` | `city` | |
+| `ktp_province` | `province` | |
+| `ktp_postal_code` | `postal_code` | |
+| `bank_name` | `bank_name` | |
+| `bank_branch` | `bank_branch` | |
+| `bank_account_number` | `bank_account_number` | |
+| `bank_account_name` | `bank_account_name` | |
+| `emergency_name` | `emergency_contact_name` | |
+| `emergency_phone` | `emergency_contact_phone` | |
+| `emergency_relationship` | `emergency_contact_relationship` | |
+| **Auto Generated** | | |
+| - | `employee_id` | Generated: `{PREFIX}-{YEAR}-{SEQ}` |
+| - | `employment_status` | Set to `active` |
+| - | `created_at` | Current timestamp |
+
+### Mapping Implementation
+
+```typescript
+// src/modules/onboarding/services/onboarding-provisioning.service.ts
+
+async function mapSubmissionToEmployee(
+  invitation: OnboardingInvitation,
+  submission: OnboardingSubmission
+): Promise<Prisma.EmployeeCreateInput> {
+
+  // Generate employee ID
+  const employeeId = await generateEmployeeId(invitation.company_id);
+
+  return {
+    // From Invitation
+    employee_id: employeeId,
+    company_id: invitation.company_id,
+    department_id: invitation.department_id,
+    name: invitation.full_name,
+    email: invitation.work_email,
+    phone: submission.phone || invitation.phone,
+    position: invitation.position,
+    employment_type: invitation.employment_type,
+    employment_status: 'active',
+    join_date: invitation.start_date,
+    manager_id: invitation.manager_id,
+    basic_salary: invitation.basic_salary,
+
+    // From Submission - Personal
+    nik: submission.nik,
+    place_of_birth: submission.place_of_birth,
+    date_of_birth: submission.date_of_birth,
+    gender: submission.gender,
+    religion: submission.religion,
+    marital_status: submission.marital_status,
+    blood_type: submission.blood_type,
+    npwp: submission.npwp,
+    bpjs_kesehatan: submission.bpjs_kesehatan,
+    bpjs_ketenagakerjaan: submission.bpjs_ketenagakerjaan,
+
+    // From Submission - Photo
+    avatar: submission.photo_path,
+
+    // From Submission - Address (KTP)
+    address: submission.ktp_address,
+    city: submission.ktp_city,
+    province: submission.ktp_province,
+    postal_code: submission.ktp_postal_code,
+
+    // From Submission - Bank
+    bank_name: submission.bank_name,
+    bank_branch: submission.bank_branch,
+    bank_account_number: submission.bank_account_number,
+    bank_account_name: submission.bank_account_name,
+
+    // From Submission - Emergency Contact
+    emergency_contact_name: submission.emergency_name,
+    emergency_contact_phone: submission.emergency_phone,
+    emergency_contact_relationship: submission.emergency_relationship,
+  };
+}
+
+/**
+ * Generate employee ID with format: {PREFIX}-{YEAR}-{SEQUENCE}
+ * Example: PFI-2025-0042
+ */
+async function generateEmployeeId(companyId: number): Promise<string> {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { code: true }
+  });
+
+  const prefix = company?.code || 'EMP';
+  const year = new Date().getFullYear();
+
+  // Get last sequence for this company and year
+  const lastEmployee = await prisma.employee.findFirst({
+    where: {
+      company_id: companyId,
+      employee_id: { startsWith: `${prefix}-${year}-` }
+    },
+    orderBy: { employee_id: 'desc' },
+    select: { employee_id: true }
+  });
+
+  let sequence = 1;
+  if (lastEmployee) {
+    const parts = lastEmployee.employee_id.split('-');
+    sequence = parseInt(parts[2]) + 1;
+  }
+
+  return `${prefix}-${year}-${String(sequence).padStart(4, '0')}`;
+}
+```
+
+### Documents Mapping
+
+Documents uploaded during onboarding are copied to the employee's document folder:
+
+```typescript
+async function copyOnboardingDocuments(
+  submissionId: number,
+  employeeId: number
+): Promise<void> {
+  const documents = await prisma.onboardingDocument.findMany({
+    where: { submission_id: submissionId }
+  });
+
+  for (const doc of documents) {
+    // Copy file to employee folder
+    const newPath = await copyFileToEmployeeFolder(
+      doc.file_path,
+      employeeId,
+      doc.document_type
+    );
+
+    // Create employee document record
+    await prisma.employeeDocument.create({
+      data: {
+        employee_id: employeeId,
+        document_type: doc.document_type,
+        file_name: doc.file_name,
+        file_path: newPath,
+        file_size: doc.file_size,
+        mime_type: doc.mime_type,
+        uploaded_at: doc.uploaded_at,
+        source: 'onboarding',
+        source_id: doc.id,
+      }
+    });
+  }
+}
+```
+
+### Family Members Mapping
+
+```typescript
+async function createFamilyMembers(
+  submissionId: number,
+  employeeId: number
+): Promise<void> {
+  const familyMembers = await prisma.onboardingFamilyMember.findMany({
+    where: { submission_id: submissionId }
+  });
+
+  for (const member of familyMembers) {
+    await prisma.employeeFamilyMember.create({
+      data: {
+        employee_id: employeeId,
+        name: member.name,
+        relationship: member.relationship,
+        date_of_birth: member.date_of_birth,
+        occupation: member.occupation,
+        is_dependent: member.is_dependent,
+      }
+    });
+  }
+}
+```
+
+---
+
 ## Implementation Phases
 
 ### Phase 1: Basic Invitation System (Week 1-2)
@@ -1799,4 +2483,4 @@ DEFAULT_M365_LICENSE_SKU=3b555118-da6a-4418-894f-7df1e2096870
 
 ---
 
-*Document last updated: February 2025*
+*Document last updated: February 2026*

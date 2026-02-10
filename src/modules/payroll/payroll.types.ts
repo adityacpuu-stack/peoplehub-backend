@@ -279,6 +279,7 @@ export const PAYROLL_LIST_SELECT = {
       name: true,
       employee_id: true,
       employment_type: true,
+      employment_status: true,
       department: { select: { id: true, name: true } },
       position: { select: { id: true, name: true } },
     },

@@ -82,6 +82,12 @@ export interface CreateEmployeeDTO {
   contract_start_date?: Date | string;
   contract_end_date?: Date | string;
 
+  // Resign Info
+  resign_date?: Date | string;
+  resign_type?: string;
+  resign_reason?: string;
+  resign_notes?: string;
+
   // Employment Details
   employment_type?: string;
   employment_status?: string;

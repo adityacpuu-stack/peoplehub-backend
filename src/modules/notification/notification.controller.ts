@@ -130,3 +130,61 @@ export const deleteAllRead = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ success: false, error: { message: error.message } });
   }
 };
+
+/**
+ * Get unread announcements for popup
+ */
+export const getAnnouncementPopups = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: { message: 'Not authenticated' } });
+      return;
+    }
+
+    const result = await notificationService.getUnreadAnnouncementsForPopup(req.user);
+    res.status(200).json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+};
+
+/**
+ * Dismiss announcement popup
+ */
+export const dismissAnnouncementPopup = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: { message: 'Not authenticated' } });
+      return;
+    }
+
+    const id = parseInt(getParam(req.params.id));
+    if (isNaN(id)) {
+      res.status(400).json({ success: false, error: { message: 'Invalid notification ID' } });
+      return;
+    }
+
+    await notificationService.dismissAnnouncementPopup(id, req.user);
+    res.status(200).json({ success: true, message: 'Popup dismissed' });
+  } catch (error: any) {
+    const status = error.message.includes('not found') ? 404 : 500;
+    res.status(status).json({ success: false, error: { message: error.message } });
+  }
+};
+
+/**
+ * Dismiss all announcement popups
+ */
+export const dismissAllAnnouncementPopups = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: { message: 'Not authenticated' } });
+      return;
+    }
+
+    const result = await notificationService.dismissAllAnnouncementPopups(req.user);
+    res.status(200).json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { message: error.message } });
+  }
+};

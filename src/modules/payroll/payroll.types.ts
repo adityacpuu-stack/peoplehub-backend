@@ -96,7 +96,15 @@ export interface CalculatePayrollDTO {
   deductions?: Record<string, number>;
   overtime_hours?: number;
   overtime_pay?: number; // Pre-calculated overtime pay from approved overtime records
-  additional_allowances?: number; // Pre-calculated allowances from approved allowance records
+  additional_allowances?: number; // Pre-calculated allowances from approved allowance records (legacy)
+  additional_allowances_by_type?: {
+    position?: number;
+    transport?: number;
+    meal?: number;
+    housing?: number;
+    communication?: number;
+    other?: number;
+  }; // Allowances from table categorized by type
   allowance_details?: Array<{ name: string; type: string; amount: number }>; // Allowance breakdown
   working_days?: number;
   actual_working_days?: number;

@@ -90,6 +90,9 @@ router.post('/calculate', requireHRStaffOrHigher, payrollController.calculate);
 // Export payroll to Excel (company_id is optional - if not provided, exports all accessible companies)
 router.get('/export', requireHRStaffOrTaxAccess, payrollController.exportExcel);
 
+// Export freelance/internship payroll to Excel (exports all accessible companies)
+router.get('/export/freelance-internship', requireHRStaffOrTaxAccess, payrollController.exportFreelanceInternship);
+
 // ==========================================
 // BULK OPERATIONS
 // ==========================================

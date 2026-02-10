@@ -193,21 +193,27 @@ export class PayrollExportService {
       BA: 12,  // JP Employee
       BB: 12,  // JKS Employee
       BC: 15,  // PPH21 Employee
-      BD: 15,  // Deduction
-      BE: 18,  // THP
-      BF: 3,   // spacer
-      BG: 22,  // NO REKENING
-      BH: 15,  // NAMA BANK
-      BI: 15,  // REMARKS
-      BJ: 3,   // spacer
-      BK: 12,  // WORKING DAYS MONTH
-      BL: 15,  // SALARY/DAYS
-      BM: 12,  // WORKING DAYS EMPLOYEE
-      BN: 15,  // SALARY THIS MONTH
-      BO: 12,  // OT HOURS
-      BP: 12,  // SUM OT HOURS
-      BQ: 12,  // MEALS/DAYS
-      BR: 12,  // TRANSPORT/DAYS
+      BD: 18,  // Subtotal BPJS+PPH21 (for GROSS)
+      BE: 15,  // Absence Deduction
+      BF: 15,  // Late Deduction
+      BG: 15,  // Loan Deduction
+      BH: 15,  // Other Deductions
+      BI: 15,  // Total System Deduction
+      BJ: 18,  // Grand Total All Deductions
+      BK: 18,  // THP
+      BL: 3,   // spacer
+      BM: 22,  // NO REKENING
+      BN: 15,  // NAMA BANK
+      BO: 15,  // REMARKS
+      BP: 3,   // spacer
+      BQ: 12,  // WORKING DAYS MONTH
+      BR: 15,  // SALARY/DAYS
+      BS: 12,  // WORKING DAYS EMPLOYEE
+      BT: 15,  // SALARY THIS MONTH
+      BU: 12,  // OT HOURS
+      BV: 12,  // SUM OT HOURS
+      BW: 12,  // MEALS/DAYS
+      BX: 12,  // TRANSPORT/DAYS
     };
 
     Object.entries(columnWidths).forEach(([col, width]) => {
@@ -306,19 +312,21 @@ export class PayrollExportService {
       AY6: 'TOTAL NET SALARY',
       AZ6: 'BPJS DEDUCTION PAYMENT BY EMPLOYEE',
       BC6: 'PPH 21 Ditanggung Karyawan',
-      BD6: 'Deduction',
-      BE6: 'THP',
-      BG6: 'NO REKENING PAYROLL',
-      BH6: 'NAMA BANK PAYROLL',
-      BI6: 'REMARKS',
-      BK6: 'HARI KERJA DALAM SATU BULAN',
-      BL6: 'SALARY / DAYS',
-      BM6: 'HARI KERJA YANG BERSANGKUTAN',
-      BN6: 'SALARY THIS MONTH',
-      BO6: 'OT / HOURS',
-      BP6: 'SUM OVERTIME (HOURS)',
-      BQ6: 'MEALS/DAYS',
-      BR6: 'TRANSPORT/DAYS',
+      BD6: 'Subtotal\nBPJS+PPH21\n(GROSS)',
+      BE6: 'SYSTEM DEDUCTIONS',
+      BJ6: 'GRAND TOTAL\nDEDUCTIONS',
+      BK6: 'THP\n(Take Home Pay)',
+      BM6: 'NO REKENING PAYROLL',
+      BN6: 'NAMA BANK PAYROLL',
+      BO6: 'REMARKS',
+      BQ6: 'HARI KERJA DALAM SATU BULAN',
+      BR6: 'SALARY / DAYS',
+      BS6: 'HARI KERJA YANG BERSANGKUTAN',
+      BT6: 'SALARY THIS MONTH',
+      BU6: 'OT / HOURS',
+      BV6: 'SUM OVERTIME (HOURS)',
+      BW6: 'MEALS/DAYS',
+      BX6: 'TRANSPORT/DAYS',
     };
 
     // Row 7: Sub headers (BPJS types)
@@ -346,6 +354,11 @@ export class PayrollExportService {
       AZ7: 'JHT',
       BA7: 'JP',
       BB7: 'JKS',
+      BE7: 'Absence',
+      BF7: 'Late',
+      BG7: 'Loan',
+      BH7: 'Other',
+      BI7: 'Total',
     };
 
     // Row 8: BPJS rates
@@ -422,12 +435,10 @@ export class PayrollExportService {
     worksheet.mergeCells('AY6:AY8');
     worksheet.mergeCells('AZ6:BB6');
     worksheet.mergeCells('BC6:BC8');
-    worksheet.mergeCells('BD6:BD8');
-    worksheet.mergeCells('BE6:BE8');
-    worksheet.mergeCells('BG6:BG8');
-    worksheet.mergeCells('BH6:BH8');
-    worksheet.mergeCells('BI6:BI8');
-    worksheet.mergeCells('BK6:BK8');
+    worksheet.mergeCells('BD6:BD8'); // Subtotal BPJS+PPH21 (GROSS)
+    worksheet.mergeCells('BE6:BI6'); // SYSTEM DEDUCTIONS header spans 5 columns
+    worksheet.mergeCells('BJ6:BJ8'); // Grand Total Deductions
+    worksheet.mergeCells('BK6:BK8'); // THP
     worksheet.mergeCells('BL6:BL8');
     worksheet.mergeCells('BM6:BM8');
     worksheet.mergeCells('BN6:BN8');
@@ -435,6 +446,12 @@ export class PayrollExportService {
     worksheet.mergeCells('BP6:BP8');
     worksheet.mergeCells('BQ6:BQ8');
     worksheet.mergeCells('BR6:BR8');
+    worksheet.mergeCells('BS6:BS8');
+    worksheet.mergeCells('BT6:BT8');
+    worksheet.mergeCells('BU6:BU8');
+    worksheet.mergeCells('BV6:BV8');
+    worksheet.mergeCells('BW6:BW8');
+    worksheet.mergeCells('BX6:BX8');
 
     // Set row heights
     worksheet.getRow(6).height = 30;
@@ -463,12 +480,14 @@ export class PayrollExportService {
     row.getCell('F').value = (payroll.pay_type || payroll.employee?.pay_type || '').toUpperCase();
     row.getCell('G').value = payroll.ptkp_status || payroll.employee?.ptkp_status || payroll.employee?.tax_status || '';
 
-    // Contract dates
+    // Contract/Probation dates
     row.getCell('H').value = payroll.employee?.join_date
       ? new Date(payroll.employee.join_date).toLocaleDateString('id-ID')
       : '-';
-    row.getCell('I').value = payroll.employee?.resign_date
-      ? new Date(payroll.employee.resign_date).toLocaleDateString('id-ID')
+    // END: Use probation_end_date or contract_end_date
+    const endDate = payroll.employee?.probation_end_date || payroll.employee?.contract_end_date;
+    row.getCell('I').value = endDate
+      ? new Date(endDate).toLocaleDateString('id-ID')
       : '-';
 
     // Offering letter values (from employee table)
@@ -542,15 +561,19 @@ export class PayrollExportService {
     row.getCell('AC').value = attendanceAllowance;
     row.getCell('AC').numFmt = currencyFormat;
 
-    // SUB TOTAL ALLOWANCE
+    // SUB TOTAL ALLOWANCE (all allowances already include values from allowances table)
+    const positionAllowance = Number(payroll.position_allowance || 0);
+    const otherAllowances = Number(payroll.other_allowances || 0);
     const subTotalAllowance = Number(payroll.meal_allowance || 0) +
       Number(payroll.overtime_pay || 0) +
       Number(payroll.transport_allowance || 0) +
+      positionAllowance +
       telecomAllowance +
       housingAllowance +
       insuranceAllowance +
       achievementAllowance +
-      attendanceAllowance;
+      attendanceAllowance +
+      otherAllowances;
     row.getCell('AD').value = subTotalAllowance;
     row.getCell('AD').numFmt = currencyFormat;
 
@@ -661,39 +684,72 @@ export class PayrollExportService {
     row.getCell('BB').numFmt = currencyFormat;
     row.getCell('BC').numFmt = currencyFormat;
 
-    // Deduction
-    row.getCell('BD').value = Number(payroll.total_deductions || 0);
+    // BD: Subtotal BPJS+PPH21 (for GROSS employees only)
+    // For GROSS employees, these are deducted from their salary
+    let subtotalBpjsPph21 = 0;
+    if (!isNett) {
+      subtotalBpjsPph21 = Number(payroll.bpjs_jht_employee || 0) +
+        Number(payroll.bpjs_jp_employee || 0) +
+        Number(payroll.bpjs_kes_employee || 0) +
+        Number(payroll.pph21 || 0);
+    }
+    row.getCell('BD').value = subtotalBpjsPph21;
     row.getCell('BD').numFmt = currencyFormat;
 
-    // THP
-    row.getCell('BE').value = Number(payroll.thp || 0);
+    // System Deductions (from payroll adjustments)
+    const absenceDeduction = Number(payroll.absence_deduction || 0);
+    const lateDeduction = Number(payroll.late_deduction || 0);
+    const loanDeduction = Number(payroll.loan_deduction || 0);
+    const otherDeductions = Number(payroll.other_deductions || 0);
+    const totalSystemDeductions = absenceDeduction + lateDeduction + loanDeduction + otherDeductions;
+
+    row.getCell('BE').value = absenceDeduction;
     row.getCell('BE').numFmt = currencyFormat;
-    row.getCell('BE').fill = {
+    row.getCell('BF').value = lateDeduction;
+    row.getCell('BF').numFmt = currencyFormat;
+    row.getCell('BG').value = loanDeduction;
+    row.getCell('BG').numFmt = currencyFormat;
+    row.getCell('BH').value = otherDeductions;
+    row.getCell('BH').numFmt = currencyFormat;
+    row.getCell('BI').value = totalSystemDeductions;
+    row.getCell('BI').numFmt = currencyFormat;
+
+    // BJ: Grand Total All Deductions (for reference) = Subtotal BPJS+PPH21 + System Deductions
+    const grandTotalDeductions = subtotalBpjsPph21 + totalSystemDeductions;
+    row.getCell('BJ').value = grandTotalDeductions;
+    row.getCell('BJ').numFmt = currencyFormat;
+    row.getCell('BJ').font = { bold: true };
+
+    // BK: THP - Use stored value from database (already calculated correctly)
+    const thp = Number(payroll.thp || 0);
+    row.getCell('BK').value = thp;
+    row.getCell('BK').numFmt = currencyFormat;
+    row.getCell('BK').fill = {
       type: 'pattern',
       pattern: 'solid',
       fgColor: { argb: 'FFFFF2CC' },
     };
-    row.getCell('BE').font = { bold: true };
+    row.getCell('BK').font = { bold: true };
 
     // Bank info
-    row.getCell('BG').value = payroll.employee?.bank_account_number || '';
-    row.getCell('BH').value = payroll.employee?.bank_name || '';
-    row.getCell('BI').value = '';
+    row.getCell('BM').value = payroll.employee?.bank_account_number || '';
+    row.getCell('BN').value = payroll.employee?.bank_name || '';
+    row.getCell('BO').value = ''; // REMARKS
 
     // Working days info (from holiday calendar calculation)
     const workingDays = Number(payroll.working_days || 0);
     const actualWorkingDays = Number(payroll.actual_working_days || payroll.working_days || 0);
 
-    row.getCell('BK').value = workingDays; // HARI KERJA DALAM SATU BULAN
-    row.getCell('BL').value = workingDays > 0 ? Number(payroll.basic_salary || 0) / workingDays : 0; // SALARY/DAYS
-    row.getCell('BL').numFmt = currencyFormat;
-    row.getCell('BM').value = actualWorkingDays; // HARI KERJA YANG BERSANGKUTAN
-    row.getCell('BN').value = Number(payroll.basic_salary || 0); // SALARY THIS MONTH
-    row.getCell('BN').numFmt = currencyFormat;
-    row.getCell('BO').value = Number(payroll.overtime_hours || 0); // OT / HOURS
-    row.getCell('BP').value = Number(payroll.overtime_hours || 0); // SUM OVERTIME (HOURS)
-    row.getCell('BQ').value = actualWorkingDays; // MEALS/DAYS
-    row.getCell('BR').value = actualWorkingDays; // TRANSPORT/DAYS
+    row.getCell('BQ').value = workingDays; // HARI KERJA DALAM SATU BULAN
+    row.getCell('BR').value = workingDays > 0 ? Number(payroll.basic_salary || 0) / workingDays : 0; // SALARY/DAYS
+    row.getCell('BR').numFmt = currencyFormat;
+    row.getCell('BS').value = actualWorkingDays; // HARI KERJA YANG BERSANGKUTAN
+    row.getCell('BT').value = Number(payroll.basic_salary || 0); // SALARY THIS MONTH
+    row.getCell('BT').numFmt = currencyFormat;
+    row.getCell('BU').value = Number(payroll.overtime_hours || 0); // OT / HOURS
+    row.getCell('BV').value = Number(payroll.overtime_hours || 0); // SUM OVERTIME (HOURS)
+    row.getCell('BW').value = actualWorkingDays; // MEALS/DAYS
+    row.getCell('BX').value = actualWorkingDays; // TRANSPORT/DAYS
 
     // Set row border
     row.eachCell({ includeEmpty: true }, (cell) => {
@@ -726,7 +782,10 @@ export class PayrollExportService {
       'AK', 'AL', 'AM', 'AN', 'AO', 'AP', // BPJS Employee company paid & totals
       'AQ', 'AR', // Gross up
       'AV', 'AW', 'AX', 'AY', // PPH & totals
-      'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', // Deductions & THP
+      'AZ', 'BA', 'BB', 'BC', // BPJS Employee Deduction & PPH21
+      'BD', // Subtotal BPJS+PPH21 (GROSS)
+      'BE', 'BF', 'BG', 'BH', 'BI', // System deductions (Absence, Late, Loan, Other, Total)
+      'BJ', 'BK', // Grand Total Deductions & THP
     ];
 
     sumColumns.forEach((col) => {

@@ -44,6 +44,11 @@ export const createEmployeeSchema = z.object({
   employment_status: employmentStatusSchema.default('active'),
   employment_type: z.enum(['permanent', 'contract', 'internship', 'freelance']).optional(),
   join_date: dateStringSchema,
+  // Resign fields
+  resign_date: dateStringSchema.optional(),
+  resign_type: z.enum(['voluntary', 'involuntary', 'retirement', 'contract_end', 'mutual_agreement', 'other']).optional(),
+  resign_reason: z.string().optional(),
+  resign_notes: z.string().optional(),
   education_level: educationLevelSchema.optional(),
   education_institution: z.string().optional(),
   education_major: z.string().optional(),

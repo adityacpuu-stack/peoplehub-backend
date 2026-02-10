@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 import { PayrollService } from './payroll.service';
+import { freelanceExportService } from './services/freelance-export.service';
 import {
   PayrollListQuery,
   SalaryComponentQuery,
@@ -869,5 +871,96 @@ export const exportExcel = async (req: Request, res: Response): Promise<void> =>
   } catch (error: any) {
     console.error('Export error:', error);
     res.status(500).json({ message: error.message || 'Failed to export payroll' });
+  }
+};
+
+// ==========================================
+// FREELANCE / INTERNSHIP EXPORT
+// ==========================================
+
+const prismaClient = new PrismaClient();
+
+export const exportFreelanceInternship = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Not authenticated' });
+      return;
+    }
+
+    const period = getParam(req.query.period as string);
+    const cutoffDate = parseInt(getParam(req.query.cutoff_date as string)) || 20;
+
+    if (!period) {
+      res.status(400).json({ message: 'Period is required' });
+      return;
+    }
+
+    // Get accessible company IDs for the user
+    const accessibleCompanyIds = req.user.accessibleCompanyIds || [];
+
+    // Fetch all freelance and internship employees from accessible companies
+    const employees = await prismaClient.employee.findMany({
+      where: {
+        company_id: { in: accessibleCompanyIds },
+        employment_type: { in: ['freelance', 'internship'] },
+        employment_status: 'active',
+      },
+      include: {
+        company: { select: { id: true, name: true, code: true } },
+        department: { select: { id: true, name: true } },
+        position: { select: { id: true, name: true } },
+      },
+      orderBy: [
+        { company_id: 'asc' },
+        { employment_type: 'asc' },
+        { name: 'asc' },
+      ],
+    });
+
+    if (employees.length === 0) {
+      res.status(404).json({ message: 'No freelance or internship employees found' });
+      return;
+    }
+
+    // Calculate period label based on cutoff date
+    const [year, month] = period.split('-').map(Number);
+    const startCutoff = cutoffDate + 1;
+    const periodStart = new Date(year, month - 2, startCutoff);
+    const periodEnd = new Date(year, month - 1, cutoffDate);
+
+    const formatDate = (d: Date) => {
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    };
+    const periodLabel = `${formatDate(periodStart)} - ${formatDate(periodEnd)} ${year}`;
+
+    // Generate Excel
+    const preparedBy = req.user.employee?.name || req.user.email || 'HR System';
+    const workbook = await freelanceExportService.generateExcel(
+      employees,
+      period,
+      periodLabel,
+      preparedBy
+    );
+
+    // Set filename
+    const periodFormatted = period.replace('-', '');
+    const filename = `Freelance_Internship_Payroll_${periodFormatted}.xlsx`;
+
+    // Set response headers
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${filename}`
+    );
+
+    // Write workbook to response
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error: any) {
+    console.error('Freelance export error:', error);
+    res.status(500).json({ message: error.message || 'Failed to export freelance/internship payroll' });
   }
 };

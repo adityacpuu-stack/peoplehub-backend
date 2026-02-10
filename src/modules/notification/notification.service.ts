@@ -203,4 +203,120 @@ export class NotificationService {
 
     return this.createBulkNotifications(userIds, notification);
   }
+
+  /**
+   * Get unread announcement notifications with full announcement details for popup
+   */
+  async getUnreadAnnouncementsForPopup(user: AuthUser) {
+    // Get unread announcement notifications
+    const notifications = await prisma.notification.findMany({
+      where: {
+        user_id: user.id,
+        is_read: false,
+        type: { in: ['announcement_new', 'announcement_urgent'] },
+      },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        message: true,
+        data: true,
+        link: true,
+        created_at: true,
+      },
+      orderBy: { created_at: 'desc' },
+      take: 5, // Limit to 5 most recent unread announcements
+    });
+
+    // Get announcement IDs from notification data
+    const announcementIds = notifications
+      .map((n) => {
+        const data = n.data as { announcement_id?: number } | null;
+        return data?.announcement_id;
+      })
+      .filter((id): id is number => id !== undefined);
+
+    // Fetch full announcement details
+    const announcements = announcementIds.length > 0
+      ? await prisma.announcement.findMany({
+          where: {
+            id: { in: announcementIds },
+            is_published: true,
+            deleted_at: null,
+          },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            category: true,
+            priority: true,
+            published_at: true,
+            creator: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        })
+      : [];
+
+    // Map announcements to notifications
+    const result = notifications.map((notification) => {
+      const data = notification.data as { announcement_id?: number } | null;
+      const announcement = announcements.find((a) => a.id === data?.announcement_id);
+      return {
+        notification_id: notification.id,
+        type: notification.type,
+        announcement: announcement || null,
+        created_at: notification.created_at,
+      };
+    }).filter((item) => item.announcement !== null);
+
+    return result;
+  }
+
+  /**
+   * Mark announcement notification as read (dismiss popup)
+   */
+  async dismissAnnouncementPopup(notificationId: number, user: AuthUser) {
+    const notification = await prisma.notification.findFirst({
+      where: {
+        id: notificationId,
+        user_id: user.id,
+        type: { in: ['announcement_new', 'announcement_urgent'] },
+      },
+    });
+
+    if (!notification) {
+      throw new Error('Notification not found');
+    }
+
+    return prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        is_read: true,
+        read_at: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Dismiss all announcement popups
+   */
+  async dismissAllAnnouncementPopups(user: AuthUser) {
+    await prisma.notification.updateMany({
+      where: {
+        user_id: user.id,
+        is_read: false,
+        type: { in: ['announcement_new', 'announcement_urgent'] },
+      },
+      data: {
+        is_read: true,
+        read_at: new Date(),
+      },
+    });
+
+    return { message: 'All announcement popups dismissed' };
+  }
 }

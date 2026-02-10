@@ -90,6 +90,8 @@ export class PayrollAdjustmentService {
     return prisma.payrollAdjustment.create({
       data: {
         ...data,
+        effective_date: data.effective_date ? new Date(data.effective_date) : undefined,
+        recurring_end_date: data.recurring_end_date ? new Date(data.recurring_end_date) : undefined,
         company_id: data.company_id || employee.company_id,
         status: 'pending',
         created_by: user.id,
@@ -103,9 +105,15 @@ export class PayrollAdjustmentService {
     if (!existing) throw new Error('Payroll adjustment not found');
     if (existing.status === 'processed') throw new Error('Cannot update processed adjustment');
 
+    const updateData = {
+      ...data,
+      effective_date: data.effective_date ? new Date(data.effective_date) : undefined,
+      recurring_end_date: data.recurring_end_date ? new Date(data.recurring_end_date) : undefined,
+    };
+
     return prisma.payrollAdjustment.update({
       where: { id },
-      data,
+      data: updateData,
       select: PAYROLL_ADJUSTMENT_DETAIL_SELECT,
     });
   }

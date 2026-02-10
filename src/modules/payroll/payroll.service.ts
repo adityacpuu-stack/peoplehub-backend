@@ -173,25 +173,46 @@ export class PayrollService {
     // Get company settings
     const settings = await this.getOrCreateSettings(data.company_id);
 
+    // Parse period to get date range using cut-off dates
+    const cutoffDate = settings.payroll_cutoff_date || 20;
+    const { periodStart: payrollPeriodStart, periodEnd: payrollPeriodEnd } = this.parsePeriod(data.period, cutoffDate);
+
     // Get employees to process (only permanent employees, exclude freelance, internship, and Super Admin)
+    // Include: active employees OR resigned employees whose resign_date is within the payroll period
     const whereEmployee: Prisma.EmployeeWhereInput = {
       company_id: data.company_id,
-      employment_status: 'active',
-      // Exclude freelance and internship - they have separate payroll process
+      // Include active employees OR resigned employees with resign_date in this period
       OR: [
-        { employment_type: { notIn: ['freelance', 'internship'] } },
-        { employment_type: null }, // Include employees without employment_type set (default to permanent)
+        { employment_status: 'active' },
+        {
+          employment_status: 'resigned',
+          resign_date: {
+            gte: payrollPeriodStart,
+            lte: payrollPeriodEnd,
+          },
+        },
       ],
-      // Exclude users with Super Admin role (they don't get payroll)
-      user: {
-        userRoles: {
-          none: {
-            role: {
-              name: 'Super Admin',
+      // Exclude freelance and internship - they have separate payroll process
+      AND: [
+        {
+          OR: [
+            { employment_type: { notIn: ['freelance', 'internship'] } },
+            { employment_type: null }, // Include employees without employment_type set (default to permanent)
+          ],
+        },
+        // Exclude users with Super Admin role (they don't get payroll)
+        {
+          user: {
+            userRoles: {
+              none: {
+                role: {
+                  name: 'Super Admin',
+                },
+              },
             },
           },
         },
-      },
+      ],
     };
 
     if (data.employee_ids && data.employee_ids.length > 0) {
@@ -223,12 +244,8 @@ export class PayrollService {
     const results = [];
     const errors = [];
 
-    // Parse period to get date range for overtime query using cut-off dates
-    const cutoffDate = settings.payroll_cutoff_date || 20;
-    const { periodStart, periodEnd } = this.parsePeriod(data.period, cutoffDate);
-
     // Calculate working days in this period (excluding weekends and holidays)
-    const workingDaysInPeriod = await this.getWorkingDays(periodStart, periodEnd, data.company_id);
+    const workingDaysInPeriod = await this.getWorkingDays(payrollPeriodStart, payrollPeriodEnd, data.company_id);
 
     for (const employee of employees) {
       try {
@@ -251,8 +268,8 @@ export class PayrollService {
             employee_id: employee.id,
             status: 'approved',
             date: {
-              gte: periodStart,
-              lte: periodEnd,
+              gte: payrollPeriodStart,
+              lte: payrollPeriodEnd,
             },
           },
           select: {
@@ -275,10 +292,10 @@ export class PayrollService {
               { effective_date: null },
               // Effective within period
               {
-                effective_date: { lte: periodEnd },
+                effective_date: { lte: payrollPeriodEnd },
                 OR: [
                   { end_date: null },
-                  { end_date: { gte: periodStart } },
+                  { end_date: { gte: payrollPeriodStart } },
                 ],
               },
             ],
@@ -291,25 +308,55 @@ export class PayrollService {
           },
         });
 
-        // Sum up allowances and create details array
-        const additionalAllowances = approvedAllowances.reduce((sum, al) => sum + Number(al.amount || 0), 0);
-        const allowanceDetails = approvedAllowances.map(al => ({
-          name: al.name,
-          type: al.type,
-          amount: Number(al.amount || 0),
-        }));
+        // Categorize allowances by type
+        const allowancesByType = {
+          position: 0,
+          transport: 0,
+          meal: 0,
+          housing: 0,
+          communication: 0,
+          other: 0,
+        };
+        for (const al of approvedAllowances) {
+          const amount = Number(al.amount || 0);
+          const type = (al.type || 'other').toLowerCase();
+          if (type === 'position') allowancesByType.position += amount;
+          else if (type === 'transport') allowancesByType.transport += amount;
+          else if (type === 'meal') allowancesByType.meal += amount;
+          else if (type === 'housing') allowancesByType.housing += amount;
+          else if (type === 'communication' || type === 'telecom') allowancesByType.communication += amount;
+          else allowancesByType.other += amount;
+        }
+        // Only include "other" type allowances in details (typed ones are in their own columns)
+        const typedAllowanceTypes = ['position', 'transport', 'meal', 'housing', 'communication', 'telecom'];
+        const allowanceDetails = approvedAllowances
+          .filter(al => !typedAllowanceTypes.includes((al.type || '').toLowerCase()))
+          .map(al => ({
+            name: al.name,
+            type: al.type,
+            amount: Number(al.amount || 0),
+          }));
 
-        // Calculate payroll with overtime and allowance data
+        // Fetch attendance summary for deductions (absence, late)
+        const attendanceSummary = await this.getAttendanceSummary(employee.id, payrollPeriodStart, payrollPeriodEnd);
+
+        // Fetch unpaid leave days
+        const unpaidLeaveDays = await this.getUnpaidLeaveDays(employee.id, payrollPeriodStart, payrollPeriodEnd);
+
+        // Calculate payroll with overtime, allowance, and deduction data
         const payroll = await this.calculateAndCreate({
           employee_id: employee.id,
           period: data.period,
           basic_salary: employee.basic_salary?.toNumber(),
           overtime_hours: overtimeHours,
           overtime_pay: overtimePay,
-          additional_allowances: additionalAllowances,
+          additional_allowances_by_type: allowancesByType,
           allowance_details: allowanceDetails,
           working_days: workingDaysInPeriod,
-          actual_working_days: workingDaysInPeriod, // Default to full working days, can be adjusted for prorate
+          actual_working_days: workingDaysInPeriod - attendanceSummary.absent_days,
+          absent_days: attendanceSummary.absent_days,
+          late_days: attendanceSummary.late_days,
+          leave_days: unpaidLeaveDays,
         }, user, settings, employee);
 
         results.push(payroll);
@@ -385,10 +432,13 @@ export class PayrollService {
         pay_type: data.pay_type || employee.pay_type || 'gross',
         basic_salary: calculation.basic_salary,
         gross_salary: calculation.gross_salary,
-        transport_allowance: calculation.transport_allowance,
-        meal_allowance: calculation.meal_allowance,
-        position_allowance: calculation.position_allowance,
-        other_allowances: data.additional_allowances || 0,
+        // Use allowances from allowances table ONLY (not employee base to avoid double counting)
+        transport_allowance: data.additional_allowances_by_type?.transport || 0,
+        meal_allowance: data.additional_allowances_by_type?.meal || 0,
+        position_allowance: data.additional_allowances_by_type?.position || 0,
+        other_allowances: (data.additional_allowances_by_type?.other || 0) +
+          (data.additional_allowances_by_type?.housing || 0) +
+          (data.additional_allowances_by_type?.communication || 0),
         allowances_detail: data.allowance_details as any,
         overtime_hours: data.overtime_hours,
         overtime_pay: data.overtime_pay || calculation.overtime_pay,
@@ -396,8 +446,8 @@ export class PayrollService {
         // Deductions
         absence_deduction: calculation.deductions?.absence_deduction,
         late_deduction: calculation.deductions?.late_deduction,
-        loan_deduction: calculation.deductions?.loan_deduction,
-        other_deductions: calculation.deductions?.other_deductions,
+        loan_deduction: (calculation.deductions?.loan_deduction || 0) + (calculation.deductions?.advance_deduction || 0),
+        other_deductions: (calculation.deductions?.other_deductions || 0) + (calculation.deductions?.penalty_deduction || 0) + (calculation.deductions?.leave_deduction || 0),
         deductions_detail: calculation.deductions?.deduction_details as any,
         // Tax & Gross Up Calculation
         taxable_income: calculation.tax.taxable_income,
@@ -413,7 +463,7 @@ export class PayrollService {
         final_gross_up: (calculation.tax as any).final_gross_up,
         total_gross: (calculation.tax as any).total_gross,
         bpjs_object_pph21: (calculation.tax as any).bpjs_object_pph21,
-        thp: (calculation.tax as any).thp,
+        thp: calculation.take_home_pay,
         total_cost_company: (calculation.tax as any).total_cost_company,
         // BPJS
         bpjs_kes_employee: calculation.bpjs.bpjs_kes_employee,
@@ -455,10 +505,11 @@ export class PayrollService {
     const payType = data.pay_type || employee.pay_type || 'gross';
 
     // Get FULL salary components (before prorate)
+    // Use allowances from table (additional_allowances_by_type) instead of employee base to avoid double counting
     const fullBasicSalary = data.basic_salary || employee.basic_salary?.toNumber() || 0;
-    const fullTransportAllowance = employee.transport_allowance?.toNumber() || 0;
-    const fullMealAllowance = employee.meal_allowance?.toNumber() || 0;
-    const fullPositionAllowance = employee.position_allowance?.toNumber() || 0;
+    const fullTransportAllowance = data.additional_allowances_by_type?.transport || 0;
+    const fullMealAllowance = data.additional_allowances_by_type?.meal || 0;
+    const fullPositionAllowance = data.additional_allowances_by_type?.position || 0;
 
     // Calculate prorate FIRST (before any calculations)
     const prorate = await this.calculateProrate({
@@ -478,9 +529,11 @@ export class PayrollService {
     const mealAllowance = this.applyProrate(fullMealAllowance, prorateFactor, isProrated);
     const positionAllowance = this.applyProrate(fullPositionAllowance, prorateFactor, isProrated);
 
-    // Include additional allowances from approved allowance records
-    const additionalAllowances = data.additional_allowances || 0;
-    const totalAllowances = transportAllowance + mealAllowance + positionAllowance + additionalAllowances;
+    // Include other allowances (housing, communication, other) from table
+    const otherAllowances = (data.additional_allowances_by_type?.housing || 0) +
+      (data.additional_allowances_by_type?.communication || 0) +
+      (data.additional_allowances_by_type?.other || 0);
+    const totalAllowances = transportAllowance + mealAllowance + positionAllowance + otherAllowances;
 
     // Use pre-calculated overtime pay if provided, otherwise calculate from hours
     const overtimePay = data.overtime_pay !== undefined && data.overtime_pay > 0
@@ -544,25 +597,27 @@ export class PayrollService {
       total_cost_company: calc.total_cost_company,
     };
 
-    // Deductions (simplified - can be expanded)
-    const deductions: DeductionCalculation = {
-      absence_deduction: 0,
-      late_deduction: 0,
-      loan_deduction: 0,
-      advance_deduction: 0,
-      leave_deduction: 0,
-      penalty_deduction: 0,
-      other_deductions: 0,
-      total_deductions: 0,
-      deduction_details: [],
-    };
+    // Calculate deductions from attendance, loans, adjustments
+    const deductions = await this.calculateDeductions({
+      employee_id: data.employee_id,
+      period: data.period,
+      basic_salary: basicSalary,
+      working_days: data.working_days || 22, // Default 22 working days
+      absent_days: data.absent_days || 0,
+      late_days: data.late_days || 0,
+      unpaid_leave_days: data.leave_days || 0,
+      company_id: employee.company_id,
+    }, settings);
+
+    // Adjust THP with deductions
+    const adjustedThp = calc.thp - deductions.total_deductions;
 
     return {
       basic_salary: calc.basic_salary,
       gross_salary: calc.final_gross_up,
-      total_deductions: calc.total_deductions,
-      net_salary: calc.net_salary,
-      take_home_pay: calc.thp,
+      total_deductions: deductions.total_deductions,
+      net_salary: calc.net_salary - deductions.total_deductions,
+      take_home_pay: adjustedThp,
       total_cost_to_company: calc.total_cost_company,
       bpjs,
       tax,
@@ -2028,6 +2083,11 @@ export class PayrollService {
         bpjs_employee_total: true,
         bpjs_company_total: true,
         total_deductions: true,
+        absence_deduction: true,
+        late_deduction: true,
+        loan_deduction: true,
+        other_deductions: true,
+        deductions_detail: true,
         net_salary: true,
         thp: true,
         working_days: true,
@@ -2052,6 +2112,8 @@ export class PayrollService {
             pay_type: true,
             join_date: true,
             resign_date: true,
+            probation_end_date: true,
+            contract_end_date: true,
             bank_name: true,
             bank_account_number: true,
             company: {

@@ -390,6 +390,8 @@ export class EmployeeService {
       // Job Info
       'job_title', 'division', 'organizational_level', 'grade_level', 'cost_center',
       'employment_type', 'employment_status', 'work_schedule', 'assigned_shift',
+      // Resign Info
+      'resign_type', 'resign_reason', 'resign_notes',
       // Salary
       'basic_salary', 'salary_currency', 'pay_frequency', 'pay_type',
       'transport_allowance', 'meal_allowance', 'position_allowance',
@@ -415,7 +417,7 @@ export class EmployeeService {
     const dateFields = [
       'date_of_birth', 'passport_expiry', 'hire_date', 'join_date',
       'probation_start_date', 'probation_end_date', 'contract_start_date',
-      'contract_end_date',
+      'contract_end_date', 'resign_date',
     ];
 
     for (const field of dateFields) {

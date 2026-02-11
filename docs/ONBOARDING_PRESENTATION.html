@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Onboarding System - New Feature Presentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --secondary: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark: #1e293b;
+      --gray: #64748b;
+      --light: #f8fafc;
+      --white: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--gray);
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .hero-content {
+      text-align: center;
+      color: white;
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto 3rem;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: white;
+    }
+
+    /* Sections */
+    section {
+      padding: 6rem 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+
+    .section-header p {
+      color: var(--gray);
+      font-size: 1.125rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Flow Section */
+    .flow-section {
+      background: white;
+    }
+
+    .flow-diagram {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      position: relative;
+      padding: 2rem 1rem;
+    }
+
+    .flow-step::after {
+      content: '→';
+      position: absolute;
+      right: -1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5rem;
+      color: var(--gray);
+    }
+
+    .flow-step:last-child::after {
+      display: none;
+    }
+
+    .flow-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+    }
+
+    .flow-step:nth-child(1) .flow-icon { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+    .flow-step:nth-child(2) .flow-icon { background: linear-gradient(135deg, #0ea5e9, #06b6d4); }
+    .flow-step:nth-child(3) .flow-icon { background: linear-gradient(135deg, #f59e0b, #f97316); }
+    .flow-step:nth-child(4) .flow-icon { background: linear-gradient(135deg, #10b981, #14b8a6); }
+    .flow-step:nth-child(5) .flow-icon { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+
+    .flow-step h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--dark);
+    }
+
+    .flow-step p {
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+
+    /* Features Grid */
+    .features-section {
+      background: var(--light);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card:nth-child(1) .feature-icon { background: #ede9fe; }
+    .feature-card:nth-child(2) .feature-icon { background: #dbeafe; }
+    .feature-card:nth-child(3) .feature-icon { background: #d1fae5; }
+    .feature-card:nth-child(4) .feature-icon { background: #fef3c7; }
+    .feature-card:nth-child(5) .feature-icon { background: #fce7f3; }
+    .feature-card:nth-child(6) .feature-icon { background: #e0e7ff; }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--dark);
+    }
+
+    .feature-card p {
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    /* Form Preview Section */
+    .preview-section {
+      background: white;
+    }
+
+    .preview-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .preview-content h3 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .preview-content p {
+      color: var(--gray);
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+
+    .preview-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .preview-step {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--light);
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+
+    .preview-step:hover {
+      background: #ede9fe;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-info h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .step-info p {
+      font-size: 0.85rem;
+      color: var(--gray);
+      margin: 0;
+    }
+
+    .preview-mockup {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .mockup-window {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .mockup-header {
+      background: #f1f5f9;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mockup-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .mockup-dot.red { background: #ef4444; }
+    .mockup-dot.yellow { background: #f59e0b; }
+    .mockup-dot.green { background: #10b981; }
+
+    .mockup-content {
+      padding: 1.5rem;
+    }
+
+    .mockup-form-group {
+      margin-bottom: 1rem;
+    }
+
+    .mockup-label {
+      font-size: 0.75rem;
+      color: var(--gray);
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    .mockup-input {
+      width: 100%;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+
+    .mockup-progress {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-step {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #e2e8f0;
+    }
+
+    .progress-step.active {
+      background: var(--primary);
+    }
+
+    /* Email Notification Section */
+    .email-section {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      color: white;
+    }
+
+    .email-section .section-header h2 {
+      color: white;
+    }
+
+    .email-section .section-header p {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .email-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .email-item {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    .email-icon-wrapper {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .email-item:nth-child(1) .email-icon-wrapper { background: rgba(99, 102, 241, 0.3); }
+    .email-item:nth-child(2) .email-icon-wrapper { background: rgba(14, 165, 233, 0.3); }
+    .email-item:nth-child(3) .email-icon-wrapper { background: rgba(16, 185, 129, 0.3); }
+    .email-item:nth-child(4) .email-icon-wrapper { background: rgba(245, 158, 11, 0.3); }
+    .email-item:nth-child(5) .email-icon-wrapper { background: rgba(236, 72, 153, 0.3); }
+
+    .email-content {
+      flex: 1;
+    }
+
+    .email-content h4 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .email-content p {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.95rem;
+    }
+
+    .email-recipients {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .recipient-badge {
+      padding: 0.25rem 0.75rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Integration Section */
+    .integration-section {
+      background: var(--light);
+    }
+
+    .integration-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .integration-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+      transition: all 0.3s;
+    }
+
+    .integration-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .integration-logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+    }
+
+    .integration-card:nth-child(1) .integration-logo {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    }
+
+    .integration-card:nth-child(2) .integration-logo {
+      background: linear-gradient(135deg, #0078d4, #00a4ef);
+    }
+
+    .integration-card:nth-child(3) .integration-logo {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .integration-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--dark);
+    }
+
+    .integration-card p {
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    /* Data Mapping Section */
+    .mapping-section {
+      background: white;
+    }
+
+    .mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .mapping-table th,
+    .mapping-table td {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .mapping-table th {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mapping-table tr:hover {
+      background: #f8fafc;
+    }
+
+    .mapping-table td:first-child {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: var(--primary);
+      background: #f8fafc;
+    }
+
+    .mapping-table td:nth-child(2) {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: var(--success);
+    }
+
+    .arrow-cell {
+      text-align: center;
+      color: var(--gray);
+      font-size: 1.25rem;
+    }
+
+    /* Timeline Section */
+    .timeline-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .timeline-section .section-header h2 {
+      color: white;
+    }
+
+    .timeline-section .section-header p {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      z-index: 0;
+    }
+
+    .timeline-item {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      flex: 1;
+    }
+
+    .timeline-dot {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    .timeline-item h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-item p {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      background: white;
+      text-align: center;
+    }
+
+    .cta-content h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+
+    .cta-content p {
+      color: var(--gray);
+      font-size: 1.125rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 1rem 2.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.6);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    footer p {
+      font-size: 0.9rem;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .preview-container,
+      .integration-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-diagram {
+        flex-direction: column;
+      }
+
+      .flow-step::after {
+        content: '↓';
+        right: 50%;
+        top: auto;
+        bottom: -1rem;
+        transform: translateX(50%);
+      }
+
+      .timeline {
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .timeline::before {
+        display: none;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-logo">PeopleHub</div>
+    <div class="nav-links">
+      <a href="#flow">Flow</a>
+      <a href="#features">Features</a>
+      <a href="#form">Form</a>
+      <a href="#notifications">Notifications</a>
+      <a href="#integration">Integration</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <span class="hero-badge">New Feature Release</span>
+      <h1>Employee Onboarding System</h1>
+      <p>Streamline your hiring process with automated onboarding, self-service forms, and seamless Microsoft 365 integration.</p>
+      <div class="hero-cta">
+        <a href="#flow" class="btn btn-primary">
+          View Flow
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+        <a href="#features" class="btn btn-outline">Explore Features</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flow Section -->
+  <section id="flow" class="flow-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">How It Works</span>
+        <h2>Complete Onboarding Flow</h2>
+        <p>From invitation to account creation, everything is automated</p>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <div class="flow-icon">📝</div>
+          <h4>HR Creates Invitation</h4>
+          <p>Input candidate details, position, salary & start date</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-icon">📧</div>
+          <h4>Email Sent</h4>
+          <p>Candidate receives unique onboarding link</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-icon">✍️</div>
+          <h4>Employee Fills Form</h4>
+          <p>Personal info, documents, bank details</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-icon">✅</div>
+          <h4>HR Reviews</h4>
+          <p>Verify data and approve submission</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-icon">🚀</div>
+          <h4>Auto Provisioning</h4>
+          <p>Create PeopleHub & M365 accounts</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Features</span>
+        <h2>Everything You Need</h2>
+        <p>A complete solution for modern employee onboarding</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3>Unique Invitation Links</h3>
+          <p>Generate secure, time-limited links for each candidate. No login required for new employees.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Mobile-Friendly Forms</h3>
+          <p>Responsive multi-step wizard that works perfectly on any device.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h3>Document Upload</h3>
+          <p>Secure upload for KTP, NPWP, certificates, and other required documents.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔔</div>
+          <h3>Smart Notifications</h3>
+          <p>HR gets notified instantly when candidates submit. Daily digest for pending reviews.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Auto Account Creation</h3>
+          <p>Automatically create PeopleHub user and Microsoft 365 account upon approval.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Progress Tracking</h3>
+          <p>Real-time visibility into onboarding status. Track every step of the process.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form Preview Section -->
+  <section id="form" class="preview-section">
+    <div class="container">
+      <div class="preview-container">
+        <div class="preview-content">
+          <h3>5-Step Onboarding Form</h3>
+          <p>A guided wizard that collects all necessary employee information in a user-friendly way.</p>
+
+          <div class="preview-steps">
+            <div class="preview-step">
+              <div class="step-number">1</div>
+              <div class="step-info">
+                <h4>Personal Information</h4>
+                <p>NIK, DOB, gender, religion, NPWP, BPJS</p>
+              </div>
+            </div>
+            <div class="preview-step">
+              <div class="step-number">2</div>
+              <div class="step-info">
+                <h4>Address</h4>
+                <p>KTP address and current domicile</p>
+              </div>
+            </div>
+            <div class="preview-step">
+              <div class="step-number">3</div>
+              <div class="step-info">
+                <h4>Family & Emergency</h4>
+                <p>Emergency contact and family members</p>
+              </div>
+            </div>
+            <div class="preview-step">
+              <div class="step-number">4</div>
+              <div class="step-info">
+                <h4>Bank Details</h4>
+                <p>Bank name, account number for payroll</p>
+              </div>
+            </div>
+            <div class="preview-step">
+              <div class="step-number">5</div>
+              <div class="step-info">
+                <h4>Documents</h4>
+                <p>Upload KTP, KK, certificates, photo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-mockup">
+          <div class="mockup-window">
+            <div class="mockup-header">
+              <span class="mockup-dot red"></span>
+              <span class="mockup-dot yellow"></span>
+              <span class="mockup-dot green"></span>
+            </div>
+            <div class="mockup-content">
+              <div class="mockup-progress">
+                <div class="progress-step active"></div>
+                <div class="progress-step active"></div>
+                <div class="progress-step"></div>
+                <div class="progress-step"></div>
+                <div class="progress-step"></div>
+              </div>
+              <div class="mockup-form-group">
+                <span class="mockup-label">NIK (KTP)</span>
+                <div class="mockup-input">3171234567890001</div>
+              </div>
+              <div class="mockup-form-group">
+                <span class="mockup-label">Place of Birth</span>
+                <div class="mockup-input">Jakarta</div>
+              </div>
+              <div class="mockup-form-group">
+                <span class="mockup-label">Date of Birth</span>
+                <div class="mockup-input">15 May 1990</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Email Notification Section -->
+  <section id="notifications" class="email-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge" style="background: rgba(255,255,255,0.2);">Notifications</span>
+        <h2>Smart Email System</h2>
+        <p>Keep everyone informed at every step of the process</p>
+      </div>
+
+      <div class="email-flow">
+        <div class="email-item">
+          <div class="email-icon-wrapper">📤</div>
+          <div class="email-content">
+            <h4>Invitation Sent</h4>
+            <p>Candidate receives email with unique onboarding link and instructions</p>
+            <div class="email-recipients">
+              <span class="recipient-badge">To: Candidate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-item">
+          <div class="email-icon-wrapper">📥</div>
+          <div class="email-content">
+            <h4>Submission Received</h4>
+            <p>HR gets instant notification when candidate completes the form</p>
+            <div class="email-recipients">
+              <span class="recipient-badge">To: HR Creator</span>
+              <span class="recipient-badge">To: HR Managers</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-item">
+          <div class="email-icon-wrapper">✅</div>
+          <div class="email-content">
+            <h4>Approval Confirmation</h4>
+            <p>Candidate receives credentials for PeopleHub and Microsoft 365</p>
+            <div class="email-recipients">
+              <span class="recipient-badge">To: Candidate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-item">
+          <div class="email-icon-wrapper">⏰</div>
+          <div class="email-content">
+            <h4>Expiry Reminders</h4>
+            <p>Automatic reminder 3 days before invitation expires</p>
+            <div class="email-recipients">
+              <span class="recipient-badge">To: Candidate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-item">
+          <div class="email-icon-wrapper">📊</div>
+          <div class="email-content">
+            <h4>Daily Digest</h4>
+            <p>HR receives daily summary of pending reviews and expiring invitations</p>
+            <div class="email-recipients">
+              <span class="recipient-badge">To: HR Managers</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Integration Section -->
+  <section id="integration" class="integration-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Integration</span>
+        <h2>Seamless Account Provisioning</h2>
+        <p>Automatically create accounts across all systems</p>
+      </div>
+
+      <div class="integration-grid">
+        <div class="integration-card">
+          <div class="integration-logo">👤</div>
+          <h3>PeopleHub Account</h3>
+          <p>Create employee record with all data from onboarding form. Auto-generate employee ID and assign role.</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-logo">☁️</div>
+          <h3>Microsoft 365</h3>
+          <p>Create Azure AD user via Graph API. Assign licenses for Outlook, Teams, OneDrive automatically.</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-logo">📧</div>
+          <h3>Welcome Email</h3>
+          <p>Send credentials to candidate's personal email with login details and first day instructions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Mapping Section -->
+  <section class="mapping-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Data Flow</span>
+        <h2>Automatic Data Mapping</h2>
+        <p>All onboarding data automatically flows into the employee record</p>
+      </div>
+
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>Onboarding Form</th>
+            <th style="text-align: center;">→</th>
+            <th>Employee Record</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>full_name</td>
+            <td class="arrow-cell">→</td>
+            <td>name</td>
+            <td>From invitation</td>
+          </tr>
+          <tr>
+            <td>work_email</td>
+            <td class="arrow-cell">→</td>
+            <td>email</td>
+            <td>From invitation</td>
+          </tr>
+          <tr>
+            <td>nik</td>
+            <td class="arrow-cell">→</td>
+            <td>nik</td>
+            <td>From submission</td>
+          </tr>
+          <tr>
+            <td>date_of_birth</td>
+            <td class="arrow-cell">→</td>
+            <td>date_of_birth</td>
+            <td>From submission</td>
+          </tr>
+          <tr>
+            <td>bank_account_number</td>
+            <td class="arrow-cell">→</td>
+            <td>bank_account_number</td>
+            <td>From submission</td>
+          </tr>
+          <tr>
+            <td>photo_path</td>
+            <td class="arrow-cell">→</td>
+            <td>avatar</td>
+            <td>Copied to employee folder</td>
+          </tr>
+          <tr>
+            <td>-</td>
+            <td class="arrow-cell">→</td>
+            <td>employee_id</td>
+            <td>Auto-generated: PFI-2025-0042</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Timeline Section -->
+  <section class="timeline-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge" style="background: rgba(255,255,255,0.2);">Implementation</span>
+        <h2>Development Timeline</h2>
+        <p>Phased approach for successful implementation</p>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot">1</div>
+          <h4>Week 1-2</h4>
+          <p>Database & Invitation System</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">2</div>
+          <h4>Week 3-4</h4>
+          <p>Public Onboarding Form</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">3</div>
+          <h4>Week 5</h4>
+          <p>Review & Approval</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">4</div>
+          <h4>Week 6</h4>
+          <p>Account Provisioning</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot">5</div>
+          <h4>Week 7-8</h4>
+          <p>Microsoft 365 Integration</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to Transform Your Onboarding?</h2>
+        <p>Reduce manual work, improve candidate experience, and ensure data accuracy with automated onboarding.</p>
+        <div class="cta-buttons">
+          <a href="#" class="btn-gradient">Start Implementation</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>PeopleHub HRIS &copy; 2025. Employee Onboarding System v1.1</p>
+  </footer>
+
+</body>
+</html>

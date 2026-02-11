@@ -49,14 +49,6 @@ interface EmployeeExportData {
   contract_start_date: Date | null;
   contract_end_date: Date | null;
 
-  // Compensation
-  basic_salary: number | null;
-  transport_allowance: number | null;
-  meal_allowance: number | null;
-  position_allowance: number | null;
-  communication_allowance: number | null;
-  housing_allowance: number | null;
-
   // Tax & BPJS
   tax_status: string | null;
   ptkp_status: string | null;
@@ -67,12 +59,6 @@ interface EmployeeExportData {
   bank_name: string | null;
   bank_account_number: string | null;
   bank_account_holder: string | null;
-
-  // Education
-  last_education: string | null;
-  education_major: string | null;
-  education_institution: string | null;
-  graduation_year: number | null;
 
   // Family
   spouse_name: string | null;
@@ -126,13 +112,6 @@ export const EMPLOYEE_EXPORT_SELECT = {
   probation_end_date: true,
   contract_start_date: true,
   contract_end_date: true,
-  // Compensation
-  basic_salary: true,
-  transport_allowance: true,
-  meal_allowance: true,
-  position_allowance: true,
-  communication_allowance: true,
-  housing_allowance: true,
   // Tax & BPJS
   tax_status: true,
   ptkp_status: true,
@@ -142,11 +121,6 @@ export const EMPLOYEE_EXPORT_SELECT = {
   bank_name: true,
   bank_account_number: true,
   bank_account_holder: true,
-  // Education
-  last_education: true,
-  education_major: true,
-  education_institution: true,
-  graduation_year: true,
   // Family
   spouse_name: true,
   children_count: true,
@@ -334,14 +308,6 @@ export class EmployeeExportService {
       { header: 'Contract Start', width: 14, format: 'date' },
       { header: 'Contract End', width: 14, format: 'date' },
 
-      // Compensation
-      { header: 'Basic Salary', width: 16, format: 'currency' },
-      { header: 'Position Allowance', width: 16, format: 'currency' },
-      { header: 'Transport Allowance', width: 16, format: 'currency' },
-      { header: 'Meal Allowance', width: 16, format: 'currency' },
-      { header: 'Communication', width: 16, format: 'currency' },
-      { header: 'Housing Allowance', width: 16, format: 'currency' },
-
       // Tax & BPJS
       { header: 'Tax Status', width: 12 },
       { header: 'PTKP', width: 12 },
@@ -352,12 +318,6 @@ export class EmployeeExportService {
       { header: 'Bank Name', width: 18 },
       { header: 'Bank Account No', width: 20 },
       { header: 'Bank Account Name', width: 22 },
-
-      // Education
-      { header: 'Education', width: 14 },
-      { header: 'Major', width: 20 },
-      { header: 'Institution', width: 25 },
-      { header: 'Graduation Year', width: 14 },
 
       // Family
       { header: 'Spouse Name', width: 22 },
@@ -370,12 +330,6 @@ export class EmployeeExportService {
     const formatDate = (date: any): Date | string => {
       if (!date) return '';
       return new Date(date);
-    };
-
-    const toNumber = (val: any): number | string => {
-      if (val === null || val === undefined) return '';
-      const num = typeof val === 'object' && val.toNumber ? val.toNumber() : Number(val);
-      return isNaN(num) ? '' : num;
     };
 
     return [
@@ -430,14 +384,6 @@ export class EmployeeExportService {
       formatDate(emp.contract_start_date),
       formatDate(emp.contract_end_date),
 
-      // Compensation
-      toNumber(emp.basic_salary),
-      toNumber(emp.position_allowance),
-      toNumber(emp.transport_allowance),
-      toNumber(emp.meal_allowance),
-      toNumber(emp.communication_allowance),
-      toNumber(emp.housing_allowance),
-
       // Tax & BPJS
       emp.tax_status || '',
       emp.ptkp_status || '',
@@ -448,12 +394,6 @@ export class EmployeeExportService {
       emp.bank_name || '',
       emp.bank_account_number || '',
       emp.bank_account_holder || '',
-
-      // Education
-      emp.last_education || '',
-      emp.education_major || '',
-      emp.education_institution || '',
-      emp.graduation_year || '',
 
       // Family
       emp.spouse_name || '',

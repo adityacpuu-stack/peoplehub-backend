@@ -283,6 +283,49 @@ export const getSubordinates = async (req: Request, res: Response): Promise<void
 };
 
 /**
+ * GET /api/v1/employees/export
+ * Export employees to Excel
+ */
+export const exportExcel = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Not authenticated' });
+      return;
+    }
+
+    const query: EmployeeListQuery = {
+      search: getParam(req.query.search as string) || undefined,
+      company_id: req.query.company_id ? parseInt(getParam(req.query.company_id as string)) : undefined,
+      department_id: req.query.department_id ? parseInt(getParam(req.query.department_id as string)) : undefined,
+      position_id: req.query.position_id ? parseInt(getParam(req.query.position_id as string)) : undefined,
+      employment_status: getParam(req.query.employment_status as string) || undefined,
+      employment_type: getParam(req.query.employment_type as string) || undefined,
+    };
+
+    const workbook = await employeeService.exportToExcel(query, req.user);
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const filename = `Employee_Export_${dateStr}.xlsx`;
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${filename}`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error: any) {
+    console.error('Employee export error:', error);
+    res.status(500).json({ message: error.message || 'Failed to export employees' });
+  }
+};
+
+/**
  * GET /api/v1/employees/me
  * Get current user's employee profile
  */

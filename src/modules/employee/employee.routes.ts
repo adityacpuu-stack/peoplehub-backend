@@ -23,6 +23,9 @@ router.put('/me', employeeController.updateMyProfile);
 // List employees (HR Staff+ or Manager for their subordinates)
 router.get('/', requireManagerOrHigher, validateCompanyAccessFromQuery, employeeController.list);
 
+// Export employees to Excel (HR Staff+)
+router.get('/export', requireHRStaffOrHigher, employeeController.exportExcel);
+
 // Get employee by employee_id (NIK)
 router.get(
   '/by-employee-id/:employeeId',

@@ -8,6 +8,7 @@ import {
   EMPLOYEE_LIST_SELECT,
   EMPLOYEE_DETAIL_SELECT,
 } from './employee.types';
+import { EmployeeExportService, EMPLOYEE_EXPORT_SELECT } from './employee-export.service';
 import { AuthUser } from '../../types/auth.types';
 
 // Company order for employee_id sorting
@@ -789,6 +790,83 @@ export class EmployeeService {
     await this.logAudit(user.id, 'update_profile', 'employee', employeeId, existing, fullEmployee);
 
     return fullEmployee;
+  }
+
+  /**
+   * Export employees to Excel
+   */
+  async exportToExcel(
+    query: EmployeeListQuery,
+    user: AuthUser
+  ) {
+    const {
+      search,
+      company_id,
+      department_id,
+      position_id,
+      employment_status,
+      employment_type,
+    } = query;
+
+    // Build where clause (same logic as list, but no pagination)
+    const where: Prisma.EmployeeWhereInput = {
+      employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
+      ...(user.roles.includes('Super Admin')
+        ? {}
+        : { company_id: { in: user.accessibleCompanyIds } }),
+    };
+
+    if (company_id) {
+      where.company_id = company_id;
+    }
+    if (department_id) {
+      where.department_id = department_id;
+    }
+    if (position_id) {
+      where.position_id = position_id;
+    }
+
+    if (employment_status === 'inactive') {
+      where.employment_status = { not: 'active' };
+    } else if (employment_status === 'all') {
+      // no filter
+    } else {
+      where.employment_status = 'active';
+    }
+
+    if (employment_type) {
+      where.employment_type = employment_type;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { employee_id: { contains: search } },
+        { email: { contains: search } },
+        { mobile_number: { contains: search } },
+      ];
+    }
+
+    const employees = await prisma.employee.findMany({
+      where,
+      select: EMPLOYEE_EXPORT_SELECT,
+    });
+
+    // Sort by company order then employee_id
+    employees.sort((a: any, b: any) => {
+      const aCode = this.extractCompanyCode(a.employee_id);
+      const bCode = this.extractCompanyCode(b.employee_id);
+      const aOrder = COMPANY_ORDER.indexOf(aCode);
+      const bOrder = COMPANY_ORDER.indexOf(bCode);
+      const aIndex = aOrder === -1 ? COMPANY_ORDER.length : aOrder;
+      const bIndex = bOrder === -1 ? COMPANY_ORDER.length : bOrder;
+      if (aIndex !== bIndex) return aIndex - bIndex;
+      return (a.employee_id || '').localeCompare(b.employee_id || '');
+    });
+
+    const exportService = new EmployeeExportService();
+    const exportedBy = user.employee?.name || user.email || 'System';
+    return exportService.generateExcel(employees, exportedBy);
   }
 
   /**

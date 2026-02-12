@@ -237,7 +237,6 @@ export const EMPLOYEE_DETAIL_SELECT = {
   current_province: true,
   current_postal_code: true,
   national_id: true,
-  tax_id: true,
   npwp_number: true,
   passport_number: true,
   passport_expiry: true,

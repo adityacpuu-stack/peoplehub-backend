@@ -191,6 +191,35 @@ export class EmployeeService {
       throw new Error('Access denied to this employee');
     }
 
+    // Hide salary/compensation fields if user is Manager (not HR/Admin/CEO)
+    const canViewSalary =
+      user.roles.includes('Super Admin') ||
+      user.roles.includes('Group CEO') ||
+      user.roles.includes('CEO') ||
+      user.roles.includes('HR Manager') ||
+      user.roles.includes('HR Staff') ||
+      user.roles.includes('Tax Manager') ||
+      user.roles.includes('Tax Staff') ||
+      user.employee?.id === id; // Can view own salary
+
+    if (!canViewSalary) {
+      const salaryFields = [
+        'basic_salary',
+        'salary_currency',
+        'pay_frequency',
+        'pay_type',
+        'transport_allowance',
+        'meal_allowance',
+        'position_allowance',
+        'communication_allowance',
+        'housing_allowance',
+        'performance_bonus',
+      ];
+      salaryFields.forEach((field) => {
+        (employee as any)[field] = null;
+      });
+    }
+
     return employee;
   }
 

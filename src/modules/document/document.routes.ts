@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as documentController from './document.controller';
 import { authenticate } from '../../middlewares/auth.middleware';
-import { requireHRStaffOrHigher, requireHRManagerOrHigher } from '../../middlewares/role.middleware';
+import { requireHRStaffOrHigher, requireHRManagerOrHigher, requireManagerOrHigher } from '../../middlewares/role.middleware';
 import { validateCompanyAccessFromQuery } from '../../middlewares/company.middleware';
 
 const router = Router();
@@ -62,8 +62,8 @@ router.get('/employee', requireHRStaffOrHigher, validateCompanyAccessFromQuery, 
 // Get employee document by ID
 router.get('/employee/:id', documentController.getEmployeeDocumentById);
 
-// Create employee document
-router.post('/employee', requireHRStaffOrHigher, documentController.createEmployeeDocument);
+// Create employee document (Manager+ can upload for their subordinates)
+router.post('/employee', requireManagerOrHigher, documentController.createEmployeeDocument);
 
 // Update employee document
 router.put('/employee/:id', requireHRStaffOrHigher, documentController.updateEmployeeDocument);

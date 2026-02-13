@@ -182,6 +182,8 @@ export const EMPLOYEE_LIST_SELECT = {
   employment_status: true,
   employment_type: true,
   hire_date: true,
+  resign_date: true,
+  resign_type: true,
   avatar: true,
   // Include salary fields for overtime/allowance calculations
   basic_salary: true,

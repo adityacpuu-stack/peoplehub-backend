@@ -322,6 +322,10 @@ export class LeaveService {
       data.end_half_day
     );
 
+    if (totalDays <= 0) {
+      throw new Error('Tanggal yang dipilih jatuh pada hari libur atau weekend. Tidak ada hari kerja yang dihitung.');
+    }
+
     // Validate leave type if provided
     let leaveType = null;
     if (data.leave_type_id) {

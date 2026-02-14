@@ -273,6 +273,7 @@ export const create = async (req: Request, res: Response): Promise<void> => {
   } catch (error: any) {
     const status = error.message.includes('No employee profile') ? 404 :
                    error.message.includes('Insufficient') ? 400 :
+                   error.message.includes('hari libur') ? 400 :
                    error.message.includes('Maximum') || error.message.includes('Minimum') ? 400 : 500;
     res.status(status).json({ message: error.message });
   }

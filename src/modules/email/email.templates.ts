@@ -9,7 +9,7 @@ import {
 
 const appName = config.app.name;
 const primaryColor = '#334155'; // slate-700
-const logoUrl = 'https://peoplehub-frontend.vercel.app/images/logo/logo.png';
+const logoUrl = 'https://peoplehub.pfigroups.com/images/logo/logo.png';
 
 // Base template wrapper
 function baseTemplate(content: string): string {

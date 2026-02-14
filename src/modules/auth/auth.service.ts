@@ -42,6 +42,7 @@ export class AuthService {
             position_id: true,
             employment_status: true,
             profile_completed: true,
+            position: { select: { name: true } },
           },
         },
         userRoles: {
@@ -175,6 +176,7 @@ export class AuthService {
             position_id: true,
             employment_status: true,
             profile_completed: true,
+            position: { select: { name: true } },
           },
         },
         userRoles: {

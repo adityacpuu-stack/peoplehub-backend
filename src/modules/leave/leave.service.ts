@@ -778,9 +778,11 @@ export class LeaveService {
         where.employee = { company_id: user.employee.company_id };
       }
     }
-    // HR Manager/Staff sees company-wide
+    // HR Manager/Staff sees all accessible companies
     else if (roleLevel >= ROLE_HIERARCHY['HR Staff']) {
-      if (user.employee.company_id) {
+      if (user.accessibleCompanyIds && user.accessibleCompanyIds.length > 0) {
+        where.employee = { company_id: { in: user.accessibleCompanyIds } };
+      } else if (user.employee.company_id) {
         where.employee = { company_id: user.employee.company_id };
       }
     }

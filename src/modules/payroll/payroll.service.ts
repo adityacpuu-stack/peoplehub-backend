@@ -182,22 +182,33 @@ export class PayrollService {
 
     // Get employees to process (only permanent employees, exclude freelance, internship, and Super Admin)
     // Include: active employees OR resigned employees whose resign_date is within the payroll period
+    // Exclude employees whose join_date is after the payroll period end (they haven't started yet)
     const whereEmployee: Prisma.EmployeeWhereInput = {
       company_id: data.company_id,
       employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
-      // Include active employees OR resigned employees with resign_date in this period
-      OR: [
-        { employment_status: 'active' },
-        {
-          employment_status: 'resigned',
-          resign_date: {
-            gte: payrollPeriodStart,
-            lte: payrollPeriodEnd,
-          },
-        },
-      ],
-      // Exclude freelance and internship - they have separate payroll process
       AND: [
+        // Only include employees who joined on or before the payroll period end date
+        // (or those without a recorded join_date)
+        {
+          OR: [
+            { join_date: { lte: payrollPeriodEnd } },
+            { join_date: null },
+          ],
+        },
+        // Include active employees OR resigned employees with resign_date in this period
+        {
+          OR: [
+            { employment_status: 'active' },
+            {
+              employment_status: 'resigned',
+              resign_date: {
+                gte: payrollPeriodStart,
+                lte: payrollPeriodEnd,
+              },
+            },
+          ],
+        },
+        // Exclude freelance and internship - they have separate payroll process
         {
           OR: [
             { employment_type: { notIn: ['freelance', 'internship'] } },

@@ -188,9 +188,12 @@ export class AllowanceService {
       throw new Error('Allowance not found');
     }
 
+    // Strip fields that can't be passed directly to Prisma update
+    const { employee_id, company_id, ...updateData } = data;
+
     return prisma.allowance.update({
       where: { id },
-      data,
+      data: updateData,
       select: ALLOWANCE_DETAIL_SELECT,
     });
   }

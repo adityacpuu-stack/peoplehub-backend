@@ -12,13 +12,15 @@ const prisma = new PrismaClient();
 
 export class WorkLocationService {
   async list(query: WorkLocationListQuery, user: AuthUser) {
-    const { page = 1, limit = 50, search, company_id, is_active } = query;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 50;
+    const { search, company_id, is_active } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.WorkLocationWhereInput = {};
 
     if (company_id) {
-      where.company_id = company_id;
+      where.company_id = Number(company_id);
     }
 
     if (is_active !== undefined) {

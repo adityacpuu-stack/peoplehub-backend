@@ -78,13 +78,13 @@ export class EmployeeService {
       where.employment_type = employment_type;
     }
 
-    // Search by name, employee_id, or email
+    // Search by name, employee_id, or email (case-insensitive)
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { employee_id: { contains: search } },
-        { email: { contains: search } },
-        { mobile_number: { contains: search } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { employee_id: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { mobile_number: { contains: search, mode: 'insensitive' } },
       ];
     }
 

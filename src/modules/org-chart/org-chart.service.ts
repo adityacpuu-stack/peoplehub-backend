@@ -9,7 +9,7 @@ import {
 } from './org-chart.types';
 
 // Hidden system accounts (Super Admin, etc.) - excluded from all listings
-const HIDDEN_EMPLOYEE_IDS = ['EMP-001'];
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001', 'PFI-PDR-HRSTAFF'];
 
 // Select fields for org chart employees
 const ORG_CHART_SELECT = {

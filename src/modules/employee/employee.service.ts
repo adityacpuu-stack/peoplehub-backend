@@ -15,7 +15,7 @@ import { AuthUser } from '../../types/auth.types';
 const COMPANY_ORDER = ['PFI', 'GDI', 'LFS', 'UOR', 'BCI', 'PDR'];
 
 // Hidden system accounts (Super Admin, etc.) - excluded from all listings
-const HIDDEN_EMPLOYEE_IDS = ['EMP-001'];
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001', 'PFI-PDR-HRSTAFF'];
 
 export class EmployeeService {
   /**

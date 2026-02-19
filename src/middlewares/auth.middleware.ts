@@ -200,12 +200,18 @@ async function getAccessibleCompanyIds(
 
     const assignedIds = assignments.map((a) => a.company_id);
 
-    // Include own company if exists
-    if (user.employee.company_id) {
-      assignedIds.push(user.employee.company_id);
+    // Only use assigned companies (from admin company assignment)
+    // If no assignments, fallback to own company
+    if (assignedIds.length > 0) {
+      return [...new Set(assignedIds)];
     }
 
-    return [...new Set(assignedIds)];
+    // Fallback: own company only
+    if (user.employee.company_id) {
+      return [user.employee.company_id];
+    }
+
+    return [];
   }
 
   // Other roles: only own company

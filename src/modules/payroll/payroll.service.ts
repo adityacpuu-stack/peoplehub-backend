@@ -43,6 +43,9 @@ import { payrollExportService } from './services/payroll-export.service';
 
 const prisma = new PrismaClient();
 
+// Hidden system accounts - excluded from payroll generation
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001', 'PFI-PDR-HRSTAFF'];
+
 export class PayrollService {
   // ==========================================
   // PAYROLL METHODS
@@ -181,6 +184,7 @@ export class PayrollService {
     // Include: active employees OR resigned employees whose resign_date is within the payroll period
     const whereEmployee: Prisma.EmployeeWhereInput = {
       company_id: data.company_id,
+      employee_id: { notIn: HIDDEN_EMPLOYEE_IDS },
       // Include active employees OR resigned employees with resign_date in this period
       OR: [
         { employment_status: 'active' },

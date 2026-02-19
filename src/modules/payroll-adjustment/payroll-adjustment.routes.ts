@@ -28,7 +28,7 @@ router.post('/:id/reject', authorize(['Super Admin', 'HR Manager', 'Finance Mana
 router.get('/', authorize(['Super Admin', 'HR Manager', 'HR Staff', 'Finance Manager']), (req, res) => controller.list(req, res));
 router.post('/', authorize(['Super Admin', 'HR Manager', 'HR Staff']), (req, res) => controller.create(req, res));
 router.get('/:id', authorize(['Super Admin', 'HR Manager', 'HR Staff', 'Finance Manager']), (req, res) => controller.getById(req, res));
-router.put('/:id', authorize(['Super Admin', 'HR Manager']), (req, res) => controller.update(req, res));
-router.delete('/:id', authorize(['Super Admin', 'HR Manager']), (req, res) => controller.delete(req, res));
+router.put('/:id', authorize(['Super Admin', 'HR Manager', 'HR Staff']), (req, res) => controller.update(req, res));
+router.delete('/:id', authorize(['Super Admin', 'HR Manager', 'HR Staff']), (req, res) => controller.delete(req, res));
 
 export default router;

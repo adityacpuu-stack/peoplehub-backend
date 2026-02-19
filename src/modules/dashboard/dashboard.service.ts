@@ -20,7 +20,7 @@ import {
 const prisma = new PrismaClient();
 
 // Hidden system accounts (Super Admin, etc.) - excluded from all listings
-const HIDDEN_EMPLOYEE_IDS = ['EMP-001'];
+const HIDDEN_EMPLOYEE_IDS = ['EMP-001', 'PFI-PDR-HRSTAFF'];
 
 export class DashboardService {
   // ==========================================
@@ -470,7 +470,7 @@ export class DashboardService {
       prisma.employee.count({ where: companyFilter }),
       prisma.employee.count({ where: { ...companyFilter, employment_status: 'active' } }),
       prisma.employee.count({ where: { ...companyFilter, join_date: { gte: startOfMonth } } }),
-      prisma.department.count({ where: companyFilter }),
+      prisma.department.count({ where: { company_id: companyFilter.company_id } }),
       prisma.leaveRequest.count({ where: { employee: companyFilter, status: 'pending' } }),
       prisma.overtime.count({ where: { employee: companyFilter, status: 'pending' } }),
       prisma.attendance.findMany({
@@ -2225,24 +2225,25 @@ export class DashboardService {
   // ==========================================
 
   private getCompanyFilter(user: AuthUser): any {
+    const hiddenFilter = { employee_id: { notIn: HIDDEN_EMPLOYEE_IDS } };
     // Super Admin can see all
     if (user.roles.includes('Super Admin')) {
-      return {};
+      return hiddenFilter;
     }
     // If user has accessible companies, filter by those
     if (user.accessibleCompanyIds && user.accessibleCompanyIds.length > 0) {
-      return { company_id: { in: user.accessibleCompanyIds } };
+      return { ...hiddenFilter, company_id: { in: user.accessibleCompanyIds } };
     }
     // If user has an employee with company_id, filter by that
     if (user.employee?.company_id) {
-      return { company_id: user.employee.company_id };
+      return { ...hiddenFilter, company_id: user.employee.company_id };
     }
-    // HR Manager/CEO without specific company - show all (for multi-company access)
-    if (user.roles.some(r => ['HR Manager', 'CEO', 'HR Staff', 'Group CEO'].includes(r))) {
-      return {};
+    // HR Manager/CEO/Group CEO without specific company - show all (for multi-company access)
+    if (user.roles.some(r => ['HR Manager', 'CEO', 'Group CEO'].includes(r))) {
+      return hiddenFilter;
     }
     // Default: no access (return impossible filter)
-    return { company_id: -1 };
+    return { ...hiddenFilter, company_id: -1 };
   }
 
   private getWorkDaysInMonth(date: Date): number {

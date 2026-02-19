@@ -60,7 +60,7 @@ router.get('/attendance', authorize(['Super Admin', 'HR Manager', 'HR Staff', 'M
 router.get('/leave', authorize(['Super Admin', 'HR Manager', 'HR Staff', 'Manager', 'Group CEO', 'CEO']), (req, res) => controller.getLeaveSummary(req, res));
 
 // GET /api/v1/dashboard/payroll - Get payroll summary
-router.get('/payroll', authorize(['Super Admin', 'HR Manager', 'Finance Manager', 'Group CEO', 'CEO', 'Tax Manager', 'Tax Staff']), (req, res) => controller.getPayrollSummary(req, res));
+router.get('/payroll', authorize(['Super Admin', 'HR Manager', 'HR Staff', 'Finance Manager', 'Group CEO', 'CEO', 'Tax Manager', 'Tax Staff']), (req, res) => controller.getPayrollSummary(req, res));
 
 // GET /api/v1/dashboard/performance - Get performance summary
 router.get('/performance', authorize(['Super Admin', 'HR Manager', 'HR Staff', 'Manager', 'Group CEO', 'CEO']), (req, res) => controller.getPerformanceSummary(req, res));

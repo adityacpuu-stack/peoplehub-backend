@@ -1249,6 +1249,11 @@ model PayrollAdjustment {
   is_bpjs_object      Boolean?  @default(false)
   reference_number    String?
   attachment_path     String?
+  total_loan_amount   Decimal?  @db.Decimal(15, 2)
+  installment_amount  Decimal?  @db.Decimal(15, 2)
+  total_installments  Int?
+  current_installment Int?      @default(0)
+  remaining_balance   Decimal?  @db.Decimal(15, 2)
   company_id          Int?
   created_by          Int?
   created_at          DateTime  @default(now())

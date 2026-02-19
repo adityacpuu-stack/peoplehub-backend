@@ -435,11 +435,6 @@ export class CompanyService {
   }
 
   async listWithFeatureToggles(user: AuthUser) {
-    // Only Super Admin can list companies with feature toggles
-    if (!user.roles.includes('Super Admin')) {
-      throw new Error('Only Super Admin can view feature toggles');
-    }
-
     const companies = await prisma.company.findMany({
       where: { status: COMPANY_STATUS.ACTIVE },
       select: {

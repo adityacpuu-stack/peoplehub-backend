@@ -13,7 +13,7 @@ router.get('/', controller.list.bind(controller));
 router.get('/hierarchy', controller.getHierarchy.bind(controller));
 
 // Feature Toggles (Super Admin Only) - Must be before /:id routes
-router.get('/feature-toggles/all', authorize(['Super Admin', 'Group CEO']), controller.listWithFeatureToggles.bind(controller));
+router.get('/feature-toggles/all', authorize(['Super Admin', 'Group CEO', 'HR Manager', 'HR Staff']), controller.listWithFeatureToggles.bind(controller));
 
 // CRUD
 router.get('/:id', controller.getById.bind(controller));

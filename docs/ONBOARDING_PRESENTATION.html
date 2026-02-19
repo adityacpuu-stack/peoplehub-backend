@@ -1,21 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Employee Onboarding System - New Feature Presentation</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Employee Onboarding System - New Feature Presentation | PeopleHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #4f46e5;
       --primary-dark: #4338ca;
+      --primary-light: #818cf8;
       --secondary: #0ea5e9;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
       --dark: #1e293b;
-      --gray: #64748b;
-      --light: #f8fafc;
+      --gray-900: #0f172a;
+      --gray-800: #1e293b;
+      --gray-700: #334155;
+      --gray-600: #475569;
+      --gray-500: #64748b;
+      --gray-400: #94a3b8;
+      --gray-300: #cbd5e1;
+      --gray-200: #e2e8f0;
+      --gray-100: #f1f5f9;
+      --gray-50: #f8fafc;
       --white: #ffffff;
     }
 
@@ -25,11 +36,16 @@
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--light);
+      background: var(--gray-50);
       color: var(--dark);
       line-height: 1.6;
+      overflow-x: hidden;
     }
 
     /* Navigation */
@@ -39,36 +55,78 @@
       left: 0;
       right: 0;
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(20px);
       padding: 1rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       z-index: 1000;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border-bottom: 1px solid var(--gray-100);
     }
 
     .nav-logo {
-      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
       font-size: 1.25rem;
       color: var(--primary);
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
     }
 
     .nav-links {
       display: flex;
-      gap: 2rem;
+      gap: 2.5rem;
     }
 
     .nav-links a {
       text-decoration: none;
-      color: var(--gray);
+      color: var(--gray-600);
       font-weight: 500;
       font-size: 0.9rem;
       transition: color 0.2s;
+      position: relative;
     }
 
     .nav-links a:hover {
       color: var(--primary);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-version {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
 
     /* Hero Section */
@@ -77,8 +135,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 6rem 2rem 4rem;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+      padding: 8rem 2rem 6rem;
       position: relative;
       overflow: hidden;
     }
@@ -90,7 +148,32 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+      top: -200px;
+      right: -200px;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    .hero-glow-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, transparent 70%);
+      bottom: -100px;
+      left: -100px;
+      animation: pulse 5s ease-in-out infinite reverse;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
     }
 
     .hero-content {
@@ -98,34 +181,87 @@
       color: white;
       position: relative;
       z-index: 1;
-      max-width: 900px;
+      max-width: 1000px;
     }
 
     .hero-badge {
-      display: inline-block;
-      background: rgba(255,255,255,0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.1);
       backdrop-filter: blur(10px);
-      padding: 0.5rem 1.5rem;
+      padding: 0.6rem 1.5rem;
       border-radius: 50px;
       font-size: 0.875rem;
       font-weight: 500;
       margin-bottom: 2rem;
+      border: 1px solid rgba(255,255,255,0.2);
       animation: fadeInUp 0.6s ease;
     }
 
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
     .hero h1 {
-      font-size: 3.5rem;
-      font-weight: 800;
+      font-size: 4rem;
+      font-weight: 900;
       margin-bottom: 1.5rem;
       animation: fadeInUp 0.6s ease 0.1s both;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .hero p {
-      font-size: 1.25rem;
-      opacity: 0.9;
-      max-width: 600px;
+      font-size: 1.35rem;
+      opacity: 0.85;
+      max-width: 700px;
       margin: 0 auto 3rem;
       animation: fadeInUp 0.6s ease 0.2s both;
+      line-height: 1.7;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      margin-bottom: 3rem;
+      animation: fadeInUp 0.6s ease 0.25s both;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-stat-label {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
     }
 
     .hero-cta {
@@ -137,7 +273,7 @@
 
     .btn {
       padding: 1rem 2rem;
-      border-radius: 12px;
+      border-radius: 14px;
       font-weight: 600;
       font-size: 1rem;
       text-decoration: none;
@@ -145,32 +281,36 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
+      border: none;
+      cursor: pointer;
     }
 
     .btn-primary {
       background: white;
       color: var(--primary);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
     }
 
     .btn-outline {
-      background: transparent;
+      background: rgba(255,255,255,0.1);
       color: white;
-      border: 2px solid rgba(255,255,255,0.5);
+      border: 2px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(10px);
     }
 
     .btn-outline:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: white;
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.5);
     }
 
     /* Sections */
     section {
-      padding: 6rem 2rem;
+      padding: 7rem 2rem;
     }
 
     .container {
@@ -185,34 +325,160 @@
 
     .section-badge {
       display: inline-block;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background: linear-gradient(135deg, var(--primary), var(--purple));
       color: white;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 1.25rem;
       border-radius: 50px;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 1rem;
+      letter-spacing: 1.5px;
+      margin-bottom: 1.25rem;
     }
 
     .section-header h2 {
-      font-size: 2.5rem;
-      font-weight: 700;
+      font-size: 2.75rem;
+      font-weight: 800;
       margin-bottom: 1rem;
-      color: var(--dark);
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
     }
 
     .section-header p {
-      color: var(--gray);
-      font-size: 1.125rem;
+      color: var(--gray-500);
+      font-size: 1.2rem;
       max-width: 600px;
       margin: 0 auto;
     }
 
+    /* Problem Section */
+    .problem-section {
+      background: var(--gray-900);
+      color: white;
+    }
+
+    .problem-section .section-header h2 {
+      color: white;
+    }
+
+    .problem-section .section-header p {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+    }
+
+    .problem-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .problem-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-5px);
+    }
+
+    .problem-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: rgba(239, 68, 68, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .problem-card h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .problem-card p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* Solution Section */
+    .solution-section {
+      background: white;
+    }
+
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+    }
+
+    .solution-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .solution-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .solution-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+
+    .solution-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .solution-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .solution-card h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+    }
+
+    .solution-card p {
+      font-size: 0.9rem;
+      color: var(--gray-500);
+    }
+
     /* Flow Section */
     .flow-section {
-      background: white;
+      background: linear-gradient(180deg, var(--gray-50) 0%, white 100%);
     }
 
     .flow-diagram {
@@ -221,39 +487,54 @@
       align-items: flex-start;
       gap: 1rem;
       flex-wrap: wrap;
+      position: relative;
+    }
+
+    .flow-line {
+      position: absolute;
+      top: 55px;
+      left: 10%;
+      right: 10%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--success));
+      z-index: 0;
+      border-radius: 2px;
     }
 
     .flow-step {
       flex: 1;
-      min-width: 200px;
+      min-width: 180px;
       text-align: center;
       position: relative;
-      padding: 2rem 1rem;
+      padding: 0 1rem;
+      z-index: 1;
     }
 
-    .flow-step::after {
-      content: '→';
-      position: absolute;
-      right: -1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1.5rem;
-      color: var(--gray);
-    }
-
-    .flow-step:last-child::after {
-      display: none;
+    .flow-number {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1rem;
     }
 
     .flow-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
+      width: 90px;
+      height: 90px;
+      border-radius: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      font-size: 2rem;
+      font-size: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
     .flow-step:nth-child(1) .flow-icon { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
@@ -262,96 +543,116 @@
     .flow-step:nth-child(4) .flow-icon { background: linear-gradient(135deg, #10b981, #14b8a6); }
     .flow-step:nth-child(5) .flow-icon { background: linear-gradient(135deg, #ec4899, #f43f5e); }
 
+    .flow-step:nth-child(1) .flow-number { border-color: #6366f1; color: #6366f1; }
+    .flow-step:nth-child(2) .flow-number { border-color: #0ea5e9; color: #0ea5e9; }
+    .flow-step:nth-child(3) .flow-number { border-color: #f59e0b; color: #f59e0b; }
+    .flow-step:nth-child(4) .flow-number { border-color: #10b981; color: #10b981; }
+    .flow-step:nth-child(5) .flow-number { border-color: #ec4899; color: #ec4899; }
+
     .flow-step h4 {
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 0.5rem;
-      color: var(--dark);
+      color: var(--gray-900);
     }
 
     .flow-step p {
-      font-size: 0.875rem;
-      color: var(--gray);
+      font-size: 0.85rem;
+      color: var(--gray-500);
+      line-height: 1.5;
     }
 
     /* Features Grid */
     .features-section {
-      background: var(--light);
+      background: white;
     }
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 2rem;
     }
 
     .feature-card {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      background: var(--gray-50);
+      border-radius: 24px;
+      padding: 2.5rem;
       transition: all 0.3s;
-      border: 1px solid rgba(0,0,0,0.05);
+      border: 1px solid var(--gray-100);
+      position: relative;
+      overflow: hidden;
     }
 
     .feature-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+      background: white;
     }
 
     .feature-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 16px;
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 2rem;
       margin-bottom: 1.5rem;
     }
 
-    .feature-card:nth-child(1) .feature-icon { background: #ede9fe; }
-    .feature-card:nth-child(2) .feature-icon { background: #dbeafe; }
-    .feature-card:nth-child(3) .feature-icon { background: #d1fae5; }
-    .feature-card:nth-child(4) .feature-icon { background: #fef3c7; }
-    .feature-card:nth-child(5) .feature-icon { background: #fce7f3; }
-    .feature-card:nth-child(6) .feature-icon { background: #e0e7ff; }
+    .feature-card:nth-child(1) .feature-icon { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+    .feature-card:nth-child(2) .feature-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+    .feature-card:nth-child(3) .feature-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .feature-card:nth-child(4) .feature-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .feature-card:nth-child(5) .feature-icon { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+    .feature-card:nth-child(6) .feature-icon { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); }
 
     .feature-card h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 1.35rem;
+      font-weight: 700;
       margin-bottom: 0.75rem;
-      color: var(--dark);
+      color: var(--gray-900);
     }
 
     .feature-card p {
-      color: var(--gray);
-      font-size: 0.95rem;
+      color: var(--gray-500);
+      font-size: 1rem;
+      line-height: 1.6;
     }
 
     /* Form Preview Section */
     .preview-section {
-      background: white;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      color: white;
+      overflow: hidden;
+    }
+
+    .preview-section .section-header h2 {
+      color: white;
+    }
+
+    .preview-section .section-header p {
+      color: rgba(255,255,255,0.7);
     }
 
     .preview-container {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 5rem;
       align-items: center;
     }
 
     .preview-content h3 {
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 2.25rem;
+      font-weight: 800;
       margin-bottom: 1.5rem;
-      color: var(--dark);
     }
 
-    .preview-content p {
-      color: var(--gray);
-      margin-bottom: 2rem;
-      font-size: 1.1rem;
+    .preview-content > p {
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 2.5rem;
+      font-size: 1.15rem;
+      line-height: 1.7;
     }
 
     .preview-steps {
@@ -363,67 +664,73 @@
     .preview-step {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: var(--light);
-      border-radius: 12px;
+      gap: 1.25rem;
+      padding: 1.25rem;
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
       transition: all 0.3s;
+      border: 1px solid rgba(255,255,255,0.1);
     }
 
     .preview-step:hover {
-      background: #ede9fe;
+      background: rgba(255,255,255,0.15);
+      transform: translateX(10px);
     }
 
     .step-number {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--primary);
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 1.1rem;
       flex-shrink: 0;
     }
 
     .step-info h4 {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 600;
-      color: var(--dark);
+      margin-bottom: 0.25rem;
     }
 
     .step-info p {
-      font-size: 0.85rem;
-      color: var(--gray);
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
       margin: 0;
     }
 
     .preview-mockup {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 20px;
-      padding: 2rem;
       position: relative;
     }
 
     .mockup-window {
       background: white;
-      border-radius: 12px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      transform: perspective(1000px) rotateY(-5deg);
+      transition: transform 0.5s;
+    }
+
+    .mockup-window:hover {
+      transform: perspective(1000px) rotateY(0deg);
     }
 
     .mockup-header {
-      background: #f1f5f9;
-      padding: 0.75rem 1rem;
+      background: linear-gradient(90deg, #f1f5f9, #e2e8f0);
+      padding: 1rem 1.25rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
     }
 
     .mockup-dot {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
     }
 
@@ -431,50 +738,123 @@
     .mockup-dot.yellow { background: #f59e0b; }
     .mockup-dot.green { background: #10b981; }
 
-    .mockup-content {
-      padding: 1.5rem;
-    }
-
-    .mockup-form-group {
-      margin-bottom: 1rem;
-    }
-
-    .mockup-label {
-      font-size: 0.75rem;
-      color: var(--gray);
-      margin-bottom: 0.25rem;
-      display: block;
-    }
-
-    .mockup-input {
-      width: 100%;
-      padding: 0.75rem;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+    .mockup-url {
+      flex: 1;
+      background: white;
+      padding: 0.5rem 1rem;
       border-radius: 8px;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-left: 1rem;
+    }
+
+    .mockup-content {
+      padding: 2rem;
+      color: var(--gray-900);
+    }
+
+    .mockup-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--gray-900);
+    }
+
+    .mockup-subtitle {
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      margin-bottom: 1.5rem;
     }
 
     .mockup-progress {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
     }
 
     .progress-step {
       flex: 1;
-      height: 4px;
-      border-radius: 2px;
-      background: #e2e8f0;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--gray-200);
+      position: relative;
+      overflow: hidden;
     }
 
     .progress-step.active {
-      background: var(--primary);
+      background: linear-gradient(90deg, var(--primary), var(--purple));
+    }
+
+    .progress-step.current::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, var(--primary), var(--purple));
+      animation: progress 2s ease-in-out infinite;
+    }
+
+    @keyframes progress {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .mockup-form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .mockup-label {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-bottom: 0.4rem;
+      display: block;
+      font-weight: 500;
+    }
+
+    .mockup-input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: var(--gray-50);
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: var(--gray-900);
+      transition: all 0.2s;
+    }
+
+    .mockup-input:focus {
+      border-color: var(--primary);
+      background: white;
+    }
+
+    .mockup-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .mockup-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
     /* Email Notification Section */
     .email-section {
-      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      background: var(--gray-900);
       color: white;
     }
 
@@ -483,27 +863,39 @@
     }
 
     .email-section .section-header p {
-      color: rgba(255,255,255,0.7);
+      color: rgba(255,255,255,0.6);
     }
 
-    .email-flow {
-      display: flex;
-      flex-direction: column;
+    .email-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
     }
 
-    .email-item {
+    .email-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+
+    .email-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-5px);
+    }
+
+    .email-card-header {
       display: flex;
-      gap: 1.5rem;
       align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
     .email-icon-wrapper {
       width: 50px;
       height: 50px;
-      border-radius: 12px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -511,158 +903,342 @@
       flex-shrink: 0;
     }
 
-    .email-item:nth-child(1) .email-icon-wrapper { background: rgba(99, 102, 241, 0.3); }
-    .email-item:nth-child(2) .email-icon-wrapper { background: rgba(14, 165, 233, 0.3); }
-    .email-item:nth-child(3) .email-icon-wrapper { background: rgba(16, 185, 129, 0.3); }
-    .email-item:nth-child(4) .email-icon-wrapper { background: rgba(245, 158, 11, 0.3); }
-    .email-item:nth-child(5) .email-icon-wrapper { background: rgba(236, 72, 153, 0.3); }
+    .email-card:nth-child(1) .email-icon-wrapper { background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3)); }
+    .email-card:nth-child(2) .email-icon-wrapper { background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(6, 182, 212, 0.3)); }
+    .email-card:nth-child(3) .email-icon-wrapper { background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(20, 184, 166, 0.3)); }
+    .email-card:nth-child(4) .email-icon-wrapper { background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(249, 115, 22, 0.3)); }
+    .email-card:nth-child(5) .email-icon-wrapper { background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(244, 63, 94, 0.3)); }
+    .email-card:nth-child(6) .email-icon-wrapper { background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(14, 165, 233, 0.3)); }
 
-    .email-content {
-      flex: 1;
+    .email-card h4 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
     }
 
-    .email-content h4 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
+    .email-card .trigger {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
     }
 
-    .email-content p {
+    .email-card p {
       color: rgba(255,255,255,0.7);
       font-size: 0.95rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
     }
 
     .email-recipients {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
-      margin-top: 0.75rem;
     }
 
     .recipient-badge {
-      padding: 0.25rem 0.75rem;
+      padding: 0.35rem 0.9rem;
       background: rgba(255,255,255,0.1);
       border-radius: 50px;
       font-size: 0.75rem;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
+    }
+
+    .recipient-badge.candidate {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    .recipient-badge.pc {
+      background: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
     }
 
     /* Integration Section */
     .integration-section {
-      background: var(--light);
-    }
-
-    .integration-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-    }
-
-    .integration-card {
       background: white;
-      border-radius: 20px;
-      padding: 2.5rem;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .integration-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .integration-content h3 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      color: var(--gray-900);
+    }
+
+    .integration-content > p {
+      color: var(--gray-500);
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    .integration-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .integration-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.25rem;
+      background: var(--gray-50);
+      border-radius: 16px;
+      border: 1px solid var(--gray-100);
       transition: all 0.3s;
     }
 
-    .integration-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    .integration-item:hover {
+      background: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      transform: translateX(10px);
     }
 
-    .integration-logo {
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
+    .integration-item-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.5rem;
-      font-size: 2rem;
-    }
-
-    .integration-card:nth-child(1) .integration-logo {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    }
-
-    .integration-card:nth-child(2) .integration-logo {
-      background: linear-gradient(135deg, #0078d4, #00a4ef);
-    }
-
-    .integration-card:nth-child(3) .integration-logo {
-      background: linear-gradient(135deg, #10b981, #059669);
-    }
-
-    .integration-card h3 {
       font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--dark);
+      flex-shrink: 0;
     }
 
-    .integration-card p {
-      color: var(--gray);
-      font-size: 0.95rem;
+    .integration-item:nth-child(1) .integration-item-icon {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+    }
+
+    .integration-item:nth-child(2) .integration-item-icon {
+      background: linear-gradient(135deg, #0078d4, #00a4ef);
+      color: white;
+    }
+
+    .integration-item:nth-child(3) .integration-item-icon {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .integration-item h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 0.25rem;
+    }
+
+    .integration-item p {
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      margin: 0;
+    }
+
+    .integration-visual {
+      position: relative;
+    }
+
+    .integration-diagram {
+      background: linear-gradient(135deg, var(--gray-50), white);
+      border-radius: 24px;
+      padding: 3rem;
+      border: 1px solid var(--gray-200);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .diagram-node {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      min-width: 200px;
+    }
+
+    .diagram-node-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .diagram-node:nth-child(1) .diagram-node-icon { background: linear-gradient(135deg, #f59e0b, #f97316); }
+    .diagram-node:nth-child(3) .diagram-node-icon { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+    .diagram-node:nth-child(5) .diagram-node-icon { background: linear-gradient(135deg, #0078d4, #00a4ef); }
+    .diagram-node:nth-child(7) .diagram-node-icon { background: linear-gradient(135deg, #10b981, #059669); }
+
+    .diagram-node span {
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .diagram-arrow {
+      font-size: 1.5rem;
+      color: var(--gray-300);
     }
 
     /* Data Mapping Section */
     .mapping-section {
+      background: var(--gray-50);
+    }
+
+    .mapping-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .mapping-content h3 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      color: var(--gray-900);
+    }
+
+    .mapping-content > p {
+      color: var(--gray-500);
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    .mapping-highlight {
       background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid var(--gray-200);
+    }
+
+    .mapping-highlight h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mapping-highlight h4 span {
+      font-size: 1.25rem;
+    }
+
+    .mapping-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .mapping-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--gray-50);
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+
+    .mapping-item .source {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: var(--primary);
+      background: #ede9fe;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .mapping-item .arrow {
+      color: var(--gray-400);
+    }
+
+    .mapping-item .target {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: var(--success);
+      background: #d1fae5;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .mapping-table-wrapper {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--gray-200);
     }
 
     .mapping-table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
 
     .mapping-table th,
     .mapping-table td {
-      padding: 1rem 1.5rem;
+      padding: 1rem 1.25rem;
       text-align: left;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--gray-100);
     }
 
     .mapping-table th {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background: linear-gradient(135deg, var(--primary), var(--purple));
       color: white;
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .mapping-table tr:hover {
-      background: #f8fafc;
+    .mapping-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mapping-table tr:hover td {
+      background: var(--gray-50);
     }
 
     .mapping-table td:first-child {
       font-family: 'Monaco', 'Consolas', monospace;
       font-size: 0.85rem;
       color: var(--primary);
-      background: #f8fafc;
     }
 
     .mapping-table td:nth-child(2) {
+      text-align: center;
+      color: var(--gray-400);
+    }
+
+    .mapping-table td:nth-child(3) {
       font-family: 'Monaco', 'Consolas', monospace;
       font-size: 0.85rem;
       color: var(--success);
     }
 
-    .arrow-cell {
-      text-align: center;
-      color: var(--gray);
-      font-size: 1.25rem;
+    .mapping-table td:nth-child(4) {
+      font-size: 0.85rem;
+      color: var(--gray-500);
     }
 
     /* Timeline Section */
     .timeline-section {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
       color: white;
     }
 
@@ -685,12 +1261,13 @@
     .timeline::before {
       content: '';
       position: absolute;
-      top: 30px;
-      left: 0;
-      right: 0;
+      top: 40px;
+      left: 5%;
+      right: 5%;
       height: 4px;
       background: rgba(255,255,255,0.2);
       z-index: 0;
+      border-radius: 2px;
     }
 
     .timeline-item {
@@ -698,50 +1275,111 @@
       z-index: 1;
       text-align: center;
       flex: 1;
+      padding: 0 1rem;
     }
 
     .timeline-dot {
-      width: 60px;
-      height: 60px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1rem;
-      font-weight: 700;
+      margin: 0 auto 1.5rem;
+      font-weight: 800;
+      font-size: 1.25rem;
       color: var(--primary);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
     }
 
     .timeline-item h4 {
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 1.1rem;
+      font-weight: 700;
       margin-bottom: 0.5rem;
     }
 
     .timeline-item p {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       opacity: 0.8;
+      line-height: 1.5;
+    }
+
+    .timeline-week {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      padding: 0.3rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Benefits Section */
+    .benefits-section {
+      background: white;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .benefit-card {
+      text-align: center;
+      padding: 2.5rem;
+    }
+
+    .benefit-value {
+      font-size: 4rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .benefit-label {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+    }
+
+    .benefit-desc {
+      color: var(--gray-500);
+      font-size: 0.95rem;
     }
 
     /* CTA Section */
     .cta-section {
-      background: white;
+      background: linear-gradient(135deg, var(--gray-50), white);
       text-align: center;
     }
 
-    .cta-content h2 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--dark);
+    .cta-card {
+      background: white;
+      border-radius: 32px;
+      padding: 4rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+      border: 1px solid var(--gray-100);
+      max-width: 800px;
+      margin: 0 auto;
     }
 
-    .cta-content p {
-      color: var(--gray);
-      font-size: 1.125rem;
-      max-width: 600px;
+    .cta-card h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: var(--gray-900);
+    }
+
+    .cta-card p {
+      color: var(--gray-500);
+      font-size: 1.15rem;
+      max-width: 500px;
       margin: 0 auto 2rem;
     }
 
@@ -752,30 +1390,86 @@
     }
 
     .btn-gradient {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background: linear-gradient(135deg, var(--primary), var(--purple));
       color: white;
-      padding: 1rem 2.5rem;
-      border-radius: 12px;
-      font-weight: 600;
+      padding: 1.1rem 2.5rem;
+      border-radius: 14px;
+      font-weight: 700;
       text-decoration: none;
       transition: all 0.3s;
+      font-size: 1rem;
     }
 
     .btn-gradient:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 40px rgba(79, 70, 229, 0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      padding: 1.1rem 2.5rem;
+      border-radius: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      font-size: 1rem;
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-200);
     }
 
     /* Footer */
     footer {
-      background: var(--dark);
+      background: var(--gray-900);
       color: rgba(255,255,255,0.6);
-      padding: 3rem 2rem;
-      text-align: center;
+      padding: 4rem 2rem;
     }
 
-    footer p {
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .footer-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .footer-info {
+      text-align: right;
+    }
+
+    .footer-info p {
       font-size: 0.9rem;
+    }
+
+    .footer-version {
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
     }
 
     /* Animations */
@@ -791,30 +1485,30 @@
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .hero h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
       }
 
       .preview-container,
-      .integration-grid {
+      .integration-container,
+      .mapping-container {
         grid-template-columns: 1fr;
+        gap: 3rem;
       }
 
-      .flow-diagram {
-        flex-direction: column;
+      .features-grid,
+      .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
 
-      .flow-step::after {
-        content: '↓';
-        right: 50%;
-        top: auto;
-        bottom: -1rem;
-        transform: translateX(50%);
+      .problem-grid,
+      .solution-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
 
       .timeline {
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 2rem;
       }
 
@@ -822,8 +1516,90 @@
         display: none;
       }
 
+      .timeline-item {
+        flex: 0 0 calc(33.333% - 1.5rem);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.25rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+      }
+
+      .hero-stats {
+        gap: 2rem;
+      }
+
+      .hero-stat-value {
+        font-size: 2rem;
+      }
+
+      section {
+        padding: 4rem 1.5rem;
+      }
+
+      .section-header h2 {
+        font-size: 2rem;
+      }
+
+      .features-grid,
+      .benefits-grid,
+      .problem-grid,
+      .solution-grid,
+      .email-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-diagram {
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .flow-line {
+        display: none;
+      }
+
+      .timeline-item {
+        flex: 0 0 100%;
+      }
+
       .nav-links {
         display: none;
+      }
+
+      .nav-version {
+        display: none;
+      }
+
+      .mockup-window {
+        transform: none;
+      }
+
+      .mockup-window:hover {
+        transform: none;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+      }
+
+      .footer-info {
+        text-align: center;
       }
     }
   </style>
@@ -832,30 +1608,126 @@
 
   <!-- Navigation -->
   <nav class="nav">
-    <div class="nav-logo">PeopleHub</div>
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">👥</div>
+      PeopleHub
+    </a>
     <div class="nav-links">
-      <a href="#flow">Flow</a>
-      <a href="#features">Features</a>
+      <a href="#problem">Tantangan</a>
+      <a href="#solution">Solusi</a>
+      <a href="#flow">Alur Kerja</a>
+      <a href="#features">Fitur</a>
       <a href="#form">Form</a>
-      <a href="#notifications">Notifications</a>
-      <a href="#integration">Integration</a>
+      <a href="#notifications">Notifikasi</a>
+      <a href="#integration">Integrasi</a>
+      <a href="#timeline">Timeline</a>
     </div>
+    <span class="nav-version">v1.1</span>
   </nav>
 
   <!-- Hero Section -->
   <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-glow-2"></div>
     <div class="hero-content">
-      <span class="hero-badge">New Feature Release</span>
-      <h1>Employee Onboarding System</h1>
-      <p>Streamline your hiring process with automated onboarding, self-service forms, and seamless Microsoft 365 integration.</p>
+      <span class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Fitur Baru - Q1 2025
+      </span>
+      <h1>Employee <span>Onboarding</span> System</h1>
+      <p>Transformasi proses penerimaan karyawan baru dengan sistem onboarding otomatis, self-service form, dan integrasi langsung dengan Microsoft 365.</p>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value">80%</div>
+          <div class="hero-stat-label">Pengurangan Waktu</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">100%</div>
+          <div class="hero-stat-label">Paperless</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">5 Step</div>
+          <div class="hero-stat-label">Simple Process</div>
+        </div>
+      </div>
+
       <div class="hero-cta">
         <a href="#flow" class="btn btn-primary">
-          View Flow
+          Lihat Alur Kerja
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
           </svg>
         </a>
-        <a href="#features" class="btn btn-outline">Explore Features</a>
+        <a href="#features" class="btn btn-outline">Jelajahi Fitur</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section id="problem" class="problem-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge" style="background: rgba(239, 68, 68, 0.3);">Tantangan Saat Ini</span>
+        <h2>Masalah Onboarding Tradisional</h2>
+        <p>Proses manual yang memakan waktu dan rentan kesalahan</p>
+      </div>
+
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-icon">📝</div>
+          <h4>Banyak Paperwork</h4>
+          <p>Form fisik yang harus diisi manual, mudah hilang atau rusak</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">⏰</div>
+          <h4>Proses Lama</h4>
+          <p>P&C harus input data manual satu per satu ke sistem</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">❌</div>
+          <h4>Rawan Error</h4>
+          <p>Typo dan kesalahan input data sering terjadi</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">🔄</div>
+          <h4>Tidak Terintegrasi</h4>
+          <p>Buat akun email & sistem harus dilakukan terpisah</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Section -->
+  <section id="solution" class="solution-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Solusi Kami</span>
+        <h2>Onboarding System Modern</h2>
+        <p>Otomatisasi end-to-end dengan pengalaman terbaik</p>
+      </div>
+
+      <div class="solution-grid">
+        <div class="solution-card">
+          <div class="solution-icon">🔗</div>
+          <h4>Link Unik</h4>
+          <p>Kandidat mengisi sendiri via link khusus, tanpa perlu login</p>
+        </div>
+        <div class="solution-card">
+          <div class="solution-icon">⚡</div>
+          <h4>Otomatis</h4>
+          <p>Data langsung masuk sistem, tidak perlu input ulang</p>
+        </div>
+        <div class="solution-card">
+          <div class="solution-icon">✅</div>
+          <h4>Validasi Real-time</h4>
+          <p>Format data divalidasi saat pengisian, minim error</p>
+        </div>
+        <div class="solution-card">
+          <div class="solution-icon">☁️</div>
+          <h4>Terintegrasi M365</h4>
+          <p>Akun email & Teams otomatis dibuat saat approve</p>
+        </div>
       </div>
     </div>
   </section>
@@ -864,36 +1736,47 @@
   <section id="flow" class="flow-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-badge">How It Works</span>
-        <h2>Complete Onboarding Flow</h2>
-        <p>From invitation to account creation, everything is automated</p>
+        <span class="section-badge">Alur Kerja</span>
+        <h2>5 Langkah Simple</h2>
+        <p>Dari undangan hingga akun siap, semua terotomasi</p>
       </div>
 
       <div class="flow-diagram">
+        <div class="flow-line"></div>
+
         <div class="flow-step">
+          <div class="flow-number">1</div>
           <div class="flow-icon">📝</div>
-          <h4>HR Creates Invitation</h4>
-          <p>Input candidate details, position, salary & start date</p>
+          <h4>P&C Buat Undangan</h4>
+          <p>Input data dasar: nama, posisi, departemen, gaji, tanggal mulai</p>
         </div>
+
         <div class="flow-step">
+          <div class="flow-number">2</div>
           <div class="flow-icon">📧</div>
-          <h4>Email Sent</h4>
-          <p>Candidate receives unique onboarding link</p>
+          <h4>Email Terkirim</h4>
+          <p>Kandidat menerima email dengan link onboarding unik</p>
         </div>
+
         <div class="flow-step">
+          <div class="flow-number">3</div>
           <div class="flow-icon">✍️</div>
-          <h4>Employee Fills Form</h4>
-          <p>Personal info, documents, bank details</p>
+          <h4>Kandidat Isi Form</h4>
+          <p>Data pribadi, alamat, keluarga, bank, upload dokumen</p>
         </div>
+
         <div class="flow-step">
+          <div class="flow-number">4</div>
           <div class="flow-icon">✅</div>
-          <h4>HR Reviews</h4>
-          <p>Verify data and approve submission</p>
+          <h4>P&C Review</h4>
+          <p>Verifikasi data dan dokumen, approve atau minta revisi</p>
         </div>
+
         <div class="flow-step">
+          <div class="flow-number">5</div>
           <div class="flow-icon">🚀</div>
           <h4>Auto Provisioning</h4>
-          <p>Create PeopleHub & M365 accounts</p>
+          <p>Akun PeopleHub + Microsoft 365 otomatis dibuat</p>
         </div>
       </div>
     </div>
@@ -903,41 +1786,41 @@
   <section id="features" class="features-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-badge">Features</span>
-        <h2>Everything You Need</h2>
-        <p>A complete solution for modern employee onboarding</p>
+        <span class="section-badge">Fitur Lengkap</span>
+        <h2>Semua yang Anda Butuhkan</h2>
+        <p>Solusi komprehensif untuk proses onboarding modern</p>
       </div>
 
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🔗</div>
-          <h3>Unique Invitation Links</h3>
-          <p>Generate secure, time-limited links for each candidate. No login required for new employees.</p>
+          <h3>Link Undangan Aman</h3>
+          <p>Generate link unik dengan waktu kadaluarsa. Kandidat bisa langsung mengisi tanpa perlu membuat akun terlebih dahulu.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📱</div>
-          <h3>Mobile-Friendly Forms</h3>
-          <p>Responsive multi-step wizard that works perfectly on any device.</p>
+          <h3>Mobile Friendly</h3>
+          <p>Form wizard responsif yang bisa diakses dari smartphone, tablet, maupun desktop dengan pengalaman yang optimal.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📄</div>
-          <h3>Document Upload</h3>
-          <p>Secure upload for KTP, NPWP, certificates, and other required documents.</p>
+          <h3>Upload Dokumen</h3>
+          <p>Upload KTP, KK, NPWP, ijazah, dan dokumen lainnya dengan aman. Preview dokumen sebelum submit.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔔</div>
-          <h3>Smart Notifications</h3>
-          <p>HR gets notified instantly when candidates submit. Daily digest for pending reviews.</p>
+          <h3>Notifikasi Pintar</h3>
+          <p>P&C mendapat notifikasi instan saat kandidat submit. Daily digest untuk pending review.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
           <h3>Auto Account Creation</h3>
-          <p>Automatically create PeopleHub user and Microsoft 365 account upon approval.</p>
+          <p>Otomatis buat akun PeopleHub dan Microsoft 365 lengkap dengan assign license saat approve.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3>Progress Tracking</h3>
-          <p>Real-time visibility into onboarding status. Track every step of the process.</p>
+          <h3>Tracking Real-time</h3>
+          <p>Monitor status setiap kandidat: pending, submitted, approved, atau perlu revisi.</p>
         </div>
       </div>
     </div>
@@ -948,43 +1831,43 @@
     <div class="container">
       <div class="preview-container">
         <div class="preview-content">
-          <h3>5-Step Onboarding Form</h3>
-          <p>A guided wizard that collects all necessary employee information in a user-friendly way.</p>
+          <h3>Form Onboarding 5 Langkah</h3>
+          <p>Wizard yang memandu kandidat mengisi semua informasi yang diperlukan dengan cara yang mudah dan terstruktur.</p>
 
           <div class="preview-steps">
             <div class="preview-step">
               <div class="step-number">1</div>
               <div class="step-info">
-                <h4>Personal Information</h4>
-                <p>NIK, DOB, gender, religion, NPWP, BPJS</p>
+                <h4>Informasi Pribadi</h4>
+                <p>NIK, tempat/tanggal lahir, agama, status, NPWP, BPJS</p>
               </div>
             </div>
             <div class="preview-step">
               <div class="step-number">2</div>
               <div class="step-info">
-                <h4>Address</h4>
-                <p>KTP address and current domicile</p>
+                <h4>Alamat</h4>
+                <p>Alamat KTP lengkap dan alamat domisili saat ini</p>
               </div>
             </div>
             <div class="preview-step">
               <div class="step-number">3</div>
               <div class="step-info">
-                <h4>Family & Emergency</h4>
-                <p>Emergency contact and family members</p>
+                <h4>Keluarga & Kontak Darurat</h4>
+                <p>Data keluarga dan kontak darurat yang bisa dihubungi</p>
               </div>
             </div>
             <div class="preview-step">
               <div class="step-number">4</div>
               <div class="step-info">
-                <h4>Bank Details</h4>
-                <p>Bank name, account number for payroll</p>
+                <h4>Rekening Bank</h4>
+                <p>Detail rekening untuk pembayaran gaji</p>
               </div>
             </div>
             <div class="preview-step">
               <div class="step-number">5</div>
               <div class="step-info">
-                <h4>Documents</h4>
-                <p>Upload KTP, KK, certificates, photo</p>
+                <h4>Upload Dokumen</h4>
+                <p>KTP, KK, ijazah, foto, buku rekening</p>
               </div>
             </div>
           </div>
@@ -996,27 +1879,47 @@
               <span class="mockup-dot red"></span>
               <span class="mockup-dot yellow"></span>
               <span class="mockup-dot green"></span>
+              <span class="mockup-url">🔒 hr.company.com/onboarding/abc123...</span>
             </div>
             <div class="mockup-content">
+              <div class="mockup-title">Selamat Datang, John Doe!</div>
+              <div class="mockup-subtitle">Lengkapi data diri Anda untuk menyelesaikan proses onboarding</div>
+
               <div class="mockup-progress">
                 <div class="progress-step active"></div>
                 <div class="progress-step active"></div>
-                <div class="progress-step"></div>
+                <div class="progress-step current"></div>
                 <div class="progress-step"></div>
                 <div class="progress-step"></div>
               </div>
+
               <div class="mockup-form-group">
-                <span class="mockup-label">NIK (KTP)</span>
+                <span class="mockup-label">NIK (Nomor KTP) *</span>
                 <div class="mockup-input">3171234567890001</div>
               </div>
-              <div class="mockup-form-group">
-                <span class="mockup-label">Place of Birth</span>
-                <div class="mockup-input">Jakarta</div>
+
+              <div class="mockup-row">
+                <div class="mockup-form-group">
+                  <span class="mockup-label">Tempat Lahir *</span>
+                  <div class="mockup-input">Jakarta</div>
+                </div>
+                <div class="mockup-form-group">
+                  <span class="mockup-label">Tanggal Lahir *</span>
+                  <div class="mockup-input">15 Mei 1990</div>
+                </div>
               </div>
+
               <div class="mockup-form-group">
-                <span class="mockup-label">Date of Birth</span>
-                <div class="mockup-input">15 May 1990</div>
+                <span class="mockup-label">NPWP</span>
+                <div class="mockup-input">12.345.678.9-012.000</div>
               </div>
+
+              <button class="mockup-btn">
+                Lanjut ke Alamat
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -1028,65 +1931,94 @@
   <section id="notifications" class="email-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-badge" style="background: rgba(255,255,255,0.2);">Notifications</span>
-        <h2>Smart Email System</h2>
-        <p>Keep everyone informed at every step of the process</p>
+        <span class="section-badge" style="background: rgba(255,255,255,0.15);">Notifikasi</span>
+        <h2>Sistem Email Otomatis</h2>
+        <p>Semua pihak selalu terinformasi di setiap tahapan proses</p>
       </div>
 
-      <div class="email-flow">
-        <div class="email-item">
-          <div class="email-icon-wrapper">📤</div>
-          <div class="email-content">
-            <h4>Invitation Sent</h4>
-            <p>Candidate receives email with unique onboarding link and instructions</p>
-            <div class="email-recipients">
-              <span class="recipient-badge">To: Candidate</span>
+      <div class="email-grid">
+        <div class="email-card">
+          <div class="email-card-header">
+            <div class="email-icon-wrapper">📤</div>
+            <div>
+              <h4>Undangan Terkirim</h4>
+              <span class="trigger">Saat P&C buat undangan</span>
             </div>
+          </div>
+          <p>Kandidat menerima email berisi link onboarding, posisi, dan tanggal mulai kerja.</p>
+          <div class="email-recipients">
+            <span class="recipient-badge candidate">📧 Kandidat</span>
           </div>
         </div>
 
-        <div class="email-item">
-          <div class="email-icon-wrapper">📥</div>
-          <div class="email-content">
-            <h4>Submission Received</h4>
-            <p>HR gets instant notification when candidate completes the form</p>
-            <div class="email-recipients">
-              <span class="recipient-badge">To: HR Creator</span>
-              <span class="recipient-badge">To: HR Managers</span>
+        <div class="email-card">
+          <div class="email-card-header">
+            <div class="email-icon-wrapper">📥</div>
+            <div>
+              <h4>Submission Masuk</h4>
+              <span class="trigger">Saat kandidat submit form</span>
             </div>
+          </div>
+          <p>P&C mendapat notifikasi bahwa ada submission baru yang perlu direview segera.</p>
+          <div class="email-recipients">
+            <span class="recipient-badge pc">👤 P&C Creator</span>
+            <span class="recipient-badge pc">👥 P&C Managers</span>
           </div>
         </div>
 
-        <div class="email-item">
-          <div class="email-icon-wrapper">✅</div>
-          <div class="email-content">
-            <h4>Approval Confirmation</h4>
-            <p>Candidate receives credentials for PeopleHub and Microsoft 365</p>
-            <div class="email-recipients">
-              <span class="recipient-badge">To: Candidate</span>
+        <div class="email-card">
+          <div class="email-card-header">
+            <div class="email-icon-wrapper">✅</div>
+            <div>
+              <h4>Approval & Credentials</h4>
+              <span class="trigger">Saat P&C approve</span>
             </div>
+          </div>
+          <p>Kandidat menerima credential login PeopleHub dan Microsoft 365 beserta instruksi hari pertama.</p>
+          <div class="email-recipients">
+            <span class="recipient-badge candidate">📧 Kandidat</span>
           </div>
         </div>
 
-        <div class="email-item">
-          <div class="email-icon-wrapper">⏰</div>
-          <div class="email-content">
-            <h4>Expiry Reminders</h4>
-            <p>Automatic reminder 3 days before invitation expires</p>
-            <div class="email-recipients">
-              <span class="recipient-badge">To: Candidate</span>
+        <div class="email-card">
+          <div class="email-card-header">
+            <div class="email-icon-wrapper">⏰</div>
+            <div>
+              <h4>Reminder Expiry</h4>
+              <span class="trigger">3 hari sebelum kadaluarsa</span>
             </div>
+          </div>
+          <p>Kandidat diingatkan untuk segera menyelesaikan form sebelum link expired.</p>
+          <div class="email-recipients">
+            <span class="recipient-badge candidate">📧 Kandidat</span>
           </div>
         </div>
 
-        <div class="email-item">
-          <div class="email-icon-wrapper">📊</div>
-          <div class="email-content">
-            <h4>Daily Digest</h4>
-            <p>HR receives daily summary of pending reviews and expiring invitations</p>
-            <div class="email-recipients">
-              <span class="recipient-badge">To: HR Managers</span>
+        <div class="email-card">
+          <div class="email-card-header">
+            <div class="email-icon-wrapper">🔄</div>
+            <div>
+              <h4>Revision Request</h4>
+              <span class="trigger">Saat P&C minta revisi</span>
             </div>
+          </div>
+          <p>Kandidat diberitahu bagian mana yang perlu diperbaiki dengan link untuk edit.</p>
+          <div class="email-recipients">
+            <span class="recipient-badge candidate">📧 Kandidat</span>
+          </div>
+        </div>
+
+        <div class="email-card">
+          <div class="email-card-header">
+            <div class="email-icon-wrapper">📊</div>
+            <div>
+              <h4>Daily Digest</h4>
+              <span class="trigger">Setiap hari jam 9 pagi</span>
+            </div>
+          </div>
+          <p>Ringkasan harian: pending review, menunggu kandidat, dan undangan hampir expired.</p>
+          <div class="email-recipients">
+            <span class="recipient-badge pc">👥 P&C Managers</span>
           </div>
         </div>
       </div>
@@ -1097,26 +2029,63 @@
   <section id="integration" class="integration-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-badge">Integration</span>
-        <h2>Seamless Account Provisioning</h2>
-        <p>Automatically create accounts across all systems</p>
+        <span class="section-badge">Integrasi</span>
+        <h2>Account Provisioning Otomatis</h2>
+        <p>Buat akun di semua sistem sekaligus dengan satu klik approve</p>
       </div>
 
-      <div class="integration-grid">
-        <div class="integration-card">
-          <div class="integration-logo">👤</div>
-          <h3>PeopleHub Account</h3>
-          <p>Create employee record with all data from onboarding form. Auto-generate employee ID and assign role.</p>
+      <div class="integration-container">
+        <div class="integration-content">
+          <h3>Satu Approve, Semua Akun Siap</h3>
+          <p>Ketika P&C meng-approve submission, sistem akan otomatis membuat semua akun yang diperlukan tanpa intervensi manual.</p>
+
+          <div class="integration-list">
+            <div class="integration-item">
+              <div class="integration-item-icon">👤</div>
+              <div>
+                <h4>PeopleHub Account</h4>
+                <p>Employee record + user login otomatis dibuat dengan role Employee</p>
+              </div>
+            </div>
+            <div class="integration-item">
+              <div class="integration-item-icon">☁️</div>
+              <div>
+                <h4>Microsoft 365 Account</h4>
+                <p>Azure AD user via Graph API dengan license assignment otomatis</p>
+              </div>
+            </div>
+            <div class="integration-item">
+              <div class="integration-item-icon">📧</div>
+              <div>
+                <h4>Welcome Email</h4>
+                <p>Credential + instruksi hari pertama dikirim ke email pribadi kandidat</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="integration-card">
-          <div class="integration-logo">☁️</div>
-          <h3>Microsoft 365</h3>
-          <p>Create Azure AD user via Graph API. Assign licenses for Outlook, Teams, OneDrive automatically.</p>
-        </div>
-        <div class="integration-card">
-          <div class="integration-logo">📧</div>
-          <h3>Welcome Email</h3>
-          <p>Send credentials to candidate's personal email with login details and first day instructions.</p>
+
+        <div class="integration-visual">
+          <div class="integration-diagram">
+            <div class="diagram-node">
+              <div class="diagram-node-icon">✍️</div>
+              <span>Onboarding Data</span>
+            </div>
+            <div class="diagram-arrow">↓</div>
+            <div class="diagram-node">
+              <div class="diagram-node-icon">👤</div>
+              <span>PeopleHub Employee</span>
+            </div>
+            <div class="diagram-arrow">↓</div>
+            <div class="diagram-node">
+              <div class="diagram-node-icon">☁️</div>
+              <span>Microsoft 365 User</span>
+            </div>
+            <div class="diagram-arrow">↓</div>
+            <div class="diagram-node">
+              <div class="diagram-node-icon">📧</div>
+              <span>Welcome Email Sent</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1127,101 +2096,180 @@
     <div class="container">
       <div class="section-header">
         <span class="section-badge">Data Flow</span>
-        <h2>Automatic Data Mapping</h2>
-        <p>All onboarding data automatically flows into the employee record</p>
+        <h2>Mapping Data Otomatis</h2>
+        <p>Semua data dari form onboarding langsung tersimpan ke employee record</p>
       </div>
 
-      <table class="mapping-table">
-        <thead>
-          <tr>
-            <th>Onboarding Form</th>
-            <th style="text-align: center;">→</th>
-            <th>Employee Record</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>full_name</td>
-            <td class="arrow-cell">→</td>
-            <td>name</td>
-            <td>From invitation</td>
-          </tr>
-          <tr>
-            <td>work_email</td>
-            <td class="arrow-cell">→</td>
-            <td>email</td>
-            <td>From invitation</td>
-          </tr>
-          <tr>
-            <td>nik</td>
-            <td class="arrow-cell">→</td>
-            <td>nik</td>
-            <td>From submission</td>
-          </tr>
-          <tr>
-            <td>date_of_birth</td>
-            <td class="arrow-cell">→</td>
-            <td>date_of_birth</td>
-            <td>From submission</td>
-          </tr>
-          <tr>
-            <td>bank_account_number</td>
-            <td class="arrow-cell">→</td>
-            <td>bank_account_number</td>
-            <td>From submission</td>
-          </tr>
-          <tr>
-            <td>photo_path</td>
-            <td class="arrow-cell">→</td>
-            <td>avatar</td>
-            <td>Copied to employee folder</td>
-          </tr>
-          <tr>
-            <td>-</td>
-            <td class="arrow-cell">→</td>
-            <td>employee_id</td>
-            <td>Auto-generated: PFI-2025-0042</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="mapping-container">
+        <div class="mapping-content">
+          <h3>Zero Manual Entry</h3>
+          <p>Data yang diisi kandidat otomatis ter-mapping ke field employee record. Tidak perlu input ulang, tidak ada typo.</p>
+
+          <div class="mapping-highlight">
+            <h4><span>✨</span> Auto-Generated</h4>
+            <div class="mapping-list">
+              <div class="mapping-item">
+                <span class="source">-</span>
+                <span class="arrow">→</span>
+                <span class="target">employee_id</span>
+                <span style="margin-left: auto; font-size: 0.8rem; color: var(--gray-500);">PFI-2025-0042</span>
+              </div>
+              <div class="mapping-item">
+                <span class="source">-</span>
+                <span class="arrow">→</span>
+                <span class="target">employment_status</span>
+                <span style="margin-left: auto; font-size: 0.8rem; color: var(--gray-500);">active</span>
+              </div>
+              <div class="mapping-item">
+                <span class="source">photo_path</span>
+                <span class="arrow">→</span>
+                <span class="target">avatar</span>
+                <span style="margin-left: auto; font-size: 0.8rem; color: var(--gray-500);">Copied to folder</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mapping-table-wrapper">
+          <table class="mapping-table">
+            <thead>
+              <tr>
+                <th>Onboarding Form</th>
+                <th>→</th>
+                <th>Employee Record</th>
+                <th>Sumber</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>full_name</td>
+                <td>→</td>
+                <td>name</td>
+                <td>Invitation</td>
+              </tr>
+              <tr>
+                <td>work_email</td>
+                <td>→</td>
+                <td>email</td>
+                <td>Invitation</td>
+              </tr>
+              <tr>
+                <td>position</td>
+                <td>→</td>
+                <td>position</td>
+                <td>Invitation</td>
+              </tr>
+              <tr>
+                <td>start_date</td>
+                <td>→</td>
+                <td>join_date</td>
+                <td>Invitation</td>
+              </tr>
+              <tr>
+                <td>basic_salary</td>
+                <td>→</td>
+                <td>basic_salary</td>
+                <td>Invitation</td>
+              </tr>
+              <tr>
+                <td>nik</td>
+                <td>→</td>
+                <td>nik</td>
+                <td>Submission</td>
+              </tr>
+              <tr>
+                <td>date_of_birth</td>
+                <td>→</td>
+                <td>date_of_birth</td>
+                <td>Submission</td>
+              </tr>
+              <tr>
+                <td>bank_account</td>
+                <td>→</td>
+                <td>bank_account_number</td>
+                <td>Submission</td>
+              </tr>
+              <tr>
+                <td>emergency_name</td>
+                <td>→</td>
+                <td>emergency_contact_name</td>
+                <td>Submission</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section class="benefits-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Manfaat</span>
+        <h2>Hasil yang Terukur</h2>
+        <p>Transformasi nyata untuk proses onboarding Anda</p>
+      </div>
+
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-value">80%</div>
+          <div class="benefit-label">Lebih Cepat</div>
+          <div class="benefit-desc">Proses yang sebelumnya memakan waktu berhari-hari kini selesai dalam hitungan jam</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-value">0</div>
+          <div class="benefit-label">Paper Forms</div>
+          <div class="benefit-desc">Tidak ada lagi form kertas yang harus diisi, discan, atau disimpan secara fisik</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-value">99%</div>
+          <div class="benefit-label">Data Accuracy</div>
+          <div class="benefit-desc">Validasi real-time dan mapping otomatis menghilangkan human error</div>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- Timeline Section -->
-  <section class="timeline-section">
+  <section id="timeline" class="timeline-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-badge" style="background: rgba(255,255,255,0.2);">Implementation</span>
-        <h2>Development Timeline</h2>
-        <p>Phased approach for successful implementation</p>
+        <span class="section-badge" style="background: rgba(255,255,255,0.15);">Implementation</span>
+        <h2>Timeline Pengembangan</h2>
+        <p>Pendekatan bertahap untuk implementasi yang sukses</p>
       </div>
 
       <div class="timeline">
         <div class="timeline-item">
           <div class="timeline-dot">1</div>
-          <h4>Week 1-2</h4>
-          <p>Database & Invitation System</p>
+          <span class="timeline-week">Week 1-2</span>
+          <h4>Database & Invitation</h4>
+          <p>Schema, API CRUD, token generation, email service</p>
         </div>
         <div class="timeline-item">
           <div class="timeline-dot">2</div>
-          <h4>Week 3-4</h4>
-          <p>Public Onboarding Form</p>
+          <span class="timeline-week">Week 3-4</span>
+          <h4>Public Form</h4>
+          <p>Multi-step wizard, validasi, upload dokumen</p>
         </div>
         <div class="timeline-item">
           <div class="timeline-dot">3</div>
-          <h4>Week 5</h4>
-          <p>Review & Approval</p>
+          <span class="timeline-week">Week 5</span>
+          <h4>Review & Approval</h4>
+          <p>P&C dashboard, approval workflow, revision handling</p>
         </div>
         <div class="timeline-item">
           <div class="timeline-dot">4</div>
-          <h4>Week 6</h4>
-          <p>Account Provisioning</p>
+          <span class="timeline-week">Week 6</span>
+          <h4>Account Provisioning</h4>
+          <p>Auto create employee, user, documents migration</p>
         </div>
         <div class="timeline-item">
           <div class="timeline-dot">5</div>
-          <h4>Week 7-8</h4>
-          <p>Microsoft 365 Integration</p>
+          <span class="timeline-week">Week 7-8</span>
+          <h4>Microsoft 365</h4>
+          <p>Azure AD integration, Graph API, license assignment</p>
         </div>
       </div>
     </div>
@@ -1230,11 +2278,12 @@
   <!-- CTA Section -->
   <section class="cta-section">
     <div class="container">
-      <div class="cta-content">
-        <h2>Ready to Transform Your Onboarding?</h2>
-        <p>Reduce manual work, improve candidate experience, and ensure data accuracy with automated onboarding.</p>
+      <div class="cta-card">
+        <h2>Siap Transformasi Onboarding?</h2>
+        <p>Kurangi pekerjaan manual, tingkatkan pengalaman kandidat, dan pastikan akurasi data dengan sistem onboarding otomatis.</p>
         <div class="cta-buttons">
-          <a href="#" class="btn-gradient">Start Implementation</a>
+          <a href="#" class="btn-gradient">Mulai Development</a>
+          <a href="#" class="btn-secondary">Lihat Dokumentasi</a>
         </div>
       </div>
     </div>
@@ -1242,7 +2291,16 @@
 
   <!-- Footer -->
   <footer>
-    <p>PeopleHub HRIS &copy; 2025. Employee Onboarding System v1.1</p>
+    <div class="footer-content">
+      <div class="footer-logo">
+        <div class="footer-logo-icon">👥</div>
+        PeopleHub HRIS
+      </div>
+      <div class="footer-info">
+        <p>Employee Onboarding System - Feature Presentation</p>
+        <span class="footer-version">Version 1.1 • February 2025</span>
+      </div>
+    </div>
   </footer>
 
 </body>

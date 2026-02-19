@@ -87,12 +87,41 @@ export class PayrollAdjustmentService {
 
     if (!employee) throw new Error('Employee not found');
 
+    const isLoanType = data.type === 'loan' || data.type === 'advance';
+    let loanFields: Record<string, any> = {};
+
+    if (isLoanType && data.total_loan_amount && data.installment_amount) {
+      const totalInstallments = Math.ceil(data.total_loan_amount / data.installment_amount);
+      loanFields = {
+        total_loan_amount: data.total_loan_amount,
+        installment_amount: data.installment_amount,
+        total_installments: totalInstallments,
+        current_installment: 0,
+        remaining_balance: data.total_loan_amount,
+      };
+      // Override amount with installment amount
+      data.amount = data.installment_amount;
+      // Auto-enable recurring monthly
+      data.is_recurring = true;
+      data.recurring_frequency = 'monthly';
+      // Auto-calculate recurring end date if effective_date is set
+      if (data.effective_date) {
+        const endDate = new Date(data.effective_date);
+        endDate.setMonth(endDate.getMonth() + totalInstallments);
+        data.recurring_end_date = endDate;
+      }
+    }
+
+    // Remove loan-specific DTO fields that are not direct Prisma columns
+    const { total_loan_amount, installment_amount, ...restData } = data;
+
     return prisma.payrollAdjustment.create({
       data: {
-        ...data,
-        effective_date: data.effective_date ? new Date(data.effective_date) : undefined,
-        recurring_end_date: data.recurring_end_date ? new Date(data.recurring_end_date) : undefined,
-        company_id: data.company_id || employee.company_id,
+        ...restData,
+        ...loanFields,
+        effective_date: restData.effective_date ? new Date(restData.effective_date) : undefined,
+        recurring_end_date: restData.recurring_end_date ? new Date(restData.recurring_end_date as any) : undefined,
+        company_id: restData.company_id || employee.company_id,
         status: 'pending',
         created_by: user.id,
       },
@@ -100,15 +129,41 @@ export class PayrollAdjustmentService {
     });
   }
 
-  async update(id: number, data: UpdatePayrollAdjustmentDTO, user: AuthUser) {
+  async update(id: number, data: UpdatePayrollAdjustmentDTO & { total_loan_amount?: number; installment_amount?: number }, user: AuthUser) {
     const existing = await prisma.payrollAdjustment.findUnique({ where: { id } });
     if (!existing) throw new Error('Payroll adjustment not found');
     if (existing.status === 'processed') throw new Error('Cannot update processed adjustment');
 
+    // Strip fields that Prisma can't accept directly in update
+    const { total_loan_amount, installment_amount, employee_id, ...restData } = data as any;
+
+    const isLoanType = (restData.type || existing.type) === 'loan' || (restData.type || existing.type) === 'advance';
+    let loanFields: Record<string, any> = {};
+
+    if (isLoanType && total_loan_amount && installment_amount) {
+      const totalInstallments = Math.ceil(total_loan_amount / installment_amount);
+      loanFields = {
+        total_loan_amount,
+        installment_amount,
+        total_installments: totalInstallments,
+        current_installment: existing.current_installment || 0,
+        remaining_balance: total_loan_amount - ((existing.current_installment || 0) * installment_amount),
+      };
+      restData.amount = installment_amount;
+      restData.is_recurring = true;
+      restData.recurring_frequency = 'monthly';
+      if (restData.effective_date) {
+        const endDate = new Date(restData.effective_date);
+        endDate.setMonth(endDate.getMonth() + totalInstallments);
+        restData.recurring_end_date = endDate as any;
+      }
+    }
+
     const updateData = {
-      ...data,
-      effective_date: data.effective_date ? new Date(data.effective_date) : undefined,
-      recurring_end_date: data.recurring_end_date ? new Date(data.recurring_end_date) : undefined,
+      ...restData,
+      ...loanFields,
+      effective_date: restData.effective_date ? new Date(restData.effective_date) : undefined,
+      recurring_end_date: restData.recurring_end_date ? new Date(restData.recurring_end_date as any) : undefined,
     };
 
     return prisma.payrollAdjustment.update({
@@ -131,11 +186,40 @@ export class PayrollAdjustmentService {
     if (!adjustment) throw new Error('Payroll adjustment not found');
     if (adjustment.status !== 'pending') throw new Error('Only pending adjustments can be approved');
 
+    const updateData: Record<string, any> = {
+      status: 'approved',
+      approved_by: user.id,
+      approved_at: new Date(),
+    };
+
+    // Track installment progress for loan/advance types
+    if (
+      (adjustment.type === 'loan' || adjustment.type === 'advance') &&
+      adjustment.total_loan_amount &&
+      adjustment.installment_amount
+    ) {
+      const newInstallment = (adjustment.current_installment || 0) + 1;
+      const installmentAmt = Number(adjustment.installment_amount);
+      const totalLoan = Number(adjustment.total_loan_amount);
+      const newBalance = Math.max(0, totalLoan - newInstallment * installmentAmt);
+
+      updateData.current_installment = newInstallment;
+      updateData.remaining_balance = newBalance;
+    }
+
     return prisma.payrollAdjustment.update({
       where: { id },
-      data: { status: 'approved', approved_by: user.id, approved_at: new Date() },
+      data: updateData,
       select: PAYROLL_ADJUSTMENT_DETAIL_SELECT,
     });
+  }
+
+  async isLoanFullyPaid(id: number): Promise<boolean> {
+    const adjustment = await prisma.payrollAdjustment.findUnique({ where: { id } });
+    if (!adjustment) throw new Error('Payroll adjustment not found');
+    if (adjustment.type !== 'loan' && adjustment.type !== 'advance') return false;
+    if (!adjustment.total_installments) return false;
+    return (adjustment.current_installment || 0) >= adjustment.total_installments;
   }
 
   async reject(id: number, reason: string, user: AuthUser) {

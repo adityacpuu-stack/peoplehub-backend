@@ -70,6 +70,7 @@ export const DEPARTMENT_LIST_SELECT = {
   location: true,
   department_type: true,
   sort_order: true,
+  company_id: true,
   company: {
     select: { id: true, name: true },
   },

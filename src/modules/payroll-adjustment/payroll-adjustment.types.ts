@@ -62,6 +62,8 @@ export interface CreatePayrollAdjustmentDTO {
   reference_number?: string;
   attachment_path?: string;
   company_id?: number;
+  total_loan_amount?: number;
+  installment_amount?: number;
 }
 
 export interface UpdatePayrollAdjustmentDTO extends Partial<Omit<CreatePayrollAdjustmentDTO, 'employee_id'>> {
@@ -108,6 +110,11 @@ export const PAYROLL_ADJUSTMENT_SELECT = {
   is_bpjs_object: true,
   reference_number: true,
   attachment_path: true,
+  total_loan_amount: true,
+  installment_amount: true,
+  total_installments: true,
+  current_installment: true,
+  remaining_balance: true,
   company_id: true,
   created_by: true,
   created_at: true,

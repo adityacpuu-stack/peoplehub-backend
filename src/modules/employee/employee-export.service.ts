@@ -51,15 +51,22 @@ interface EmployeeExportData {
 
   // Tax & BPJS
   tax_status: string | null;
-  ptkp_status: string | null;
   bpjs_ketenagakerjaan_number: string | null;
   bpjs_kesehatan_number: string | null;
+
+  // Compensation
+  basic_salary: number | null;
+  salary_currency: string | null;
+  pay_frequency: string | null;
+  pay_type: string | null;
+  transport_allowance: number | null;
+  meal_allowance: number | null;
+  position_allowance: number | null;
+  housing_allowance: number | null;
 
   // Bank
   bank_name: string | null;
   bank_account_number: string | null;
-  bank_account_holder: string | null;
-
   // Family
   spouse_name: string | null;
   children_count: number | null;
@@ -70,6 +77,7 @@ interface EmployeeExportData {
   department_name: string | null;
   position_name: string | null;
   manager_name: string | null;
+  work_location_name: string | null;
 }
 
 // Prisma select for export query
@@ -114,13 +122,20 @@ export const EMPLOYEE_EXPORT_SELECT = {
   contract_end_date: true,
   // Tax & BPJS
   tax_status: true,
-  ptkp_status: true,
   bpjs_ketenagakerjaan_number: true,
   bpjs_kesehatan_number: true,
+  // Compensation
+  basic_salary: true,
+  salary_currency: true,
+  pay_frequency: true,
+  pay_type: true,
+  transport_allowance: true,
+  meal_allowance: true,
+  position_allowance: true,
+  housing_allowance: true,
   // Bank
   bank_name: true,
   bank_account_number: true,
-  bank_account_holder: true,
   // Family
   spouse_name: true,
   children_count: true,
@@ -130,6 +145,7 @@ export const EMPLOYEE_EXPORT_SELECT = {
   department: { select: { id: true, name: true } },
   position: { select: { id: true, name: true } },
   manager: { select: { id: true, name: true } },
+  workLocation: { select: { id: true, name: true, city: true } },
 } as const;
 
 export class EmployeeExportService {
@@ -145,7 +161,7 @@ export class EmployeeExportService {
     workbook.created = new Date();
 
     const sheet = workbook.addWorksheet('Employees', {
-      views: [{ state: 'frozen', xSplit: 3, ySplit: 4 }],
+      views: [{ state: 'frozen', xSplit: 3, ySplit: 5 }],
     });
 
     // ========== HEADER SECTION ==========
@@ -157,14 +173,14 @@ export class EmployeeExportService {
     });
 
     // Row 1: Title
-    sheet.mergeCells('A1:AP1');
+    sheet.mergeCells('A1:BC1');
     const titleCell = sheet.getCell('A1');
     titleCell.value = 'EMPLOYEE DATA EXPORT';
     titleCell.font = { bold: true, size: 14 };
     titleCell.alignment = { horizontal: 'center' };
 
     // Row 2: Export info
-    sheet.mergeCells('A2:AP2');
+    sheet.mergeCells('A2:BC2');
     const infoCell = sheet.getCell('A2');
     infoCell.value = `Exported on: ${exportDate} | By: ${exportedBy} | Total: ${employees.length} employees`;
     infoCell.font = { size: 10, italic: true, color: { argb: '666666' } };
@@ -173,7 +189,7 @@ export class EmployeeExportService {
     // Row 3: Empty separator
     sheet.addRow([]);
 
-    // ========== COLUMN HEADERS ==========
+    // ========== COLUMN DEFINITIONS ==========
     const columns = this.getColumnDefinitions();
 
     // Set column widths
@@ -181,8 +197,35 @@ export class EmployeeExportService {
       width: col.width,
     }));
 
-    // Row 4: Header row
-    const headerRow = sheet.getRow(4);
+    // ========== ROW 4: GROUP/SECTION HEADERS ==========
+    const groupHeaders = this.getGroupHeaders();
+    const groupRow = sheet.getRow(4);
+    groupRow.height = 24;
+
+    groupHeaders.forEach((group) => {
+      const startCol = this.colLetter(group.startCol);
+      const endCol = this.colLetter(group.endCol);
+      sheet.mergeCells(`${startCol}4:${endCol}4`);
+
+      const cell = groupRow.getCell(group.startCol);
+      cell.value = group.label;
+      cell.font = { bold: true, size: 10, color: { argb: 'FFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: group.color },
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    });
+
+    // ========== ROW 5: COLUMN HEADERS ==========
+    const headerRow = sheet.getRow(5);
     columns.forEach((col, idx) => {
       const cell = headerRow.getCell(idx + 1);
       cell.value = col.header;
@@ -204,7 +247,7 @@ export class EmployeeExportService {
 
     // ========== DATA ROWS ==========
     employees.forEach((emp, index) => {
-      const row = sheet.getRow(5 + index);
+      const row = sheet.getRow(6 + index);
       const data = this.mapEmployeeToRow(emp, index + 1);
 
       data.forEach((value, colIdx) => {
@@ -265,6 +308,7 @@ export class EmployeeExportService {
       { header: 'Position', width: 22 },
       { header: 'Job Title', width: 22 },
       { header: 'Manager', width: 22 },
+      { header: 'Work Location', width: 25 },
       { header: 'Status', width: 12 },
       { header: 'Employment Type', width: 16 },
 
@@ -308,22 +352,62 @@ export class EmployeeExportService {
       { header: 'Contract Start', width: 14, format: 'date' },
       { header: 'Contract End', width: 14, format: 'date' },
 
+      // Compensation
+      { header: 'Basic Salary', width: 18, format: 'currency' },
+      { header: 'Currency', width: 10 },
+      { header: 'Pay Frequency', width: 14 },
+      { header: 'Pay Type', width: 12 },
+      { header: 'Transport Allowance', width: 18, format: 'currency' },
+      { header: 'Meal Allowance', width: 18, format: 'currency' },
+      { header: 'Position Allowance', width: 18, format: 'currency' },
+      { header: 'Housing Allowance', width: 18, format: 'currency' },
+
       // Tax & BPJS
       { header: 'Tax Status', width: 12 },
-      { header: 'PTKP', width: 12 },
       { header: 'BPJS TK No', width: 20 },
       { header: 'BPJS Kes No', width: 20 },
 
       // Bank
       { header: 'Bank Name', width: 18 },
       { header: 'Bank Account No', width: 20 },
-      { header: 'Bank Account Name', width: 22 },
 
       // Family
       { header: 'Spouse Name', width: 22 },
       { header: 'Children', width: 10 },
       { header: 'Dependents', width: 10 },
     ];
+  }
+
+  private getGroupHeaders(): {
+    label: string;
+    startCol: number;
+    endCol: number;
+    color: string;
+  }[] {
+    return [
+      { label: 'INFORMASI DASAR', startCol: 1, endCol: 11, color: '1B4F72' },
+      { label: 'DATA PRIBADI', startCol: 12, endCol: 20, color: '6C3483' },
+      { label: 'KONTAK', startCol: 21, endCol: 23, color: '1A5276' },
+      { label: 'ALAMAT KTP', startCol: 24, endCol: 27, color: '117A65' },
+      { label: 'ALAMAT DOMISILI', startCol: 28, endCol: 31, color: '117A65' },
+      { label: 'KONTAK DARURAT', startCol: 32, endCol: 34, color: 'B03A2E' },
+      { label: 'TANGGAL KERJA', startCol: 35, endCol: 39, color: '1B4F72' },
+      { label: 'KOMPENSASI & GAJI', startCol: 40, endCol: 47, color: 'B7950B' },
+      { label: 'PAJAK & BPJS', startCol: 48, endCol: 50, color: '6E2C00' },
+      { label: 'REKENING BANK', startCol: 51, endCol: 52, color: '1A5276' },
+      { label: 'KELUARGA', startCol: 53, endCol: 55, color: '6C3483' },
+    ];
+  }
+
+  private colLetter(colNum: number): string {
+    let result = '';
+    let num = colNum;
+    while (num > 0) {
+      const remainder = (num - 1) % 26;
+      result = String.fromCharCode(65 + remainder) + result;
+      num = Math.floor((num - 1) / 26);
+    }
+    return result;
   }
 
   private mapEmployeeToRow(emp: any, index: number): any[] {
@@ -341,6 +425,7 @@ export class EmployeeExportService {
       emp.position?.name || '',
       emp.job_title || '',
       emp.manager?.name || '',
+      emp.workLocation ? `${emp.workLocation.name}${emp.workLocation.city ? ` - ${emp.workLocation.city}` : ''}` : '',
       emp.employment_status || '',
       emp.employment_type || '',
 
@@ -384,16 +469,24 @@ export class EmployeeExportService {
       formatDate(emp.contract_start_date),
       formatDate(emp.contract_end_date),
 
+      // Compensation
+      emp.basic_salary ? Number(emp.basic_salary) : '',
+      emp.salary_currency || '',
+      emp.pay_frequency || '',
+      emp.pay_type || '',
+      emp.transport_allowance ? Number(emp.transport_allowance) : '',
+      emp.meal_allowance ? Number(emp.meal_allowance) : '',
+      emp.position_allowance ? Number(emp.position_allowance) : '',
+      emp.housing_allowance ? Number(emp.housing_allowance) : '',
+
       // Tax & BPJS
       emp.tax_status || '',
-      emp.ptkp_status || '',
       emp.bpjs_ketenagakerjaan_number || '',
       emp.bpjs_kesehatan_number || '',
 
       // Bank
       emp.bank_name || '',
       emp.bank_account_number || '',
-      emp.bank_account_holder || '',
 
       // Family
       emp.spouse_name || '',

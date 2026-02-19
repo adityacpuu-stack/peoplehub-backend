@@ -63,6 +63,10 @@ export class EmployeeService {
       where.position_id = position_id;
     }
 
+    if (query.work_location_id) {
+      where.work_location_id = Number(query.work_location_id);
+    }
+
     // Default to active employees unless explicitly requesting inactive or all
     if (employment_status === 'inactive') {
       // 'inactive' means all non-active statuses (inactive, terminated, resigned, retired)

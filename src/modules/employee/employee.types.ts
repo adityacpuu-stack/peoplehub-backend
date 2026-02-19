@@ -8,6 +8,7 @@ export interface EmployeeListQuery {
   company_id?: number;
   department_id?: number;
   position_id?: number;
+  work_location_id?: number;
   employment_status?: string;
   employment_type?: string;
   sort_by?: string;

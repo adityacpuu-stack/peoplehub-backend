@@ -104,6 +104,9 @@ export const WORK_LOCATION_SELECT = {
   late_tolerance_minutes: true,
   is_active: true,
   company_id: true,
+  company: {
+    select: { id: true, name: true, code: true },
+  },
   settings: true,
   created_at: true,
   updated_at: true,

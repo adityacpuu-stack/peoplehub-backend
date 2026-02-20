@@ -1,5 +1,5 @@
 import express from 'express';
-import * as Sentry from '@sentry/node';
+// import * as Sentry from '@sentry/node';
 import helmet from 'helmet';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
@@ -188,15 +188,8 @@ app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 
 // ==========================================
-// SENTRY
+// SENTRY (disabled)
 // ==========================================
-// Debug route to test Sentry integration
-app.get('/debug-sentry', function mainHandler(req, res) {
-  throw new Error('Sentry test error!');
-});
-
-// Sentry error handler must be before other error middleware
-Sentry.setupExpressErrorHandler(app);
 
 // ==========================================
 // ERROR HANDLING

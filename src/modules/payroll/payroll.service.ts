@@ -301,6 +301,7 @@ export class PayrollService {
         const approvedAllowances = await prisma.allowance.findMany({
           where: {
             employee_id: employee.id,
+            deleted_at: null,
             status: { in: ['approved', 'active'] },
             OR: [
               // No date restrictions

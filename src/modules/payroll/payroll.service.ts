@@ -347,10 +347,11 @@ export class PayrollService {
             allowancesByType.other += amount;
           }
         }
-        // Only include "other" type allowances in details (typed ones are in their own columns)
-        const typedAllowanceTypes = ['position', 'transport', 'meal', 'housing', 'communication', 'telecom', 'medical', 'performance', 'attendance'];
+        // Exclude basic typed allowances from details (they have their own DB columns)
+        // Keep performance, medical, attendance in details so Excel can parse them into separate columns
+        const basicTypedAllowances = ['position', 'transport', 'meal', 'housing', 'communication', 'telecom'];
         const allowanceDetails = approvedAllowances
-          .filter(al => !typedAllowanceTypes.includes((al.type || '').toLowerCase()))
+          .filter(al => !basicTypedAllowances.includes((al.type || '').toLowerCase()))
           .map(al => ({
             name: al.name,
             type: al.type,

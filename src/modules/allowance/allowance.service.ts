@@ -188,8 +188,23 @@ export class AllowanceService {
       throw new Error('Allowance not found');
     }
 
-    // Strip fields that can't be passed directly to Prisma update
-    const { employee_id, company_id, ...updateData } = data;
+    // Only pass allowed fields to Prisma update
+    const updateData: any = {};
+    const allowedFields = [
+      'name', 'type', 'amount', 'percentage', 'calculation_base', 'formula',
+      'frequency', 'effective_date', 'end_date', 'status', 'description', 'notes',
+      'is_taxable', 'is_bpjs_object', 'is_recurring', 'metadata',
+      'approved_by', 'approved_at', 'rejection_reason',
+    ];
+    for (const key of allowedFields) {
+      if ((data as any)[key] !== undefined) {
+        updateData[key] = (data as any)[key];
+      }
+    }
+
+    // Convert date strings to Date objects
+    if (updateData.effective_date) updateData.effective_date = new Date(updateData.effective_date);
+    if (updateData.end_date) updateData.end_date = new Date(updateData.end_date);
 
     return prisma.allowance.update({
       where: { id },

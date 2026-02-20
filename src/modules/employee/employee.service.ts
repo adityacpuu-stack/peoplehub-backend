@@ -771,7 +771,7 @@ export class EmployeeService {
 
     // Only include fields that are provided
     const allowedFields = [
-      'phone', 'mobile_number',
+      'name', 'phone', 'mobile_number',
       // Alamat KTP
       'address', 'city', 'province', 'postal_code',
       // Alamat Domisili

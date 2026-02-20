@@ -149,7 +149,7 @@ export const EMPLOYEE_EXPORT_SELECT = {
   department: { select: { id: true, name: true } },
   position: { select: { id: true, name: true } },
   manager: { select: { id: true, name: true } },
-  workLocation: { select: { id: true, name: true, city: true } },
+  workLocationRef: { select: { id: true, name: true, city: true } },
 } as const;
 
 export class EmployeeExportService {
@@ -392,16 +392,16 @@ export class EmployeeExportService {
   }[] {
     return [
       { label: 'INFORMASI DASAR', startCol: 1, endCol: 11, color: '1B4F72' },
-      { label: 'DATA PRIBADI', startCol: 12, endCol: 20, color: '6C3483' },
-      { label: 'KONTAK', startCol: 21, endCol: 23, color: '1A5276' },
-      { label: 'ALAMAT KTP', startCol: 24, endCol: 27, color: '117A65' },
-      { label: 'ALAMAT DOMISILI', startCol: 28, endCol: 31, color: '117A65' },
-      { label: 'KONTAK DARURAT', startCol: 32, endCol: 34, color: 'B03A2E' },
-      { label: 'TANGGAL KERJA', startCol: 35, endCol: 39, color: '1B4F72' },
-      { label: 'KOMPENSASI & GAJI', startCol: 40, endCol: 47, color: 'B7950B' },
-      { label: 'PAJAK & BPJS', startCol: 48, endCol: 50, color: '6E2C00' },
-      { label: 'REKENING BANK', startCol: 51, endCol: 52, color: '1A5276' },
-      { label: 'KELUARGA', startCol: 53, endCol: 55, color: '6C3483' },
+      { label: 'DATA PRIBADI', startCol: 12, endCol: 21, color: '6C3483' },
+      { label: 'KONTAK', startCol: 22, endCol: 25, color: '1A5276' },
+      { label: 'ALAMAT KTP', startCol: 26, endCol: 29, color: '117A65' },
+      { label: 'ALAMAT DOMISILI', startCol: 30, endCol: 33, color: '117A65' },
+      { label: 'KONTAK DARURAT', startCol: 34, endCol: 36, color: 'B03A2E' },
+      { label: 'TANGGAL KERJA', startCol: 37, endCol: 41, color: '1B4F72' },
+      { label: 'KOMPENSASI & GAJI', startCol: 42, endCol: 49, color: 'B7950B' },
+      { label: 'PAJAK & BPJS', startCol: 50, endCol: 52, color: '6E2C00' },
+      { label: 'REKENING BANK', startCol: 53, endCol: 54, color: '1A5276' },
+      { label: 'KELUARGA', startCol: 55, endCol: 57, color: '6C3483' },
     ];
   }
 
@@ -431,7 +431,7 @@ export class EmployeeExportService {
       emp.position?.name || '',
       emp.job_title || '',
       emp.manager?.name || '',
-      emp.workLocation ? `${emp.workLocation.name}${emp.workLocation.city ? ` - ${emp.workLocation.city}` : ''}` : '',
+      emp.workLocationRef ? `${emp.workLocationRef.name}${emp.workLocationRef.city ? ` - ${emp.workLocationRef.city}` : ''}` : '',
       emp.employment_status || '',
       emp.employment_type || '',
 

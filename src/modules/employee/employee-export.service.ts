@@ -24,7 +24,9 @@ interface EmployeeExportData {
   blood_type: string | null;
   nationality: string | null;
   national_id: string | null;
+  family_card_number: string | null;
   npwp_number: string | null;
+  personal_email: string | null;
 
   // Address - KTP
   address: string | null;
@@ -100,7 +102,9 @@ export const EMPLOYEE_EXPORT_SELECT = {
   blood_type: true,
   nationality: true,
   national_id: true,
+  family_card_number: true,
   npwp_number: true,
+  personal_email: true,
   // Address KTP
   address: true,
   city: true,
@@ -321,10 +325,12 @@ export class EmployeeExportService {
       { header: 'Blood Type', width: 10 },
       { header: 'Nationality', width: 14 },
       { header: 'NIK (KTP)', width: 20 },
+      { header: 'No. KK', width: 20 },
       { header: 'NPWP', width: 22 },
 
       // Contact
       { header: 'Work Email', width: 28 },
+      { header: 'Personal Email', width: 28 },
       { header: 'Phone', width: 18 },
       { header: 'Mobile', width: 18 },
 
@@ -438,10 +444,12 @@ export class EmployeeExportService {
       emp.blood_type || '',
       emp.nationality || '',
       emp.national_id || '',
+      emp.family_card_number || '',
       emp.npwp_number || '',
 
       // Contact
       emp.email || '',
+      emp.personal_email || '',
       emp.phone || '',
       emp.mobile_number || '',
 

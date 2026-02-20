@@ -1016,7 +1016,7 @@ export class PayrollService {
 
     return {
       is_prorated: isProrated,
-      prorate_factor: Math.round(prorateFactor * 10000) / 10000, // 4 decimal places
+      prorate_factor: prorateFactor, // Keep full precision for accurate calculation
       actual_days: actualDays,
       total_days: totalDays,
       prorate_reason: prorateReason || undefined,

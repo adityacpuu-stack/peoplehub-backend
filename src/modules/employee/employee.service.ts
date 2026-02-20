@@ -779,7 +779,7 @@ export class EmployeeService {
       'emergency_contact_name', 'emergency_contact_phone',
       'emergency_contact_relationship', 'emergency_contact_address',
       // Identity Documents (for profile completion)
-      'national_id', 'npwp_number',
+      'national_id', 'family_card_number', 'npwp_number',
       // Bank Information (for profile completion)
       'bank_name', 'bank_account_number', 'bank_account_holder',
       // Avatar

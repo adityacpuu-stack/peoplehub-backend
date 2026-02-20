@@ -85,6 +85,7 @@ model Employee {
 
   // Identity Documents
   national_id                     String?   // KTP
+  family_card_number              String?   // Nomor KK
   tax_id                          String?
   npwp_number                     String?
   passport_number                 String?

@@ -74,6 +74,7 @@ model Employee {
   phone                           String?
   mobile_number                   String?
   email                           String?   // Work email (can be different from login email)
+  personal_email                  String?   // Email pribadi
   address                         String?   @db.Text  // Alamat KTP
   city                            String?              // Kota KTP
   province                        String?              // Provinsi KTP

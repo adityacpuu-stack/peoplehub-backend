@@ -771,7 +771,8 @@ export class EmployeeService {
 
     // Only include fields that are provided
     const allowedFields = [
-      'name', 'phone', 'mobile_number',
+      'name', 'place_of_birth', 'date_of_birth', 'blood_type', 'gender', 'personal_email',
+      'phone', 'mobile_number',
       // Alamat KTP
       'address', 'city', 'province', 'postal_code',
       // Alamat Domisili
@@ -795,6 +796,11 @@ export class EmployeeService {
       if (data[field as keyof UpdateEmployeeDTO] !== undefined) {
         (updateData as any)[field] = data[field as keyof UpdateEmployeeDTO];
       }
+    }
+
+    // Convert date strings to Date objects
+    if (updateData.date_of_birth && typeof updateData.date_of_birth === 'string') {
+      updateData.date_of_birth = new Date(updateData.date_of_birth as string);
     }
 
     // Update employee

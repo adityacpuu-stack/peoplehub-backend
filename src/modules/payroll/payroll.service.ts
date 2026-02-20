@@ -324,26 +324,30 @@ export class PayrollService {
         });
 
         // Categorize allowances by type
-        const allowancesByType = {
+        const allowancesByType: Record<string, number> = {
           position: 0,
           transport: 0,
           meal: 0,
           housing: 0,
           communication: 0,
+          medical: 0,
+          performance: 0,
+          attendance: 0,
           other: 0,
         };
         for (const al of approvedAllowances) {
           const amount = Number(al.amount || 0);
           const type = (al.type || 'other').toLowerCase();
-          if (type === 'position') allowancesByType.position += amount;
-          else if (type === 'transport') allowancesByType.transport += amount;
-          else if (type === 'meal') allowancesByType.meal += amount;
-          else if (type === 'housing') allowancesByType.housing += amount;
-          else if (type === 'communication' || type === 'telecom') allowancesByType.communication += amount;
-          else allowancesByType.other += amount;
+          if (type in allowancesByType) {
+            allowancesByType[type] += amount;
+          } else if (type === 'telecom') {
+            allowancesByType.communication += amount;
+          } else {
+            allowancesByType.other += amount;
+          }
         }
         // Only include "other" type allowances in details (typed ones are in their own columns)
-        const typedAllowanceTypes = ['position', 'transport', 'meal', 'housing', 'communication', 'telecom'];
+        const typedAllowanceTypes = ['position', 'transport', 'meal', 'housing', 'communication', 'telecom', 'medical', 'performance', 'attendance'];
         const allowanceDetails = approvedAllowances
           .filter(al => !typedAllowanceTypes.includes((al.type || '').toLowerCase()))
           .map(al => ({

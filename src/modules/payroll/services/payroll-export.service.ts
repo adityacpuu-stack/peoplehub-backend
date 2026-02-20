@@ -885,10 +885,12 @@ export class PayrollExportService {
             result.housing += amount;
           } else if (type.includes('insurance') || type.includes('asuransi')) {
             result.insurance += amount;
-          } else if (type.includes('achievement') || type.includes('prestasi')) {
+          } else if (type.includes('achievement') || type.includes('prestasi') || type.includes('performance') || type.includes('kinerja')) {
             result.achievement += amount;
           } else if (type.includes('attendance') || type.includes('kehadiran')) {
             result.attendance += amount;
+          } else if (type.includes('medical') || type.includes('kesehatan')) {
+            result.insurance += amount;
           }
         }
       }
@@ -898,7 +900,7 @@ export class PayrollExportService {
         result.communication = result.telecom;
         result.housing = Number(allowancesDetail.housing || 0);
         result.insurance = Number(allowancesDetail.insurance || 0);
-        result.achievement = Number(allowancesDetail.achievement || 0);
+        result.achievement = Number(allowancesDetail.achievement || allowancesDetail.performance || 0);
         result.attendance = Number(allowancesDetail.attendance || 0);
       }
     } catch (e) {

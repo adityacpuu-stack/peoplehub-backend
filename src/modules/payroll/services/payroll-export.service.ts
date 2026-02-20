@@ -563,7 +563,12 @@ export class PayrollExportService {
 
     // SUB TOTAL ALLOWANCE (all allowances already include values from allowances table)
     const positionAllowance = Number(payroll.position_allowance || 0);
-    const otherAllowances = Number(payroll.other_allowances || 0);
+    // other_allowances DB field includes: housing + communication + medical + performance + attendance + other
+    // Subtract amounts already extracted into specific columns (from allowances_detail) to avoid double counting
+    const otherAllowances = Math.max(0, Number(payroll.other_allowances || 0)
+      - insuranceAllowance
+      - achievementAllowance
+      - attendanceAllowance);
     const subTotalAllowance = Number(payroll.meal_allowance || 0) +
       Number(payroll.overtime_pay || 0) +
       Number(payroll.transport_allowance || 0) +

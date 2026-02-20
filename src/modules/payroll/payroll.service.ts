@@ -459,7 +459,10 @@ export class PayrollService {
         position_allowance: data.additional_allowances_by_type?.position || 0,
         other_allowances: (data.additional_allowances_by_type?.other || 0) +
           (data.additional_allowances_by_type?.housing || 0) +
-          (data.additional_allowances_by_type?.communication || 0),
+          (data.additional_allowances_by_type?.communication || 0) +
+          (data.additional_allowances_by_type?.medical || 0) +
+          (data.additional_allowances_by_type?.performance || 0) +
+          (data.additional_allowances_by_type?.attendance || 0),
         allowances_detail: data.allowance_details as any,
         overtime_hours: data.overtime_hours,
         overtime_pay: data.overtime_pay || calculation.overtime_pay,
@@ -550,9 +553,12 @@ export class PayrollService {
     const mealAllowance = this.applyProrate(fullMealAllowance, prorateFactor, isProrated);
     const positionAllowance = this.applyProrate(fullPositionAllowance, prorateFactor, isProrated);
 
-    // Include other allowances (housing, communication, other) from table
+    // Include other allowances (housing, communication, medical, performance, attendance, other) from table
     const otherAllowances = (data.additional_allowances_by_type?.housing || 0) +
       (data.additional_allowances_by_type?.communication || 0) +
+      (data.additional_allowances_by_type?.medical || 0) +
+      (data.additional_allowances_by_type?.performance || 0) +
+      (data.additional_allowances_by_type?.attendance || 0) +
       (data.additional_allowances_by_type?.other || 0);
     const totalAllowances = transportAllowance + mealAllowance + positionAllowance + otherAllowances;
 

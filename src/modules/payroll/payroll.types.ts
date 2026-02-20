@@ -103,6 +103,9 @@ export interface CalculatePayrollDTO {
     meal?: number;
     housing?: number;
     communication?: number;
+    medical?: number;
+    performance?: number;
+    attendance?: number;
     other?: number;
   }; // Allowances from table categorized by type
   allowance_details?: Array<{ name: string; type: string; amount: number }>; // Allowance breakdown

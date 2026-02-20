@@ -45,8 +45,12 @@ export interface CreateEmployeeDTO {
   current_province?: string;
   current_postal_code?: string;
 
+  // Personal email
+  personal_email?: string;
+
   // Identity Documents
   national_id?: string;
+  family_card_number?: string;
   tax_id?: string;
   npwp_number?: string;
   passport_number?: string;
@@ -240,6 +244,8 @@ export const EMPLOYEE_DETAIL_SELECT = {
   current_province: true,
   current_postal_code: true,
   national_id: true,
+  family_card_number: true,
+  personal_email: true,
   npwp_number: true,
   passport_number: true,
   passport_expiry: true,

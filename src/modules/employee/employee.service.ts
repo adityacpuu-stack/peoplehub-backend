@@ -809,15 +809,18 @@ export class EmployeeService {
       data: updateData,
     });
 
-    // Check if profile is now complete
-    if (!existing.profile_completed && this.isProfileComplete(employee)) {
-      employee = await prisma.employee.update({
-        where: { id: employeeId },
-        data: {
-          profile_completed: true,
-          profile_completed_at: new Date(),
-        },
-      });
+    // Check if profile is now complete - re-fetch to get all fields
+    if (!existing.profile_completed) {
+      const freshEmployee = await prisma.employee.findUnique({ where: { id: employeeId } });
+      if (freshEmployee && this.isProfileComplete(freshEmployee)) {
+        employee = await prisma.employee.update({
+          where: { id: employeeId },
+          data: {
+            profile_completed: true,
+            profile_completed_at: new Date(),
+          },
+        });
+      }
     }
 
     // Return full employee data

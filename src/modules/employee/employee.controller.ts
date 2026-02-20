@@ -370,6 +370,7 @@ export const updateMyProfile = async (req: Request, res: Response): Promise<void
 
     // Only allow updating certain fields for self-service
     const allowedFields = [
+      'name', 'place_of_birth', 'date_of_birth', 'blood_type', 'gender', 'personal_email',
       'phone', 'mobile_number',
       // Alamat KTP
       'address', 'city', 'province', 'postal_code',
@@ -379,7 +380,7 @@ export const updateMyProfile = async (req: Request, res: Response): Promise<void
       'emergency_contact_name', 'emergency_contact_phone',
       'emergency_contact_relationship', 'emergency_contact_address', 'avatar',
       // Identity Documents (for profile completion)
-      'national_id', 'npwp_number',
+      'national_id', 'family_card_number', 'npwp_number',
       // Bank Information (for profile completion)
       'bank_name', 'bank_account_number', 'bank_account_holder',
       // Education fields

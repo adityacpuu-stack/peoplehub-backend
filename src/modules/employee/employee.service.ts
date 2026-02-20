@@ -733,6 +733,7 @@ export class EmployeeService {
     'emergency_contact_relationship',
     // Identity Documents (npwp is optional)
     'national_id',
+    'family_card_number',
     // Bank Information (bank_account_holder auto-filled from employee name)
     'bank_name',
     'bank_account_number',

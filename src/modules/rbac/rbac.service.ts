@@ -19,7 +19,6 @@ import {
   PERMISSION_GROUPS,
 } from './rbac.types';
 import { AuthUser } from '../../middlewares/auth.middleware';
-import { NotFoundError, ConflictError, BadRequestError } from '../../middlewares/error.middleware';
 
 const prisma = new PrismaClient();
 
@@ -74,7 +73,7 @@ export class RbacService {
     });
 
     if (!role) {
-      throw new NotFoundError('Role');
+      throw new Error('Role not found');
     }
 
     return role;
@@ -87,7 +86,7 @@ export class RbacService {
     });
 
     if (!role) {
-      throw new NotFoundError('Role');
+      throw new Error('Role not found');
     }
 
     return role;
@@ -100,7 +99,7 @@ export class RbacService {
     });
 
     if (existing) {
-      throw new ConflictError('Role name already exists');
+      throw new Error('Role name already exists');
     }
 
     const role = await prisma.role.create({
@@ -128,7 +127,7 @@ export class RbacService {
     const existing = await prisma.role.findUnique({ where: { id } });
 
     if (!existing) {
-      throw new NotFoundError('Role');
+      throw new Error('Role not found');
     }
 
     // Check name uniqueness if changing
@@ -137,7 +136,7 @@ export class RbacService {
         where: { name: data.name, id: { not: id } },
       });
       if (nameExists) {
-        throw new ConflictError('Role name already exists');
+        throw new Error('Role name already exists');
       }
     }
 
@@ -155,15 +154,15 @@ export class RbacService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Role');
+      throw new Error('Role not found');
     }
 
     if (existing.is_system) {
-      throw new BadRequestError('Cannot delete system roles');
+      throw new Error('Cannot delete system roles');
     }
 
     if (existing._count.userRoles > 0) {
-      throw new BadRequestError('Cannot delete role with assigned users. Please remove users first.');
+      throw new Error('Cannot delete role with assigned users. Please remove users first.');
     }
 
     // Delete role permissions first
@@ -234,7 +233,7 @@ export class RbacService {
     });
 
     if (!permission) {
-      throw new NotFoundError('Permission');
+      throw new Error('Permission not found');
     }
 
     return permission;
@@ -247,7 +246,7 @@ export class RbacService {
     });
 
     if (existing) {
-      throw new ConflictError('Permission name already exists');
+      throw new Error('Permission name already exists');
     }
 
     return prisma.permission.create({
@@ -260,7 +259,7 @@ export class RbacService {
     const existing = await prisma.permission.findUnique({ where: { id } });
 
     if (!existing) {
-      throw new NotFoundError('Permission');
+      throw new Error('Permission not found');
     }
 
     // Check name uniqueness if changing
@@ -269,7 +268,7 @@ export class RbacService {
         where: { name: data.name, id: { not: id } },
       });
       if (nameExists) {
-        throw new ConflictError('Permission name already exists');
+        throw new Error('Permission name already exists');
       }
     }
 
@@ -284,7 +283,7 @@ export class RbacService {
     const existing = await prisma.permission.findUnique({ where: { id } });
 
     if (!existing) {
-      throw new NotFoundError('Permission');
+      throw new Error('Permission not found');
     }
 
     // Delete role permissions first
@@ -309,7 +308,7 @@ export class RbacService {
     // Verify role exists
     const role = await prisma.role.findUnique({ where: { id: role_id } });
     if (!role) {
-      throw new NotFoundError('Role');
+      throw new Error('Role not found');
     }
 
     // Remove existing permissions
@@ -338,7 +337,7 @@ export class RbacService {
     });
 
     if (existing) {
-      throw new ConflictError('Permission already assigned to this role');
+      throw new Error('Permission already assigned to this role');
     }
 
     await prisma.rolePermission.create({
@@ -375,7 +374,7 @@ export class RbacService {
     // Verify user exists
     const targetUser = await prisma.user.findUnique({ where: { id: user_id } });
     if (!targetUser) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     // Remove existing roles
@@ -404,7 +403,7 @@ export class RbacService {
     });
 
     if (existing) {
-      throw new ConflictError('Role already assigned to this user');
+      throw new Error('Role already assigned to this user');
     }
 
     await prisma.userRole.create({
@@ -478,7 +477,7 @@ export class RbacService {
     // Verify user exists
     const targetUser = await prisma.user.findUnique({ where: { id: user_id } });
     if (!targetUser) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     // Remove existing direct permissions

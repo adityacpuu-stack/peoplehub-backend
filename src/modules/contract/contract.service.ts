@@ -16,7 +16,6 @@ import {
   MOVEMENT_DETAIL_SELECT,
 } from './contract.types';
 import { AuthUser, hasCompanyAccess, canAccessEmployee, getHighestRoleLevel, ROLE_HIERARCHY } from '../../middlewares/auth.middleware';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../../middlewares/error.middleware';
 
 const prisma = new PrismaClient();
 
@@ -85,11 +84,11 @@ export class ContractService {
     });
 
     if (!contract) {
-      throw new NotFoundError('Contract');
+      throw new Error('Contract not found');
     }
 
     if (!await canAccessEmployee(user, contract.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     return contract;
@@ -97,7 +96,7 @@ export class ContractService {
 
   async getMyContracts(user: AuthUser) {
     if (!user.employee) {
-      throw new BadRequestError('No employee profile found');
+      throw new Error('No employee profile found');
     }
 
     return prisma.contract.findMany({
@@ -109,7 +108,7 @@ export class ContractService {
 
   async getActiveContract(employeeId: number, user: AuthUser) {
     if (!await canAccessEmployee(user, employeeId)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     return prisma.contract.findFirst({
@@ -132,7 +131,7 @@ export class ContractService {
 
     if (companyId) {
       if (!hasCompanyAccess(user, companyId)) {
-        throw new ForbiddenError('Access denied to this company');
+        throw new Error('Access denied to this company');
       }
       where.employee = { company_id: companyId };
     } else if (user.employee?.company_id && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
@@ -148,7 +147,7 @@ export class ContractService {
 
   async createContract(data: CreateContractDTO, user: AuthUser) {
     if (!await canAccessEmployee(user, data.employee_id)) {
-      throw new ForbiddenError('Access denied to this employee');
+      throw new Error('Access denied to this employee');
     }
 
     // Generate contract number
@@ -177,11 +176,11 @@ export class ContractService {
   async updateContract(id: number, data: UpdateContractDTO, user: AuthUser) {
     const existing = await prisma.contract.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Contract');
+      throw new Error('Contract not found');
     }
 
     if (!await canAccessEmployee(user, existing.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     return prisma.contract.update({
@@ -198,11 +197,11 @@ export class ContractService {
   async activateContract(id: number, user: AuthUser) {
     const existing = await prisma.contract.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Contract');
+      throw new Error('Contract not found');
     }
 
     if (!await canAccessEmployee(user, existing.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     // Deactivate any other active contracts for this employee
@@ -228,11 +227,11 @@ export class ContractService {
   async renewContract(id: number, data: RenewContractDTO, user: AuthUser) {
     const existing = await prisma.contract.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Contract');
+      throw new Error('Contract not found');
     }
 
     if (!await canAccessEmployee(user, existing.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     // Mark old contract as renewed
@@ -269,11 +268,11 @@ export class ContractService {
   async terminateContract(id: number, data: TerminateContractDTO, user: AuthUser) {
     const existing = await prisma.contract.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Contract');
+      throw new Error('Contract not found');
     }
 
     if (!await canAccessEmployee(user, existing.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     return prisma.contract.update({
@@ -349,11 +348,11 @@ export class ContractService {
     });
 
     if (!movement) {
-      throw new NotFoundError('Movement');
+      throw new Error('Movement not found');
     }
 
     if (!await canAccessEmployee(user, movement.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     return movement;
@@ -361,7 +360,7 @@ export class ContractService {
 
   async getMyMovements(user: AuthUser) {
     if (!user.employee) {
-      throw new BadRequestError('No employee profile found');
+      throw new Error('No employee profile found');
     }
 
     return prisma.employeeMovement.findMany({
@@ -376,7 +375,7 @@ export class ContractService {
 
   async createMovement(data: CreateMovementDTO, user: AuthUser) {
     if (!await canAccessEmployee(user, data.employee_id)) {
-      throw new ForbiddenError('Access denied to this employee');
+      throw new Error('Access denied to this employee');
     }
 
     // Get employee's current state
@@ -390,7 +389,7 @@ export class ContractService {
     });
 
     if (!employee) {
-      throw new NotFoundError('Employee');
+      throw new Error('Employee not found');
     }
 
     // Get new position/department names if IDs provided
@@ -459,11 +458,11 @@ export class ContractService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Movement');
+      throw new Error('Movement not found');
     }
 
     if (existing.status !== 'pending') {
-      throw new BadRequestError('Can only approve pending movements');
+      throw new Error('Can only approve pending movements');
     }
 
     return prisma.employeeMovement.update({
@@ -484,11 +483,11 @@ export class ContractService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Movement');
+      throw new Error('Movement not found');
     }
 
     if (existing.status !== 'pending') {
-      throw new BadRequestError('Can only reject pending movements');
+      throw new Error('Can only reject pending movements');
     }
 
     return prisma.employeeMovement.update({
@@ -509,15 +508,15 @@ export class ContractService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Movement');
+      throw new Error('Movement not found');
     }
 
     if (existing.status !== 'approved') {
-      throw new BadRequestError('Can only apply approved movements');
+      throw new Error('Can only apply approved movements');
     }
 
     if (existing.is_applied) {
-      throw new BadRequestError('Movement already applied');
+      throw new Error('Movement already applied');
     }
 
     // Apply changes to employee
@@ -551,15 +550,15 @@ export class ContractService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Movement');
+      throw new Error('Movement not found');
     }
 
     if (!await canAccessEmployee(user, existing.employee_id)) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     if (existing.is_applied) {
-      throw new BadRequestError('Cannot delete applied movements');
+      throw new Error('Cannot delete applied movements');
     }
 
     return prisma.employeeMovement.update({

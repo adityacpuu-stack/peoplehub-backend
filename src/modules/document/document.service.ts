@@ -18,7 +18,6 @@ import {
   DOCUMENT_CATEGORY_SELECT,
 } from './document.types';
 import { AuthUser, hasCompanyAccess, canAccessEmployee, getHighestRoleLevel, ROLE_HIERARCHY } from '../../middlewares/auth.middleware';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../../middlewares/error.middleware';
 
 const prisma = new PrismaClient();
 
@@ -110,14 +109,14 @@ export class DocumentService {
     });
 
     if (!document) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check access
     if (document.employee_id) {
       const hasAccess = await canAccessEmployee(user, document.employee_id);
       if (!hasAccess && document.visibility === 'private') {
-        throw new ForbiddenError('Access denied');
+        throw new Error('Access denied');
       }
     }
 
@@ -135,7 +134,7 @@ export class DocumentService {
     if (data.employee_id) {
       const hasAccess = await canAccessEmployee(user, data.employee_id);
       if (!hasAccess) {
-        throw new ForbiddenError('Access denied to this employee');
+        throw new Error('Access denied to this employee');
       }
     }
 
@@ -166,14 +165,14 @@ export class DocumentService {
   async updateDocument(id: number, data: UpdateDocumentDTO, user: AuthUser) {
     const existing = await prisma.document.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check access
     if (existing.employee_id) {
       const hasAccess = await canAccessEmployee(user, existing.employee_id);
       if (!hasAccess) {
-        throw new ForbiddenError('Access denied');
+        throw new Error('Access denied');
       }
     }
 
@@ -191,7 +190,7 @@ export class DocumentService {
   async deleteDocument(id: number, user: AuthUser) {
     const existing = await prisma.document.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check access - only HR or uploader can delete
@@ -199,7 +198,7 @@ export class DocumentService {
     const isHR = getHighestRoleLevel(user.roles) >= ROLE_HIERARCHY['HR Staff'];
 
     if (!isUploader && !isHR) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     // Soft delete
@@ -212,7 +211,7 @@ export class DocumentService {
   async archiveDocument(id: number, user: AuthUser) {
     const existing = await prisma.document.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     const doc = await prisma.document.update({
@@ -226,12 +225,12 @@ export class DocumentService {
   async verifyDocument(id: number, user: AuthUser) {
     const existing = await prisma.document.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Only HR can verify
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['HR Staff']) {
-      throw new ForbiddenError('Only HR can verify documents');
+      throw new Error('Only HR can verify documents');
     }
 
     const doc = await prisma.document.update({
@@ -335,7 +334,7 @@ export class DocumentService {
     });
 
     if (!document) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check access
@@ -343,7 +342,7 @@ export class DocumentService {
     const hasAccess = await canAccessEmployee(user, document.employee_id);
 
     if (!isOwner && !hasAccess) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     return serializeDocument(document);
@@ -351,7 +350,7 @@ export class DocumentService {
 
   async getMyDocuments(user: AuthUser) {
     if (!user.employee) {
-      throw new BadRequestError('No employee profile found');
+      throw new Error('No employee profile found');
     }
 
     const docs = await prisma.employeeDocument.findMany({
@@ -367,7 +366,7 @@ export class DocumentService {
 
   async uploadMyDocument(data: CreateEmployeeDocumentDTO, user: AuthUser) {
     if (!user.employee) {
-      throw new BadRequestError('No employee profile found');
+      throw new Error('No employee profile found');
     }
 
     // Force employee_id to be the current user's employee ID
@@ -397,7 +396,7 @@ export class DocumentService {
 
   async deleteMyDocument(id: number, user: AuthUser) {
     if (!user.employee) {
-      throw new BadRequestError('No employee profile found');
+      throw new Error('No employee profile found');
     }
 
     const existing = await prisma.employeeDocument.findFirst({
@@ -405,17 +404,17 @@ export class DocumentService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check ownership
     if (existing.employee_id !== user.employee.id) {
-      throw new ForbiddenError('Access denied - you can only delete your own documents');
+      throw new Error('Access denied - you can only delete your own documents');
     }
 
     // Check if document is verified - cannot delete verified documents
     if (existing.is_verified) {
-      throw new BadRequestError('Cannot delete verified documents');
+      throw new Error('Cannot delete verified documents');
     }
 
     // Soft delete
@@ -429,7 +428,7 @@ export class DocumentService {
     // Check employee access
     const hasAccess = await canAccessEmployee(user, data.employee_id);
     if (!hasAccess) {
-      throw new ForbiddenError('Access denied to this employee');
+      throw new Error('Access denied to this employee');
     }
 
     const doc = await prisma.employeeDocument.create({
@@ -462,13 +461,13 @@ export class DocumentService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check access
     const hasAccess = await canAccessEmployee(user, existing.employee_id);
     if (!hasAccess) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     const doc = await prisma.employeeDocument.update({
@@ -489,7 +488,7 @@ export class DocumentService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Check access - only HR or uploader can delete
@@ -497,7 +496,7 @@ export class DocumentService {
     const isHR = getHighestRoleLevel(user.roles) >= ROLE_HIERARCHY['HR Staff'];
 
     if (!isUploader && !isHR) {
-      throw new ForbiddenError('Access denied');
+      throw new Error('Access denied');
     }
 
     // Soft delete
@@ -513,12 +512,12 @@ export class DocumentService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Only HR can verify
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['HR Staff']) {
-      throw new ForbiddenError('Only HR can verify documents');
+      throw new Error('Only HR can verify documents');
     }
 
     const doc = await prisma.employeeDocument.update({
@@ -540,12 +539,12 @@ export class DocumentService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Document');
+      throw new Error('Document not found');
     }
 
     // Only HR can unverify
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['HR Staff']) {
-      throw new ForbiddenError('Only HR can unverify documents');
+      throw new Error('Only HR can unverify documents');
     }
 
     const doc = await prisma.employeeDocument.update({
@@ -575,7 +574,7 @@ export class DocumentService {
 
     if (companyId) {
       if (!hasCompanyAccess(user, companyId)) {
-        throw new ForbiddenError('Access denied to this company');
+        throw new Error('Access denied to this company');
       }
       where.employee = { company_id: companyId };
     } else if (user.employee?.company_id && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
@@ -598,7 +597,7 @@ export class DocumentService {
 
     if (companyId) {
       if (!hasCompanyAccess(user, companyId)) {
-        throw new ForbiddenError('Access denied to this company');
+        throw new Error('Access denied to this company');
       }
       where.employee = { company_id: companyId };
     } else if (user.employee?.company_id && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
@@ -620,7 +619,7 @@ export class DocumentService {
 
     if (companyId) {
       if (!hasCompanyAccess(user, companyId)) {
-        throw new ForbiddenError('Access denied to this company');
+        throw new Error('Access denied to this company');
       }
       where.employee = { company_id: companyId };
     } else if (user.employee?.company_id && getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
@@ -732,7 +731,7 @@ export class DocumentService {
     });
 
     if (!category) {
-      throw new NotFoundError('Category');
+      throw new Error('Category not found');
     }
 
     return category;
@@ -741,7 +740,7 @@ export class DocumentService {
   async createCategory(data: CreateDocumentCategoryDTO, user: AuthUser) {
     // Only HR can create categories
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['HR Staff']) {
-      throw new ForbiddenError('Only HR can create categories');
+      throw new Error('Only HR can create categories');
     }
 
     return prisma.documentCategory.create({
@@ -759,17 +758,17 @@ export class DocumentService {
   async updateCategory(id: number, data: UpdateDocumentCategoryDTO, user: AuthUser) {
     // Only HR can update categories
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['HR Staff']) {
-      throw new ForbiddenError('Only HR can update categories');
+      throw new Error('Only HR can update categories');
     }
 
     const existing = await prisma.documentCategory.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Category');
+      throw new Error('Category not found');
     }
 
     // Prevent circular reference
     if (data.parent_id === id) {
-      throw new BadRequestError('Category cannot be its own parent');
+      throw new Error('Category cannot be its own parent');
     }
 
     return prisma.documentCategory.update({
@@ -782,7 +781,7 @@ export class DocumentService {
   async deleteCategory(id: number, user: AuthUser) {
     // Only HR can delete categories
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['HR Staff']) {
-      throw new ForbiddenError('Only HR can delete categories');
+      throw new Error('Only HR can delete categories');
     }
 
     const existing = await prisma.documentCategory.findUnique({
@@ -793,15 +792,15 @@ export class DocumentService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Category');
+      throw new Error('Category not found');
     }
 
     if (existing._count.documents > 0) {
-      throw new BadRequestError('Cannot delete category with documents');
+      throw new Error('Cannot delete category with documents');
     }
 
     if (existing._count.children > 0) {
-      throw new BadRequestError('Cannot delete category with subcategories');
+      throw new Error('Cannot delete category with subcategories');
     }
 
     return prisma.documentCategory.delete({ where: { id } });

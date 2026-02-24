@@ -8,7 +8,6 @@ import {
   USER_DETAIL_SELECT,
 } from './user.types';
 import { AuthUser } from '../../middlewares/auth.middleware';
-import { NotFoundError, ForbiddenError, ConflictError, BadRequestError } from '../../middlewares/error.middleware';
 import { emailService } from '../email/email.service';
 import { config } from '../../config/env';
 
@@ -94,13 +93,13 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     // Check access for non-super admin
     if (!authUser.roles.includes('Super Admin')) {
       if (user.employee && !authUser.accessibleCompanyIds.includes(user.employee.company?.id || 0)) {
-        throw new ForbiddenError('Access denied');
+        throw new Error('Access denied');
       }
     }
 
@@ -121,7 +120,7 @@ export class UserService {
     });
 
     if (existing) {
-      throw new ConflictError('Email already exists');
+      throw new Error('Email already exists');
     }
 
     // Hash password
@@ -177,13 +176,13 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     // Check access for non-super admin
     if (!authUser.roles.includes('Super Admin')) {
       if (user.employee && !authUser.accessibleCompanyIds.includes(user.employee.company_id || 0)) {
-        throw new ForbiddenError('Access denied');
+        throw new Error('Access denied');
       }
     }
 
@@ -196,7 +195,7 @@ export class UserService {
         where: { email: data.email, id: { not: id } },
       });
       if (existing) {
-        throw new ConflictError('Email already exists');
+        throw new Error('Email already exists');
       }
       updateData.email = data.email;
     }
@@ -258,18 +257,18 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     // Prevent deleting own account
     if (user.id === authUser.id) {
-      throw new BadRequestError('Cannot delete your own account');
+      throw new Error('Cannot delete your own account');
     }
 
     // Check access for non-super admin
     if (!authUser.roles.includes('Super Admin')) {
       if (user.employee && !authUser.accessibleCompanyIds.includes(user.employee.company_id || 0)) {
-        throw new ForbiddenError('Access denied');
+        throw new Error('Access denied');
       }
     }
 
@@ -289,12 +288,12 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     // Prevent deactivating own account
     if (user.id === authUser.id) {
-      throw new BadRequestError('Cannot deactivate your own account');
+      throw new Error('Cannot deactivate your own account');
     }
 
     const updated = await prisma.user.update({

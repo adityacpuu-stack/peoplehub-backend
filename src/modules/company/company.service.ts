@@ -9,7 +9,6 @@ import {
   COMPANY_STATUS,
 } from './company.types';
 import { AuthUser, getHighestRoleLevel, ROLE_HIERARCHY } from '../../middlewares/auth.middleware';
-import { NotFoundError, ForbiddenError, ConflictError, BadRequestError } from '../../middlewares/error.middleware';
 
 const prisma = new PrismaClient();
 
@@ -89,7 +88,7 @@ export class CompanyService {
   async getById(id: number, user: AuthUser) {
     // Check access
     if (!user.roles.includes('Super Admin') && !user.accessibleCompanyIds.includes(id)) {
-      throw new ForbiddenError('Access denied to this company');
+      throw new Error('Access denied to this company');
     }
 
     const company = await prisma.company.findUnique({
@@ -98,7 +97,7 @@ export class CompanyService {
     });
 
     if (!company) {
-      throw new NotFoundError('Company');
+      throw new Error('Company not found');
     }
 
     return company;
@@ -155,7 +154,7 @@ export class CompanyService {
   async create(data: CreateCompanyDTO, user: AuthUser) {
     // Only Super Admin or CEO can create companies
     if (getHighestRoleLevel(user.roles) < ROLE_HIERARCHY['CEO']) {
-      throw new ForbiddenError('Only Super Admin or CEO can create companies');
+      throw new Error('Only Super Admin or CEO can create companies');
     }
 
     // Check if code is unique
@@ -164,7 +163,7 @@ export class CompanyService {
         where: { code: data.code },
       });
       if (existing) {
-        throw new ConflictError('Company code already exists');
+        throw new Error('Company code already exists');
       }
     }
 
@@ -174,7 +173,7 @@ export class CompanyService {
         where: { id: data.parent_company_id },
       });
       if (!parent) {
-        throw new NotFoundError('Parent company');
+        throw new Error('Parent company not found');
       }
     }
 
@@ -191,12 +190,12 @@ export class CompanyService {
   async update(id: number, data: UpdateCompanyDTO, user: AuthUser) {
     // Check access
     if (!user.roles.includes('Super Admin') && !user.accessibleCompanyIds.includes(id)) {
-      throw new ForbiddenError('Access denied to this company');
+      throw new Error('Access denied to this company');
     }
 
     const existing = await prisma.company.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Company');
+      throw new Error('Company not found');
     }
 
     // Check if code is unique (if changing)
@@ -205,13 +204,13 @@ export class CompanyService {
         where: { code: data.code },
       });
       if (codeExists) {
-        throw new ConflictError('Company code already exists');
+        throw new Error('Company code already exists');
       }
     }
 
     // Prevent circular parent reference
     if (data.parent_company_id === id) {
-      throw new BadRequestError('Company cannot be its own parent');
+      throw new Error('Company cannot be its own parent');
     }
 
     return prisma.company.update({
@@ -227,7 +226,7 @@ export class CompanyService {
   async delete(id: number, user: AuthUser) {
     // Only Super Admin can delete companies
     if (!user.roles.includes('Super Admin')) {
-      throw new ForbiddenError('Only Super Admin can delete companies');
+      throw new Error('Only Super Admin can delete companies');
     }
 
     const existing = await prisma.company.findUnique({
@@ -243,16 +242,16 @@ export class CompanyService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Company');
+      throw new Error('Company not found');
     }
 
     // Check if company has employees or subsidiaries
     if (existing._count.employees > 0) {
-      throw new BadRequestError('Cannot delete company with employees. Please transfer or remove employees first.');
+      throw new Error('Cannot delete company with employees. Please transfer or remove employees first.');
     }
 
     if (existing._count.subsidiaries > 0) {
-      throw new BadRequestError('Cannot delete company with subsidiaries. Please remove subsidiaries first.');
+      throw new Error('Cannot delete company with subsidiaries. Please remove subsidiaries first.');
     }
 
     // Soft delete by setting status to inactive
@@ -270,7 +269,7 @@ export class CompanyService {
   async getStatistics(id: number, user: AuthUser) {
     // Check access
     if (!user.roles.includes('Super Admin') && !user.accessibleCompanyIds.includes(id)) {
-      throw new ForbiddenError('Access denied to this company');
+      throw new Error('Access denied to this company');
     }
 
     const [
@@ -335,7 +334,7 @@ export class CompanyService {
   async getSettings(id: number, user: AuthUser) {
     // Check access
     if (!user.roles.includes('Super Admin') && !user.accessibleCompanyIds.includes(id)) {
-      throw new ForbiddenError('Access denied to this company');
+      throw new Error('Access denied to this company');
     }
 
     const company = await prisma.company.findUnique({
@@ -349,7 +348,7 @@ export class CompanyService {
   async updateSettings(id: number, settings: Record<string, any>, user: AuthUser) {
     // Check access
     if (!user.roles.includes('Super Admin') && !user.accessibleCompanyIds.includes(id)) {
-      throw new ForbiddenError('Access denied to this company');
+      throw new Error('Access denied to this company');
     }
 
     const existing = await prisma.company.findUnique({
@@ -358,7 +357,7 @@ export class CompanyService {
     });
 
     if (!existing) {
-      throw new NotFoundError('Company');
+      throw new Error('Company not found');
     }
 
     // Merge existing settings with new settings
@@ -381,7 +380,7 @@ export class CompanyService {
   async getFeatureToggles(id: number, user: AuthUser) {
     // Only Super Admin can view feature toggles
     if (!user.roles.includes('Super Admin')) {
-      throw new ForbiddenError('Only Super Admin can view feature toggles');
+      throw new Error('Only Super Admin can view feature toggles');
     }
 
     const company = await prisma.company.findUnique({
@@ -398,7 +397,7 @@ export class CompanyService {
     });
 
     if (!company) {
-      throw new NotFoundError('Company');
+      throw new Error('Company not found');
     }
 
     return company;
@@ -407,12 +406,12 @@ export class CompanyService {
   async updateFeatureToggles(id: number, data: UpdateFeatureTogglesDTO, user: AuthUser) {
     // Only Super Admin can update feature toggles
     if (!user.roles.includes('Super Admin')) {
-      throw new ForbiddenError('Only Super Admin can update feature toggles');
+      throw new Error('Only Super Admin can update feature toggles');
     }
 
     const existing = await prisma.company.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundError('Company');
+      throw new Error('Company not found');
     }
 
     return prisma.company.update({

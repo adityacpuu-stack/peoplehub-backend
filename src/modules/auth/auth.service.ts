@@ -5,7 +5,6 @@ import { config } from '../../config/env';
 import { prisma } from '../../config/prisma';
 import { AuthUser, JWTPayload, ROLE_HIERARCHY, CompanyFeatures } from '../../types/auth.types';
 import { emailService } from '../email/email.service';
-import { NotFoundError, ForbiddenError, BadRequestError, UnauthorizedError } from '../../middlewares/error.middleware';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_DURATION_MINUTES = 30;
@@ -65,7 +64,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedError('Invalid email or password');
+      throw new Error('Invalid email or password');
     }
 
     // Check if account is locked
@@ -73,12 +72,12 @@ export class AuthService {
       const remainingMinutes = Math.ceil(
         (new Date(user.account_locked_until).getTime() - Date.now()) / 60000
       );
-      throw new ForbiddenError(`Account is locked. Try again in ${remainingMinutes} minutes.`);
+      throw new Error(`Account is locked. Try again in ${remainingMinutes} minutes.`);
     }
 
     // Check if account is active
     if (!user.is_active) {
-      throw new ForbiddenError('Account is disabled. Please contact administrator.');
+      throw new Error('Account is disabled. Please contact administrator.');
     }
 
     // Verify password
@@ -102,15 +101,15 @@ export class AuthService {
       });
 
       if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-        throw new ForbiddenError(`Account locked due to too many failed attempts. Try again in ${LOCK_DURATION_MINUTES} minutes.`);
+        throw new Error(`Account locked due to too many failed attempts. Try again in ${LOCK_DURATION_MINUTES} minutes.`);
       }
 
-      throw new UnauthorizedError('Invalid email or password');
+      throw new Error('Invalid email or password');
     }
 
     // Check if password has expired
     if (user.password_expires_at && new Date(user.password_expires_at) < new Date()) {
-      throw new ForbiddenError('Password has expired. Please reset your password.');
+      throw new Error('Password has expired. Please reset your password.');
     }
 
     // Reset failed attempts and update login info
@@ -201,7 +200,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     const roles = user.userRoles.map((ur) => ur.role.name);
@@ -233,13 +232,14 @@ export class AuthService {
     try {
       const decoded = jwt.verify(refreshToken, config.jwtSecret + '_refresh') as JWTPayload;
 
+      // Verify user still exists and is active
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
         select: { id: true, email: true, is_active: true },
       });
 
       if (!user || !user.is_active) {
-        throw new UnauthorizedError('Invalid refresh token');
+        throw new Error('Invalid refresh token');
       }
 
       const newToken = this.generateToken(user.id, user.email);
@@ -247,8 +247,7 @@ export class AuthService {
 
       return { token: newToken, refreshToken: newRefreshToken };
     } catch (error) {
-      if (error instanceof UnauthorizedError) throw error;
-      throw new UnauthorizedError('Invalid or expired refresh token');
+      throw new Error('Invalid or expired refresh token');
     }
   }
 
@@ -266,12 +265,12 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundError('User');
+      throw new Error('User not found');
     }
 
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
-      throw new BadRequestError('Current password is incorrect');
+      throw new Error('Current password is incorrect');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -366,7 +365,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestError('Invalid or expired reset token');
+      throw new Error('Invalid or expired reset token');
     }
 
     // Hash new password

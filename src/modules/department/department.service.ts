@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AuthUser } from '../../types/auth.types';
+import { NotFoundError, ConflictError, BadRequestError } from '../../middlewares/error.middleware';
 import {
   DepartmentListQuery,
   CreateDepartmentDTO,
@@ -86,7 +87,7 @@ export class DepartmentService {
     });
 
     if (!department) {
-      throw new Error('Department not found');
+      throw new NotFoundError('Department');
     }
 
     // Departments are now global - no company access check needed
@@ -104,7 +105,7 @@ export class DepartmentService {
         where: { code: data.code },
       });
       if (existing) {
-        throw new Error('Department code already exists');
+        throw new ConflictError('Department code already exists');
       }
     }
 
@@ -114,7 +115,7 @@ export class DepartmentService {
         where: { id: data.parent_id },
       });
       if (!parent) {
-        throw new Error('Parent department not found');
+        throw new NotFoundError('Parent department');
       }
     }
 
@@ -124,7 +125,7 @@ export class DepartmentService {
         where: { id: data.manager_id },
       });
       if (!manager) {
-        throw new Error('Manager not found');
+        throw new NotFoundError('Manager');
       }
     }
 
@@ -163,7 +164,7 @@ export class DepartmentService {
     });
 
     if (!existing) {
-      throw new Error('Department not found');
+      throw new NotFoundError('Department');
     }
 
     // Check for duplicate code if changing
@@ -175,20 +176,20 @@ export class DepartmentService {
         },
       });
       if (duplicate) {
-        throw new Error('Department code already exists');
+        throw new ConflictError('Department code already exists');
       }
     }
 
     // Validate parent if changing
     if (data.parent_id) {
       if (data.parent_id === id) {
-        throw new Error('Department cannot be its own parent');
+        throw new BadRequestError('Department cannot be its own parent');
       }
       const parent = await prisma.department.findUnique({
         where: { id: data.parent_id },
       });
       if (!parent) {
-        throw new Error('Parent department not found');
+        throw new NotFoundError('Parent department');
       }
     }
 
@@ -198,7 +199,7 @@ export class DepartmentService {
         where: { id: data.manager_id },
       });
       if (!manager) {
-        throw new Error('Manager not found');
+        throw new NotFoundError('Manager');
       }
     }
 
@@ -250,17 +251,17 @@ export class DepartmentService {
     });
 
     if (!department) {
-      throw new Error('Department not found');
+      throw new NotFoundError('Department');
     }
 
     // Check for active employees
     if (department._count.employees > 0) {
-      throw new Error('Cannot delete department with active employees');
+      throw new BadRequestError('Cannot delete department with active employees');
     }
 
     // Check for child departments
     if (department._count.children > 0) {
-      throw new Error('Cannot delete department with child departments');
+      throw new BadRequestError('Cannot delete department with child departments');
     }
 
     await prisma.department.update({

@@ -1,286 +1,174 @@
 import { Request, Response } from 'express';
 import { RbacService } from './rbac.service';
-import { AuthUser } from '../../middlewares/auth.middleware';
+import { asyncHandler } from '../../middlewares/error.middleware';
 
 const rbacService = new RbacService();
 
-export class RbacController {
-  // ==========================================
-  // ROLE ENDPOINTS
-  // ==========================================
+// Helper to safely get param as string
+const getParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0] || '';
+  return param || '';
+};
 
-  async listRoles(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.listRoles(req.query, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+// ==========================================
+// ROLE ENDPOINTS
+// ==========================================
 
-  async getRoleById(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id as string);
-      const result = await rbacService.getRoleById(id);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message === 'Role not found' ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const listRoles = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.listRoles(req.query, req.user!);
+  res.json({ message: 'Roles retrieved successfully', ...result });
+});
 
-  async getRoleByName(req: Request, res: Response) {
-    try {
-      const result = await rbacService.getRoleByName(req.params.name as string);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message === 'Role not found' ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const getRoleById = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await rbacService.getRoleById(id);
+  res.json({ message: 'Role retrieved successfully', data: result });
+});
 
-  async createRole(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.createRole(req.body, user);
-      res.status(201).json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const getRoleByName = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.getRoleByName(getParam(req.params.name));
+  res.json({ message: 'Role retrieved successfully', data: result });
+});
 
-  async updateRole(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await rbacService.updateRole(id, req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const createRole = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.createRole(req.body, req.user!);
+  res.status(201).json({ message: 'Role created successfully', data: result });
+});
 
-  async deleteRole(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      await rbacService.deleteRole(id, user);
-      res.json({ message: 'Role deleted successfully' });
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const updateRole = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await rbacService.updateRole(id, req.body, req.user!);
+  res.json({ message: 'Role updated successfully', data: result });
+});
 
-  // ==========================================
-  // PERMISSION ENDPOINTS
-  // ==========================================
+export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  await rbacService.deleteRole(id, req.user!);
+  res.json({ message: 'Role deleted successfully' });
+});
 
-  async listPermissions(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.listPermissions(req.query, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+// ==========================================
+// PERMISSION ENDPOINTS
+// ==========================================
 
-  async getPermissionById(req: Request, res: Response) {
-    try {
-      const id = parseInt(req.params.id as string);
-      const result = await rbacService.getPermissionById(id);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message === 'Permission not found' ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const listPermissions = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.listPermissions(req.query, req.user!);
+  res.json({ message: 'Permissions retrieved successfully', ...result });
+});
 
-  async createPermission(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.createPermission(req.body, user);
-      res.status(201).json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const getPermissionById = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await rbacService.getPermissionById(id);
+  res.json({ message: 'Permission retrieved successfully', data: result });
+});
 
-  async updatePermission(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await rbacService.updatePermission(id, req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const createPermission = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.createPermission(req.body, req.user!);
+  res.status(201).json({ message: 'Permission created successfully', data: result });
+});
 
-  async deletePermission(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      await rbacService.deletePermission(id, user);
-      res.json({ message: 'Permission deleted successfully' });
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const updatePermission = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await rbacService.updatePermission(id, req.body, req.user!);
+  res.json({ message: 'Permission updated successfully', data: result });
+});
 
-  async getPermissionGroups(req: Request, res: Response) {
-    try {
-      const result = await rbacService.getPermissionGroups();
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const deletePermission = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  await rbacService.deletePermission(id, req.user!);
+  res.json({ message: 'Permission deleted successfully' });
+});
 
-  // ==========================================
-  // ROLE-PERMISSION ASSIGNMENT
-  // ==========================================
+export const getPermissionGroups = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.getPermissionGroups();
+  res.json({ message: 'Permission groups retrieved successfully', data: result });
+});
 
-  async assignPermissionsToRole(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.assignPermissionsToRole(req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+// ==========================================
+// ROLE-PERMISSION ASSIGNMENT
+// ==========================================
 
-  async addPermissionToRole(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const roleId = parseInt(req.params.roleId as string);
-      const permissionId = parseInt(req.params.permissionId as string);
-      const result = await rbacService.addPermissionToRole(roleId, permissionId, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const assignPermissionsToRole = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.assignPermissionsToRole(req.body, req.user!);
+  res.json({ message: 'Permissions assigned successfully', data: result });
+});
 
-  async removePermissionFromRole(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const roleId = parseInt(req.params.roleId as string);
-      const permissionId = parseInt(req.params.permissionId as string);
-      const result = await rbacService.removePermissionFromRole(roleId, permissionId, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const addPermissionToRole = asyncHandler(async (req: Request, res: Response) => {
+  const roleId = parseInt(getParam(req.params.roleId));
+  const permissionId = parseInt(getParam(req.params.permissionId));
+  const result = await rbacService.addPermissionToRole(roleId, permissionId, req.user!);
+  res.json({ message: 'Permission added to role', data: result });
+});
 
-  // ==========================================
-  // USER-ROLE ASSIGNMENT
-  // ==========================================
+export const removePermissionFromRole = asyncHandler(async (req: Request, res: Response) => {
+  const roleId = parseInt(getParam(req.params.roleId));
+  const permissionId = parseInt(getParam(req.params.permissionId));
+  const result = await rbacService.removePermissionFromRole(roleId, permissionId, req.user!);
+  res.json({ message: 'Permission removed from role', data: result });
+});
 
-  async getUserRoles(req: Request, res: Response) {
-    try {
-      const userId = parseInt(req.params.userId as string);
-      const result = await rbacService.getUserRoles(userId);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+// ==========================================
+// USER-ROLE ASSIGNMENT
+// ==========================================
 
-  async assignRolesToUser(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.assignRolesToUser(req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const getUserRoles = asyncHandler(async (req: Request, res: Response) => {
+  const userId = parseInt(getParam(req.params.userId));
+  const result = await rbacService.getUserRoles(userId);
+  res.json({ message: 'User roles retrieved successfully', data: result });
+});
 
-  async addRoleToUser(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const userId = parseInt(req.params.userId as string);
-      const roleId = parseInt(req.params.roleId as string);
-      const result = await rbacService.addRoleToUser(userId, roleId, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const assignRolesToUser = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.assignRolesToUser(req.body, req.user!);
+  res.json({ message: 'Roles assigned successfully', data: result });
+});
 
-  async removeRoleFromUser(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const userId = parseInt(req.params.userId as string);
-      const roleId = parseInt(req.params.roleId as string);
-      const result = await rbacService.removeRoleFromUser(userId, roleId, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const addRoleToUser = asyncHandler(async (req: Request, res: Response) => {
+  const userId = parseInt(getParam(req.params.userId));
+  const roleId = parseInt(getParam(req.params.roleId));
+  const result = await rbacService.addRoleToUser(userId, roleId, req.user!);
+  res.json({ message: 'Role added to user', data: result });
+});
 
-  // ==========================================
-  // USER-PERMISSION (DIRECT) ASSIGNMENT
-  // ==========================================
+export const removeRoleFromUser = asyncHandler(async (req: Request, res: Response) => {
+  const userId = parseInt(getParam(req.params.userId));
+  const roleId = parseInt(getParam(req.params.roleId));
+  const result = await rbacService.removeRoleFromUser(userId, roleId, req.user!);
+  res.json({ message: 'Role removed from user', data: result });
+});
 
-  async getUserPermissions(req: Request, res: Response) {
-    try {
-      const userId = parseInt(req.params.userId as string);
-      const result = await rbacService.getUserPermissions(userId);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+// ==========================================
+// USER-PERMISSION (DIRECT) ASSIGNMENT
+// ==========================================
 
-  async assignPermissionsToUser(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.assignPermissionsToUser(req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const getUserPermissions = asyncHandler(async (req: Request, res: Response) => {
+  const userId = parseInt(getParam(req.params.userId));
+  const result = await rbacService.getUserPermissions(userId);
+  res.json({ message: 'User permissions retrieved successfully', data: result });
+});
 
-  // ==========================================
-  // CHECK & UTILITY
-  // ==========================================
+export const assignPermissionsToUser = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.assignPermissionsToUser(req.body, req.user!);
+  res.json({ message: 'Permissions assigned successfully', data: result });
+});
 
-  async checkPermission(req: Request, res: Response) {
-    try {
-      const userId = parseInt(req.params.userId as string);
-      const permissionName = req.params.permissionName as string;
-      const hasPermission = await rbacService.checkPermission(userId, permissionName);
-      res.json({ has_permission: hasPermission });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+// ==========================================
+// CHECK & UTILITY
+// ==========================================
 
-  async getUsersByRole(req: Request, res: Response) {
-    try {
-      const roleId = parseInt(req.params.roleId as string);
-      const result = await rbacService.getUsersByRole(roleId);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const checkPermission = asyncHandler(async (req: Request, res: Response) => {
+  const userId = parseInt(getParam(req.params.userId));
+  const permissionName = getParam(req.params.permissionName);
+  const hasPermission = await rbacService.checkPermission(userId, permissionName);
+  res.json({ has_permission: hasPermission });
+});
 
-  // ==========================================
-  // SEED
-  // ==========================================
+export const getUsersByRole = asyncHandler(async (req: Request, res: Response) => {
+  const roleId = parseInt(getParam(req.params.roleId));
+  const result = await rbacService.getUsersByRole(roleId);
+  res.json({ message: 'Users retrieved successfully', data: result });
+});
 
-  async seedRolesAndPermissions(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await rbacService.seedRolesAndPermissions(user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
-}
+export const seedRolesAndPermissions = asyncHandler(async (req: Request, res: Response) => {
+  const result = await rbacService.seedRolesAndPermissions(req.user!);
+  res.json({ message: 'Seed completed', data: result });
+});

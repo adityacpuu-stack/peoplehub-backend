@@ -1,136 +1,78 @@
 import { Request, Response } from 'express';
 import { CompanyService } from './company.service';
-import { AuthUser } from '../../middlewares/auth.middleware';
+import { asyncHandler } from '../../middlewares/error.middleware';
+
+const getParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0] || '';
+  return param || '';
+};
 
 const companyService = new CompanyService();
 
-export class CompanyController {
-  async list(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await companyService.list(req.query, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const list = asyncHandler(async (req: Request, res: Response) => {
+  const result = await companyService.list(req.query, req.user!);
+  res.json({ message: 'Companies retrieved successfully', ...result });
+});
 
-  async getById(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.getById(id, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message === 'Company not found' ? 404 : 403).json({ error: error.message });
-    }
-  }
+export const getById = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.getById(id, req.user!);
+  res.json({ message: 'Company retrieved successfully', data: result });
+});
 
-  async getHierarchy(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await companyService.getHierarchy(user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const getHierarchy = asyncHandler(async (req: Request, res: Response) => {
+  const result = await companyService.getHierarchy(req.user!);
+  res.json({ message: 'Company hierarchy retrieved successfully', data: result });
+});
 
-  async create(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await companyService.create(req.body, user);
-      res.status(201).json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const create = asyncHandler(async (req: Request, res: Response) => {
+  const result = await companyService.create(req.body, req.user!);
+  res.status(201).json({ message: 'Company created successfully', data: result });
+});
 
-  async update(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.update(id, req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const update = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.update(id, req.body, req.user!);
+  res.json({ message: 'Company updated successfully', data: result });
+});
 
-  async delete(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.delete(id, user);
-      res.json({ message: 'Company deactivated successfully', data: result });
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 400).json({ error: error.message });
-    }
-  }
+export const remove = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.delete(id, req.user!);
+  res.json({ message: 'Company deactivated successfully', data: result });
+});
 
-  async getStatistics(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.getStatistics(id, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const getStatistics = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.getStatistics(id, req.user!);
+  res.json({ message: 'Statistics retrieved successfully', data: result });
+});
 
-  async getSettings(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.getSettings(id, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const getSettings = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.getSettings(id, req.user!);
+  res.json({ message: 'Settings retrieved successfully', data: result });
+});
 
-  async updateSettings(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.updateSettings(id, req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+export const updateSettings = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.updateSettings(id, req.body, req.user!);
+  res.json({ message: 'Settings updated successfully', data: result });
+});
 
-  // Feature Toggles (Super Admin Only)
-  async listWithFeatureToggles(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const result = await companyService.listWithFeatureToggles(user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('Super Admin') ? 403 : 400).json({ error: error.message });
-    }
-  }
+export const listWithFeatureToggles = asyncHandler(async (req: Request, res: Response) => {
+  const result = await companyService.listWithFeatureToggles(req.user!);
+  res.json({ message: 'Feature toggles retrieved successfully', data: result });
+});
 
-  async getFeatureToggles(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.getFeatureToggles(id, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 403).json({ error: error.message });
-    }
-  }
+export const getFeatureToggles = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.getFeatureToggles(id, req.user!);
+  res.json({ message: 'Feature toggles retrieved successfully', data: result });
+});
 
-  async updateFeatureToggles(req: Request, res: Response) {
-    try {
-      const user = req.user as AuthUser;
-      const id = parseInt(req.params.id as string);
-      const result = await companyService.updateFeatureToggles(id, req.body, user);
-      res.json(result);
-    } catch (error: any) {
-      res.status(error.message.includes('not found') ? 404 : 403).json({ error: error.message });
-    }
-  }
-}
+export const updateFeatureToggles = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(getParam(req.params.id));
+  const result = await companyService.updateFeatureToggles(id, req.body, req.user!);
+  res.json({ message: 'Feature toggles updated successfully', data: result });
+});

@@ -10,6 +10,12 @@ import {
   validateCompanyAccess,
   validateCompanyAccessFromQuery,
 } from '../../middlewares/company.middleware';
+import { validateBody, validateQuery } from '../../middlewares/validate.middleware';
+import {
+  createEmployeeSchema,
+  updateEmployeeSchema,
+  listEmployeesQuerySchema,
+} from '../../validations/employee.schema';
 
 const router = Router();
 
@@ -21,7 +27,7 @@ router.get('/me', employeeController.getMyProfile);
 router.put('/me', employeeController.updateMyProfile);
 
 // List employees (HR Staff+ or Manager for their subordinates)
-router.get('/', requireManagerOrHigher, validateCompanyAccessFromQuery, employeeController.list);
+router.get('/', requireManagerOrHigher, validateCompanyAccessFromQuery, validateQuery(listEmployeesQuerySchema), employeeController.list);
 
 // Export employees to Excel (HR Staff+)
 router.get('/export', requireHRStaffOrHigher, employeeController.exportExcel);
@@ -77,10 +83,10 @@ router.get(
 );
 
 // Create employee (HR Staff+)
-router.post('/', requireHRStaffOrHigher, employeeController.create);
+router.post('/', requireHRStaffOrHigher, validateBody(createEmployeeSchema), employeeController.create);
 
 // Update employee (HR Staff+)
-router.put('/:id', requireHRStaffOrHigher, employeeController.update);
+router.put('/:id', requireHRStaffOrHigher, validateBody(updateEmployeeSchema), employeeController.update);
 
 // Delete employee (HR Manager+)
 router.delete('/:id', requireHRStaffOrHigher, employeeController.remove);

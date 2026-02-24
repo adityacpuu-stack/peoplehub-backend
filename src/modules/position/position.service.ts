@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AuthUser } from '../../types/auth.types';
+import { NotFoundError, ForbiddenError, ConflictError, BadRequestError } from '../../middlewares/error.middleware';
 import {
   PositionListQuery,
   CreatePositionDTO,
@@ -35,7 +36,7 @@ export class PositionService {
     // Company filter - restrict to accessible companies
     if (company_id) {
       if (!user.accessibleCompanyIds.includes(company_id)) {
-        throw new Error('Access denied to this company');
+        throw new ForbiddenError('Access denied to this company');
       }
       where.company_id = company_id;
     } else {
@@ -99,12 +100,12 @@ export class PositionService {
     });
 
     if (!position) {
-      throw new Error('Position not found');
+      throw new NotFoundError('Position');
     }
 
     // Check company access
     if (!user.accessibleCompanyIds.includes(position.company.id)) {
-      throw new Error('Access denied to this position');
+      throw new ForbiddenError('Access denied to this position');
     }
 
     return position;
@@ -116,7 +117,7 @@ export class PositionService {
   async create(data: CreatePositionDTO, user: AuthUser) {
     // Check company access
     if (!user.accessibleCompanyIds.includes(data.company_id)) {
-      throw new Error('Access denied to create position in this company');
+      throw new ForbiddenError('Access denied to create position in this company');
     }
 
     // Check for duplicate code within company
@@ -128,7 +129,7 @@ export class PositionService {
         },
       });
       if (existing) {
-        throw new Error('Position code already exists in this company');
+        throw new ConflictError('Position code already exists in this company');
       }
     }
 
@@ -139,10 +140,10 @@ export class PositionService {
         select: { company_id: true },
       });
       if (!department) {
-        throw new Error('Department not found');
+        throw new NotFoundError('Department');
       }
       if (department.company_id !== data.company_id) {
-        throw new Error('Department must be in the same company');
+        throw new BadRequestError('Department must be in the same company');
       }
     }
 
@@ -179,12 +180,12 @@ export class PositionService {
     });
 
     if (!existing) {
-      throw new Error('Position not found');
+      throw new NotFoundError('Position');
     }
 
     // Check company access
     if (!user.accessibleCompanyIds.includes(existing.company_id)) {
-      throw new Error('Access denied to update this position');
+      throw new ForbiddenError('Access denied to update this position');
     }
 
     // Check for duplicate code if changing
@@ -197,7 +198,7 @@ export class PositionService {
         },
       });
       if (duplicate) {
-        throw new Error('Position code already exists in this company');
+        throw new ConflictError('Position code already exists in this company');
       }
     }
 
@@ -208,10 +209,10 @@ export class PositionService {
         select: { company_id: true },
       });
       if (!department) {
-        throw new Error('Department not found');
+        throw new NotFoundError('Department');
       }
       if (department.company_id !== existing.company_id) {
-        throw new Error('Department must be in the same company');
+        throw new BadRequestError('Department must be in the same company');
       }
     }
 
@@ -256,16 +257,16 @@ export class PositionService {
     });
 
     if (!position) {
-      throw new Error('Position not found');
+      throw new NotFoundError('Position');
     }
 
     if (!user.accessibleCompanyIds.includes(position.company_id)) {
-      throw new Error('Access denied to delete this position');
+      throw new ForbiddenError('Access denied to delete this position');
     }
 
     // Check for active employees
     if (position._count.employees > 0) {
-      throw new Error('Cannot delete position with active employees');
+      throw new BadRequestError('Cannot delete position with active employees');
     }
 
     await prisma.position.update({
@@ -281,7 +282,7 @@ export class PositionService {
    */
   async getByCompany(companyId: number, user: AuthUser) {
     if (!user.accessibleCompanyIds.includes(companyId)) {
-      throw new Error('Access denied to this company');
+      throw new ForbiddenError('Access denied to this company');
     }
 
     const positions = await prisma.position.findMany({
@@ -306,7 +307,7 @@ export class PositionService {
     });
 
     if (!department) {
-      throw new Error('Department not found');
+      throw new NotFoundError('Department');
     }
 
     const positions = await prisma.position.findMany({

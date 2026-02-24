@@ -10,6 +10,7 @@ import {
 } from './employee.types';
 import { EmployeeExportService, EMPLOYEE_EXPORT_SELECT } from './employee-export.service';
 import { AuthUser } from '../../types/auth.types';
+import { NotFoundError, ForbiddenError, ConflictError } from '../../middlewares/error.middleware';
 
 // Company order for employee_id sorting
 const COMPANY_ORDER = ['PFI', 'GDI', 'LFS', 'UOR', 'BCI', 'PDR'];
@@ -183,7 +184,7 @@ export class EmployeeService {
     });
 
     if (!employee) {
-      throw new Error('Employee not found');
+      throw new NotFoundError('Employee');
     }
 
     // Check company access
@@ -192,7 +193,7 @@ export class EmployeeService {
       employee.company?.id &&
       !user.accessibleCompanyIds.includes(employee.company.id)
     ) {
-      throw new Error('Access denied to this employee');
+      throw new ForbiddenError('Access denied to this employee');
     }
 
     // Hide salary/compensation fields if user is Manager (not HR/Admin/CEO)
@@ -237,7 +238,7 @@ export class EmployeeService {
     });
 
     if (!employee) {
-      throw new Error('Employee not found');
+      throw new NotFoundError('Employee');
     }
 
     // Check company access
@@ -246,7 +247,7 @@ export class EmployeeService {
       employee.company?.id &&
       !user.accessibleCompanyIds.includes(employee.company.id)
     ) {
-      throw new Error('Access denied to this employee');
+      throw new ForbiddenError('Access denied to this employee');
     }
 
     return employee;
@@ -262,7 +263,7 @@ export class EmployeeService {
       !user.roles.includes('Super Admin') &&
       !user.accessibleCompanyIds.includes(data.company_id)
     ) {
-      throw new Error('Access denied to create employee in this company');
+      throw new ForbiddenError('Access denied to create employee in this company');
     }
 
     // Generate employee_id if not provided
@@ -276,7 +277,7 @@ export class EmployeeService {
         where: { employee_id: data.employee_id },
       });
       if (existing) {
-        throw new Error('Employee ID already exists');
+        throw new ConflictError('Employee ID already exists');
       }
     }
 
@@ -383,7 +384,7 @@ export class EmployeeService {
     });
 
     if (!existing) {
-      throw new Error('Employee not found');
+      throw new NotFoundError('Employee');
     }
 
     // Check company access
@@ -392,7 +393,7 @@ export class EmployeeService {
       existing.company_id &&
       !user.accessibleCompanyIds.includes(existing.company_id)
     ) {
-      throw new Error('Access denied to update this employee');
+      throw new ForbiddenError('Access denied to update this employee');
     }
 
     // Check new company access if changing company
@@ -402,7 +403,7 @@ export class EmployeeService {
       !user.roles.includes('Super Admin') &&
       !user.accessibleCompanyIds.includes(data.company_id)
     ) {
-      throw new Error('Access denied to transfer employee to this company');
+      throw new ForbiddenError('Access denied to transfer employee to this company');
     }
 
     // Prepare update data
@@ -538,7 +539,7 @@ export class EmployeeService {
     });
 
     if (!employee) {
-      throw new Error('Employee not found');
+      throw new NotFoundError('Employee');
     }
 
     // Check company access
@@ -547,7 +548,7 @@ export class EmployeeService {
       employee.company_id &&
       !user.accessibleCompanyIds.includes(employee.company_id)
     ) {
-      throw new Error('Access denied to delete this employee');
+      throw new ForbiddenError('Access denied to delete this employee');
     }
 
     // Soft delete - update status
@@ -569,7 +570,7 @@ export class EmployeeService {
       !user.roles.includes('Super Admin') &&
       !user.accessibleCompanyIds.includes(companyId)
     ) {
-      throw new Error('Access denied to this company');
+      throw new ForbiddenError('Access denied to this company');
     }
 
     const employees = await prisma.employee.findMany({
@@ -763,7 +764,7 @@ export class EmployeeService {
     });
 
     if (!existing) {
-      throw new Error('Employee not found');
+      throw new NotFoundError('Employee');
     }
 
     // Prepare update data

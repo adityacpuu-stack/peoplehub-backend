@@ -106,6 +106,8 @@ export interface CalculatePayrollDTO {
     medical?: number;
     performance?: number;
     attendance?: number;
+    thr?: number;
+    bonus?: number;
     other?: number;
   }; // Allowances from table categorized by type
   allowance_details?: Array<{ name: string; type: string; amount: number }>; // Allowance breakdown

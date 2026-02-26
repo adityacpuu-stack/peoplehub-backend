@@ -334,6 +334,8 @@ export class PayrollService {
           medical: 0,
           performance: 0,
           attendance: 0,
+          thr: 0,
+          bonus: 0,
           other: 0,
         };
         for (const al of approvedAllowances) {
@@ -457,6 +459,8 @@ export class PayrollService {
         transport_allowance: data.additional_allowances_by_type?.transport || 0,
         meal_allowance: data.additional_allowances_by_type?.meal || 0,
         position_allowance: data.additional_allowances_by_type?.position || 0,
+        thr: data.additional_allowances_by_type?.thr || 0,
+        bonus: data.additional_allowances_by_type?.bonus || 0,
         other_allowances: (data.additional_allowances_by_type?.other || 0) +
           (data.additional_allowances_by_type?.housing || 0) +
           (data.additional_allowances_by_type?.communication || 0) +
@@ -553,12 +557,14 @@ export class PayrollService {
     const mealAllowance = this.applyProrate(fullMealAllowance, prorateFactor, isProrated);
     const positionAllowance = this.applyProrate(fullPositionAllowance, prorateFactor, isProrated);
 
-    // Include other allowances (housing, communication, medical, performance, attendance, other) from table
+    // Include other allowances (housing, communication, medical, performance, attendance, thr, bonus, other) from table
     const otherAllowances = (data.additional_allowances_by_type?.housing || 0) +
       (data.additional_allowances_by_type?.communication || 0) +
       (data.additional_allowances_by_type?.medical || 0) +
       (data.additional_allowances_by_type?.performance || 0) +
       (data.additional_allowances_by_type?.attendance || 0) +
+      (data.additional_allowances_by_type?.thr || 0) +
+      (data.additional_allowances_by_type?.bonus || 0) +
       (data.additional_allowances_by_type?.other || 0);
     const totalAllowances = transportAllowance + mealAllowance + positionAllowance + otherAllowances;
 

@@ -214,6 +214,8 @@ export class PayrollExportService {
       BV: 12,  // SUM OT HOURS
       BW: 12,  // MEALS/DAYS
       BX: 12,  // TRANSPORT/DAYS
+      BY: 15,  // THR
+      BZ: 15,  // BONUS
     };
 
     Object.entries(columnWidths).forEach(([col, width]) => {
@@ -327,6 +329,8 @@ export class PayrollExportService {
       BV6: 'SUM OVERTIME (HOURS)',
       BW6: 'MEALS/DAYS',
       BX6: 'TRANSPORT/DAYS',
+      BY6: 'THR\n(Tunjangan Hari Raya)',
+      BZ6: 'BONUS',
     };
 
     // Row 7: Sub headers (BPJS types)
@@ -452,6 +456,8 @@ export class PayrollExportService {
     worksheet.mergeCells('BV6:BV8');
     worksheet.mergeCells('BW6:BW8');
     worksheet.mergeCells('BX6:BX8');
+    worksheet.mergeCells('BY6:BY8');
+    worksheet.mergeCells('BZ6:BZ8');
 
     // Set row heights
     worksheet.getRow(6).height = 30;
@@ -756,6 +762,12 @@ export class PayrollExportService {
     row.getCell('BW').value = actualWorkingDays; // MEALS/DAYS
     row.getCell('BX').value = actualWorkingDays; // TRANSPORT/DAYS
 
+    // THR & Bonus
+    row.getCell('BY').value = Number(payroll.thr || 0);
+    row.getCell('BY').numFmt = currencyFormat;
+    row.getCell('BZ').value = Number(payroll.bonus || 0);
+    row.getCell('BZ').numFmt = currencyFormat;
+
     // Set row border
     row.eachCell({ includeEmpty: true }, (cell) => {
       cell.border = {
@@ -791,6 +803,7 @@ export class PayrollExportService {
       'BD', // Subtotal BPJS+PPH21 (GROSS)
       'BE', 'BF', 'BG', 'BH', 'BI', // System deductions (Absence, Late, Loan, Other, Total)
       'BJ', 'BK', // Grand Total Deductions & THP
+      'BY', 'BZ', // THR & Bonus
     ];
 
     sumColumns.forEach((col) => {

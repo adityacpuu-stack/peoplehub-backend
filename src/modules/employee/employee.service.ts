@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/prisma';
 import {
   EmployeeListQuery,
@@ -295,6 +296,7 @@ export class EmployeeService {
       phone: data.phone,
       mobile_number: data.mobile_number,
       email: data.email,
+      personal_email: data.personal_email,
       // Alamat KTP
       address: data.address,
       city: data.city,
@@ -350,7 +352,13 @@ export class EmployeeService {
       // Relations - user is required for Employee
       user: data.user_id
         ? { connect: { id: data.user_id } }
-        : { create: { email: data.email || `temp-${Date.now()}@temp.local`, password: 'temp' } },
+        : {
+            create: {
+              email: data.email || `temp-${Date.now()}@temp.local`,
+              password: data.email ? await bcrypt.hash(this.generateRandomPassword(), 10) : 'temp',
+              force_password_change: true,
+            },
+          },
       ...(data.company_id && { company: { connect: { id: data.company_id } } }),
       ...(data.department_id && { department: { connect: { id: data.department_id } } }),
       ...(data.position_id && { position: { connect: { id: data.position_id } } }),
@@ -516,11 +524,30 @@ export class EmployeeService {
         : { disconnect: true };
     }
 
+    // Also add personal_email to direct fields if provided
+    if (data.personal_email !== undefined) {
+      (updateData as any).personal_email = data.personal_email;
+    }
+
     const employee = await prisma.employee.update({
       where: { id },
       data: updateData,
       select: EMPLOYEE_DETAIL_SELECT,
     });
+
+    // Sync user email if employee email changed and user still has temp email
+    if (data.email && existing.user_id) {
+      const linkedUser = await prisma.user.findUnique({
+        where: { id: existing.user_id },
+        select: { email: true },
+      });
+      if (linkedUser?.email.endsWith('@temp.local')) {
+        await prisma.user.update({
+          where: { id: existing.user_id },
+          data: { email: data.email },
+        });
+      }
+    }
 
     // Log audit
     await this.logAudit(user.id, 'update', 'employee', id, existing, employee);
@@ -657,6 +684,22 @@ export class EmployeeService {
    * Format: {HOLDING_CODE}-{COMPANY_CODE}-{YY}{NNNNN}
    * Example: PFI-GDI-2500001
    */
+
+  private generateRandomPassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const special = '!@#$%&*';
+    let password = '';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    for (let i = 0; i < 2; i++) {
+      const pos = Math.floor(Math.random() * (password.length + 1));
+      const char = special.charAt(Math.floor(Math.random() * special.length));
+      password = password.slice(0, pos) + char + password.slice(pos);
+    }
+    return password;
+  }
+
   async generateEmployeeId(companyId?: number): Promise<string> {
     // Get company info
     let companyCode = 'XXX';

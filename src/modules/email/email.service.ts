@@ -99,7 +99,7 @@ class EmailService {
   ): Promise<boolean> {
     return this.sendEmail({
       to,
-      subject: `Selamat Datang di ${config.app.name}!`,
+      subject: `Welcome to ${config.app.name}!`,
       html: welcomeEmailTemplate(data),
     });
   }
@@ -127,7 +127,7 @@ class EmailService {
   ): Promise<boolean> {
     return this.sendEmail({
       to,
-      subject: `Pengajuan Cuti Baru dari ${data.employeeName}`,
+      subject: `New Leave Request from ${data.employeeName}`,
       html: leaveRequestEmailTemplate(data),
     });
   }
@@ -139,10 +139,10 @@ class EmailService {
     to: string,
     data: LeaveApprovalEmailData
   ): Promise<boolean> {
-    const statusText = data.status === 'approved' ? 'Disetujui' : 'Ditolak';
+    const statusText = data.status === 'approved' ? 'Approved' : 'Rejected';
     return this.sendEmail({
       to,
-      subject: `Pengajuan Cuti ${statusText} - ${config.app.name}`,
+      subject: `Leave Request ${statusText} - ${config.app.name}`,
       html: leaveApprovalEmailTemplate(data),
     });
   }
@@ -156,7 +156,7 @@ class EmailService {
   ): Promise<boolean> {
     return this.sendEmail({
       to,
-      subject: `Pengingat: ${data.pendingCount} Pengajuan Cuti Menunggu`,
+      subject: `Reminder: ${data.pendingCount} Pending Leave Request(s)`,
       html: leaveReminderEmailTemplate(data),
     });
   }

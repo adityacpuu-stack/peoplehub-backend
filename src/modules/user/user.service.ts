@@ -408,8 +408,9 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
     let officeEmail = user.email;
+    let isNewM365Account = false;
 
-    // If username provided, create M365 mailbox and set office email
+    // If username provided, check/create M365 mailbox and set office email
     if (username) {
       const company = user.employee.company;
       if (!company?.email_domain) {
@@ -418,7 +419,7 @@ export class UserService {
 
       officeEmail = `${username}@${company.email_domain}`;
 
-      // Check if another user already uses this email
+      // Check if another PeopleHub user already uses this email
       const existingUser = await prisma.user.findFirst({
         where: { email: officeEmail, id: { not: id } },
       });
@@ -426,14 +427,25 @@ export class UserService {
         throw new Error(`Email ${officeEmail} is already used by another user.`);
       }
 
-      // Create mailbox in Microsoft 365
+      // Check if M365 user already exists
       if (microsoft365Service.isReady()) {
-        await microsoft365Service.createUser({
-          displayName: user.employee.name,
-          mailNickname: username,
-          email: officeEmail,
-          password: tempPassword,
-        });
+        const existingM365 = await microsoft365Service.getUserByEmail(officeEmail);
+
+        if (existingM365) {
+          // M365 already exists → only reset PeopleHub password
+          console.log(`[SendCredentials] M365 user ${officeEmail} already exists, skipping creation`);
+          isNewM365Account = false;
+        } else {
+          // M365 doesn't exist → create with same password
+          await microsoft365Service.createUser({
+            displayName: user.employee.name,
+            mailNickname: username,
+            email: officeEmail,
+            password: tempPassword,
+          });
+          isNewM365Account = true;
+          console.log(`[SendCredentials] M365 user ${officeEmail} created`);
+        }
       }
 
       // Update employee work email
@@ -443,7 +455,7 @@ export class UserService {
       });
     }
 
-    // Update user login email + password
+    // Update user login email + password in PeopleHub
     await prisma.user.update({
       where: { id },
       data: {
@@ -460,6 +472,8 @@ export class UserService {
       email: officeEmail,
       temporaryPassword: tempPassword,
       loginUrl: `${config.app.url}/login`,
+      isNewM365Account,
+      outlookUrl: 'https://outlook.office.com',
     });
 
     if (!sent) {
@@ -470,6 +484,7 @@ export class UserService {
       success: true,
       officeEmail,
       sentTo: personalEmail,
+      isNewM365Account,
     };
   }
 

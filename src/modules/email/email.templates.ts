@@ -67,29 +67,105 @@ function button(text: string, url: string, color: string = primaryColor): string
 
 // Welcome Email Template
 export function welcomeEmailTemplate(data: WelcomeEmailData): string {
+  const outlookUrl = data.outlookUrl || 'https://outlook.office.com';
+
+  // New M365 account: show both email & PeopleHub credentials (same password)
+  if (data.isNewM365Account) {
+    const content = `
+      <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 20px;">Selamat Datang, ${data.name}!</h2>
+      <p style="margin: 0 0 20px; color: #475569; font-size: 14px; line-height: 1.6;">
+        Akun email kantor dan ${appName} Anda telah berhasil dibuat. Berikut detail login Anda.
+      </p>
+
+      <!-- Credential Box -->
+      <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid ${primaryColor};">
+        <p style="margin: 0 0 12px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">📧 Email Kantor & ${appName}</p>
+        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-size: 13px; width: 100px;">Email</td>
+            <td style="padding: 4px 0; color: #1e293b; font-size: 14px; font-weight: 600;">${data.email}</td>
+          </tr>
+          ${data.temporaryPassword ? `
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-size: 13px;">Password</td>
+            <td style="padding: 4px 0; color: #1e293b; font-size: 14px; font-family: monospace; font-weight: 600;">${data.temporaryPassword}</td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      <!-- Warning -->
+      <div style="background-color: #fef3c7; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
+        <p style="margin: 0; color: #92400e; font-size: 13px;">
+          <strong>⚠️ Penting:</strong> Password di atas berlaku untuk <strong>email kantor</strong> dan <strong>${appName}</strong>. Anda wajib mengganti password saat login pertama kali.
+        </p>
+      </div>
+
+      <!-- Buttons -->
+      <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+        <tr>
+          <td style="text-align: center; padding: 0 4px;">
+            ${button('Login PeopleHub', data.loginUrl)}
+          </td>
+          <td style="text-align: center; padding: 0 4px;">
+            ${button('Login Email', outlookUrl, '#0078d4')}
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin: 0; color: #64748b; font-size: 12px; text-align: center;">
+        Jika ada pertanyaan, silakan hubungi tim IT atau HR.
+      </p>
+    `;
+    return baseTemplate(content);
+  }
+
+  // Existing M365 account: only PeopleHub credential
   const content = `
-    <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 20px;">Selamat Datang, ${data.name}!</h2>
+    <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 20px;">Halo, ${data.name}!</h2>
     <p style="margin: 0 0 20px; color: #475569; font-size: 14px; line-height: 1.6;">
-      Akun Anda telah berhasil dibuat di ${appName}. Anda sekarang dapat mengakses sistem untuk mengelola data kepegawaian Anda.
+      Password ${appName} Anda telah direset. Berikut detail login terbaru Anda.
     </p>
 
-    <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-      <p style="margin: 0 0 10px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Detail Login</p>
-      <p style="margin: 0 0 8px; color: #1e293b; font-size: 14px;"><strong>Email:</strong> ${data.email}</p>
-      ${data.temporaryPassword ? `
-        <p style="margin: 0; color: #1e293b; font-size: 14px;"><strong>Password Sementara:</strong> ${data.temporaryPassword}</p>
-        <p style="margin: 16px 0 0; color: #dc2626; font-size: 12px;">
-          * Anda akan diminta untuk mengubah password saat pertama kali login.
-        </p>
-      ` : ''}
+    <!-- Credential Box -->
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid ${primaryColor};">
+      <p style="margin: 0 0 12px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">🔑 Login ${appName}</p>
+      <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 4px 0; color: #64748b; font-size: 13px; width: 100px;">Email</td>
+          <td style="padding: 4px 0; color: #1e293b; font-size: 14px; font-weight: 600;">${data.email}</td>
+        </tr>
+        ${data.temporaryPassword ? `
+        <tr>
+          <td style="padding: 4px 0; color: #64748b; font-size: 13px;">Password</td>
+          <td style="padding: 4px 0; color: #1e293b; font-size: 14px; font-family: monospace; font-weight: 600;">${data.temporaryPassword}</td>
+        </tr>
+        ` : ''}
+      </table>
     </div>
+
+    <!-- Info -->
+    <div style="background-color: #eff6ff; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
+      <p style="margin: 0; color: #1e40af; font-size: 13px;">
+        ℹ️ Password email kantor Anda <strong>tidak berubah</strong>. Hanya password ${appName} yang direset.
+      </p>
+    </div>
+
+    <!-- Warning -->
+    ${data.temporaryPassword ? `
+    <div style="background-color: #fef3c7; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
+      <p style="margin: 0; color: #92400e; font-size: 13px;">
+        <strong>⚠️</strong> Anda wajib mengganti password saat login pertama kali.
+      </p>
+    </div>
+    ` : ''}
 
     <div style="text-align: center; margin-bottom: 24px;">
       ${button('Login Sekarang', data.loginUrl)}
     </div>
 
     <p style="margin: 0; color: #64748b; font-size: 12px; text-align: center;">
-      Jika Anda tidak merasa mendaftar, abaikan email ini.
+      Jika ada pertanyaan, silakan hubungi tim IT atau HR.
     </p>
   `;
 

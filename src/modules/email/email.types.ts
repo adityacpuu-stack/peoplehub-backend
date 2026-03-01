@@ -21,6 +21,8 @@ export interface WelcomeEmailData {
   email: string;
   temporaryPassword?: string;
   loginUrl: string;
+  isNewM365Account?: boolean;
+  outlookUrl?: string;
 }
 
 export interface ResetPasswordEmailData {

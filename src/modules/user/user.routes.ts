@@ -36,6 +36,9 @@ router.post('/', authorize(['Super Admin', 'HR Manager']), userController.create
 // Update user
 router.put('/:id', authorize(['Super Admin', 'HR Manager']), userController.update.bind(userController));
 
+// Send credentials to user
+router.post('/:id/send-credentials', authorize(['Super Admin', 'HR Manager']), userController.sendCredentials.bind(userController));
+
 // Toggle user status
 router.patch('/:id/toggle-status', authorize(['Super Admin', 'HR Manager']), userController.toggleStatus.bind(userController));
 

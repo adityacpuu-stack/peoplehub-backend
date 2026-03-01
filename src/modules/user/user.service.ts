@@ -360,6 +360,82 @@ export class UserService {
   }
 
   /**
+   * Send credentials to user (generate new temp password & send welcome email)
+   */
+  async sendCredentials(id: number, authUser: AuthUser) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        employee: { select: { name: true, company_id: true } },
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check access for non-super admin
+    if (!authUser.roles.includes('Super Admin')) {
+      if (user.employee && !authUser.accessibleCompanyIds.includes(user.employee.company_id || 0)) {
+        throw new Error('Access denied');
+      }
+    }
+
+    // Don't send to temp emails
+    if (user.email.endsWith('@temp.local')) {
+      throw new Error('Cannot send credentials to temporary email. Please update user email first.');
+    }
+
+    // Generate random temporary password
+    const tempPassword = this.generateRandomPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Update password & force password change
+    await prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        force_password_change: true,
+        last_password_change: new Date(),
+      },
+    });
+
+    // Send welcome email with new credentials
+    const employeeName = user.employee?.name || 'User';
+    const sent = await emailService.sendWelcomeEmail(user.email, {
+      name: employeeName,
+      email: user.email,
+      temporaryPassword: tempPassword,
+      loginUrl: `${config.app.url}/login`,
+    });
+
+    if (!sent) {
+      throw new Error('Failed to send credential email. Please check email configuration.');
+    }
+
+    return { success: true, email: user.email };
+  }
+
+  /**
+   * Generate random password (12 chars, alphanumeric + special)
+   */
+  private generateRandomPassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const special = '!@#$%&*';
+    let password = '';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    // Add 2 special chars at random positions
+    for (let i = 0; i < 2; i++) {
+      const pos = Math.floor(Math.random() * (password.length + 1));
+      const char = special.charAt(Math.floor(Math.random() * special.length));
+      password = password.slice(0, pos) + char + password.slice(pos);
+    }
+    return password;
+  }
+
+  /**
    * Get user notification preferences
    */
   async getPreferences(userId: number) {

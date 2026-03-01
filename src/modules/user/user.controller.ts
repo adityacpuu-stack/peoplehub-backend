@@ -106,6 +106,19 @@ export class UserController {
   }
 
   /**
+   * Send credentials to user
+   */
+  async sendCredentials(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id as string);
+      const result = await userService.sendCredentials(id, req.user as AuthUser);
+      res.json({ message: `Credentials sent to ${result.email}`, ...result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get current user's notification preferences
    */
   async getMyPreferences(req: Request, res: Response, next: NextFunction) {

@@ -401,12 +401,6 @@ export class UserService {
       }
     }
 
-    // Determine send-to email (personal email)
-    const personalEmail = user.employee.personal_email || user.employee.email;
-    if (!personalEmail || personalEmail.endsWith('@temp.local')) {
-      throw new Error('Employee has no personal email. Please update employee personal email first.');
-    }
-
     // Generate separate passwords for PeopleHub and M365
     const peoplehubPassword = this.generateRandomPassword();
     const m365Password = this.generateRandomPassword();
@@ -414,9 +408,11 @@ export class UserService {
 
     let officeEmail = user.email;
     let isNewM365Account = false;
+    // Determine mode: onboarding (new M365) vs PeopleHub-only (existing M365 + licensed)
+    let isPeopleHubOnly = false;
 
-    // If username provided, check/create M365 mailbox and set office email
     if (username) {
+      // Onboarding mode: create/check M365 mailbox
       const company = user.employee.company;
       if (!company?.email_domain) {
         throw new Error(`Company "${company?.name || 'Unknown'}" has no email domain configured.`);
@@ -437,16 +433,19 @@ export class UserService {
         const existingM365 = await microsoft365Service.getUserByEmail(officeEmail);
 
         if (existingM365) {
-          // M365 already exists → only reset PeopleHub password
           console.log(`[SendCredentials] M365 user ${officeEmail} already exists, skipping creation`);
           isNewM365Account = false;
 
-          // Assign license to existing user if requested
+          // Check if user already has licenses → PeopleHub-only mode
+          const userLicenses = await microsoft365Service.getUserLicenses(officeEmail);
+          if (userLicenses.length > 0) {
+            isPeopleHubOnly = true;
+          }
+
           if (licenseSkuId) {
             await microsoft365Service.assignLicense(existingM365.id, licenseSkuId);
           }
         } else {
-          // M365 doesn't exist → create with separate password
           const m365User = await microsoft365Service.createUser({
             displayName: user.employee.name,
             mailNickname: username,
@@ -456,7 +455,6 @@ export class UserService {
           isNewM365Account = true;
           console.log(`[SendCredentials] M365 user ${officeEmail} created`);
 
-          // Assign license to newly created user
           if (licenseSkuId) {
             await microsoft365Service.assignLicense(m365User.id, licenseSkuId);
           }
@@ -468,6 +466,28 @@ export class UserService {
         where: { id: user.employee.id },
         data: { email: officeEmail },
       });
+    } else {
+      // No username provided → PeopleHub-only resend
+      isPeopleHubOnly = true;
+    }
+
+    // Determine send-to email:
+    // - Onboarding (new M365): send to personal email
+    // - PeopleHub-only (existing M365 + licensed): send to office email
+    let sendTo: string;
+    if (isPeopleHubOnly) {
+      // Send to office email
+      sendTo = officeEmail;
+      if (!sendTo || sendTo.endsWith('@temp.local')) {
+        throw new Error('User has no valid office email. Please set up M365 account first.');
+      }
+    } else {
+      // Send to personal email for onboarding
+      const personalEmail = user.employee.personal_email || user.employee.email;
+      if (!personalEmail || personalEmail.endsWith('@temp.local')) {
+        throw new Error('Employee has no personal email. Please update employee personal email first.');
+      }
+      sendTo = personalEmail;
     }
 
     // Update user login email + password in PeopleHub
@@ -486,8 +506,8 @@ export class UserService {
       ? new Date(user.employee.join_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : undefined;
 
-    // Send credentials to personal email
-    const sent = await emailService.sendWelcomeEmail(personalEmail, {
+    // Send credentials email
+    const sent = await emailService.sendWelcomeEmail(sendTo, {
       name: user.employee.name,
       email: officeEmail,
       temporaryPassword: peoplehubPassword,
@@ -509,8 +529,9 @@ export class UserService {
     return {
       success: true,
       officeEmail,
-      sentTo: personalEmail,
+      sentTo: sendTo,
       isNewM365Account,
+      isPeopleHubOnly,
     };
   }
 

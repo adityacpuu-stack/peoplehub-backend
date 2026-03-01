@@ -372,11 +372,15 @@ export class UserService {
         employee: {
           select: {
             id: true,
+            employee_id: true,
             name: true,
             personal_email: true,
             email: true,
             company_id: true,
+            join_date: true,
             company: { select: { id: true, name: true, email_domain: true } },
+            position: { select: { id: true, name: true } },
+            department: { select: { id: true, name: true } },
           },
         },
       },
@@ -403,9 +407,10 @@ export class UserService {
       throw new Error('Employee has no personal email. Please update employee personal email first.');
     }
 
-    // Generate random temporary password
-    const tempPassword = this.generateRandomPassword();
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    // Generate separate passwords for PeopleHub and M365
+    const peoplehubPassword = this.generateRandomPassword();
+    const m365Password = this.generateRandomPassword();
+    const hashedPassword = await bcrypt.hash(peoplehubPassword, 10);
 
     let officeEmail = user.email;
     let isNewM365Account = false;
@@ -441,12 +446,12 @@ export class UserService {
             await microsoft365Service.assignLicense(existingM365.id, licenseSkuId);
           }
         } else {
-          // M365 doesn't exist → create with same password
+          // M365 doesn't exist → create with separate password
           const m365User = await microsoft365Service.createUser({
             displayName: user.employee.name,
             mailNickname: username,
             email: officeEmail,
-            password: tempPassword,
+            password: m365Password,
           });
           isNewM365Account = true;
           console.log(`[SendCredentials] M365 user ${officeEmail} created`);
@@ -476,14 +481,25 @@ export class UserService {
       },
     });
 
+    // Format start date
+    const startDate = user.employee.join_date
+      ? new Date(user.employee.join_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : undefined;
+
     // Send credentials to personal email
     const sent = await emailService.sendWelcomeEmail(personalEmail, {
       name: user.employee.name,
       email: officeEmail,
-      temporaryPassword: tempPassword,
+      temporaryPassword: peoplehubPassword,
       loginUrl: `${config.app.url}/login`,
       isNewM365Account,
+      m365Password: isNewM365Account ? m365Password : undefined,
       outlookUrl: 'https://outlook.office.com',
+      employeeId: user.employee.employee_id || undefined,
+      position: user.employee.position?.name,
+      department: user.employee.department?.name,
+      company: user.employee.company?.name,
+      startDate,
     });
 
     if (!sent) {

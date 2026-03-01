@@ -140,6 +140,34 @@ export class UserController {
   }
 
   /**
+   * Get M365 status for a specific user (existence + assigned licenses)
+   */
+  async getM365UserStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!microsoft365Service.isReady()) {
+        res.json({ available: false, exists: false, licenses: [] });
+        return;
+      }
+      const email = req.query.email as string;
+      if (!email) {
+        res.json({ available: true, exists: false, licenses: [] });
+        return;
+      }
+
+      const m365User = await microsoft365Service.getUserByEmail(email);
+      if (!m365User) {
+        res.json({ available: true, exists: false, licenses: [] });
+        return;
+      }
+
+      const licenses = await microsoft365Service.getUserLicenses(email);
+      res.json({ available: true, exists: true, licenses });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get current user's notification preferences
    */
   async getMyPreferences(req: Request, res: Response, next: NextFunction) {

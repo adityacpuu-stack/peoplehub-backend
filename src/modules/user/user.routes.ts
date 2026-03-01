@@ -27,6 +27,9 @@ router.get('/stats', authorize(['Super Admin', 'HR Manager']), userController.ge
 // Get available M365 licenses
 router.get('/m365-licenses', authorize(['Super Admin', 'HR Manager']), userController.getM365Licenses.bind(userController));
 
+// Get M365 user status (existence + assigned licenses)
+router.get('/m365-user-status', authorize(['Super Admin', 'HR Manager']), userController.getM365UserStatus.bind(userController));
+
 // List users
 router.get('/', authorize(['Super Admin', 'HR Manager']), userController.list.bind(userController));
 

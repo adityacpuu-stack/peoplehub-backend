@@ -22,7 +22,14 @@ export interface WelcomeEmailData {
   temporaryPassword?: string;
   loginUrl: string;
   isNewM365Account?: boolean;
+  m365Password?: string;
   outlookUrl?: string;
+  // Employee info
+  employeeId?: string;
+  position?: string;
+  department?: string;
+  company?: string;
+  startDate?: string;
 }
 
 export interface ResetPasswordEmailData {

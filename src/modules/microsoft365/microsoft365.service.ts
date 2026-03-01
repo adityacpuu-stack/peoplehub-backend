@@ -26,6 +26,34 @@ export interface M365License {
   availableUnits: number;
 }
 
+export interface M365UserLicense {
+  skuId: string;
+  skuPartNumber: string;
+  displayName: string;
+}
+
+// Friendly display names for common SKUs
+const skuDisplayNames: Record<string, string> = {
+  'O365_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
+  'O365_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
+  'SPB': 'Microsoft 365 Business Premium',
+  'ENTERPRISEPACK': 'Office 365 E3',
+  'ENTERPRISEPREMIUM': 'Office 365 E5',
+  'SMB_BUSINESS': 'Microsoft 365 Apps for Business',
+  'SMB_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
+  'EXCHANGESTANDARD': 'Exchange Online (Plan 1)',
+  'EXCHANGEENTERPRISE': 'Exchange Online (Plan 2)',
+  'AAD_PREMIUM': 'Azure AD Premium P1',
+  'AAD_PREMIUM_P2': 'Azure AD Premium P2',
+  'FLOW_FREE': 'Microsoft Power Automate Free',
+  'POWER_BI_STANDARD': 'Power BI (Free)',
+  'TEAMS_EXPLORATORY': 'Microsoft Teams Exploratory',
+  'STREAM': 'Microsoft Stream',
+  'VISIOCLIENT': 'Visio Plan 2',
+  'VISIOONLINE_PLAN1': 'Visio Plan 1',
+  'INTUNE_A': 'Microsoft Intune',
+};
+
 class Microsoft365Service {
   private client: Client | null = null;
   private isConfigured: boolean = false;
@@ -134,25 +162,6 @@ class Microsoft365Service {
       const result = await this.client.api('/subscribedSkus').get();
       const skus = result.value || [];
 
-      // Map friendly display names for common SKUs
-      const skuDisplayNames: Record<string, string> = {
-        'O365_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
-        'O365_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
-        'SPB': 'Microsoft 365 Business Premium',
-        'ENTERPRISEPACK': 'Office 365 E3',
-        'ENTERPRISEPREMIUM': 'Office 365 E5',
-        'SMB_BUSINESS': 'Microsoft 365 Apps for Business',
-        'SMB_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
-        'EXCHANGESTANDARD': 'Exchange Online (Plan 1)',
-        'EXCHANGEENTERPRISE': 'Exchange Online (Plan 2)',
-        'AAD_PREMIUM': 'Azure AD Premium P1',
-        'AAD_PREMIUM_P2': 'Azure AD Premium P2',
-        'FLOW_FREE': 'Microsoft Power Automate Free',
-        'POWER_BI_STANDARD': 'Power BI (Free)',
-        'TEAMS_EXPLORATORY': 'Microsoft Teams Exploratory',
-        'STREAM': 'Microsoft Stream',
-      };
-
       return skus
         .filter((sku: any) => sku.capabilityStatus === 'Enabled')
         .map((sku: any) => {
@@ -171,6 +180,28 @@ class Microsoft365Service {
     } catch (error: any) {
       console.error('[M365] Failed to get licenses:', error.message);
       throw new Error(`Failed to get Microsoft 365 licenses: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get licenses assigned to a specific user
+   */
+  async getUserLicenses(email: string): Promise<M365UserLicense[]> {
+    if (!this.client) return [];
+
+    try {
+      const result = await this.client.api(`/users/${email}/licenseDetails`).get();
+      const licenses = result.value || [];
+
+      return licenses.map((lic: any) => ({
+        skuId: lic.skuId,
+        skuPartNumber: lic.skuPartNumber,
+        displayName: skuDisplayNames[lic.skuPartNumber] || lic.skuPartNumber,
+      }));
+    } catch (error: any) {
+      if (error.statusCode === 404) return [];
+      console.error(`[M365] Failed to get user licenses for ${email}:`, error.message);
+      return [];
     }
   }
 

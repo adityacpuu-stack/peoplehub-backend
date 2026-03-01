@@ -358,6 +358,13 @@ export class EmployeeService {
               email: data.email || data.personal_email || `temp-${Date.now()}@temp.local`,
               password: (data.email || data.personal_email) ? await bcrypt.hash(this.generateRandomPassword(), 10) : 'temp',
               force_password_change: true,
+              userRoles: {
+                create: {
+                  role: {
+                    connect: { name_guard_name: { name: 'Employee', guard_name: 'web' } },
+                  },
+                },
+              },
             },
           },
       ...(data.company_id && { company: { connect: { id: data.company_id } } }),

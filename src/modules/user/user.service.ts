@@ -474,12 +474,18 @@ export class UserService {
     // Determine send-to email:
     // - Onboarding (new M365): send to personal email
     // - PeopleHub-only (existing M365 + licensed): send to office email
+    // - PeopleHub-only (no office email): send to personal email
     let sendTo: string;
     if (isPeopleHubOnly) {
-      // Send to office email
-      sendTo = officeEmail;
-      if (!sendTo || sendTo.endsWith('@temp.local')) {
-        throw new Error('User has no valid office email. Please set up M365 account first.');
+      // If office email is valid, send there; otherwise fallback to personal email
+      if (officeEmail && !officeEmail.endsWith('@temp.local')) {
+        sendTo = officeEmail;
+      } else {
+        const personalEmail = user.employee.personal_email || user.employee.email;
+        if (!personalEmail || personalEmail.endsWith('@temp.local')) {
+          throw new Error('Employee has no personal or office email. Please update employee data first.');
+        }
+        sendTo = personalEmail;
       }
     } else {
       // Send to personal email for onboarding

@@ -3,8 +3,14 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { config } from '../../config/env';
 import { prisma } from '../../config/prisma';
-import { AuthUser, JWTPayload, ROLE_HIERARCHY, CompanyFeatures } from '../../types/auth.types';
+import { AuthUser, JWTPayload, CompanyFeatures } from '../../types/auth.types';
 import { emailService } from '../email/email.service';
+import {
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  BadRequestError,
+} from '../../middlewares/error.middleware';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_DURATION_MINUTES = 30;
@@ -20,7 +26,6 @@ export class AuthService {
     password: string,
     ipAddress?: string
   ): Promise<{ token: string; refreshToken: string; user: AuthUser }> {
-    // Find user with all related data
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
@@ -64,7 +69,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     // Check if account is locked
@@ -72,23 +77,21 @@ export class AuthService {
       const remainingMinutes = Math.ceil(
         (new Date(user.account_locked_until).getTime() - Date.now()) / 60000
       );
-      throw new Error(`Account is locked. Try again in ${remainingMinutes} minutes.`);
+      throw new ForbiddenError(`Account is locked. Try again in ${remainingMinutes} minutes.`);
     }
 
     // Check if account is active
     if (!user.is_active) {
-      throw new Error('Account is disabled. Please contact administrator.');
+      throw new ForbiddenError('Account is disabled. Please contact administrator.');
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      // Increment failed attempts
       const newAttempts = user.failed_login_attempts + 1;
       const updateData: any = { failed_login_attempts: newAttempts };
 
-      // Lock account if max attempts exceeded
       if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
         updateData.account_locked_until = new Date(
           Date.now() + LOCK_DURATION_MINUTES * 60 * 1000
@@ -101,15 +104,15 @@ export class AuthService {
       });
 
       if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-        throw new Error(`Account locked due to too many failed attempts. Try again in ${LOCK_DURATION_MINUTES} minutes.`);
+        throw new ForbiddenError(`Account locked due to too many failed attempts. Try again in ${LOCK_DURATION_MINUTES} minutes.`);
       }
 
-      throw new Error('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     // Check if password has expired
     if (user.password_expires_at && new Date(user.password_expires_at) < new Date()) {
-      throw new Error('Password has expired. Please reset your password.');
+      throw new UnauthorizedError('Password has expired. Please reset your password.');
     }
 
     // Reset failed attempts and update login info
@@ -131,13 +134,9 @@ export class AuthService {
     const directPermissions = user.userPermissions.map((up) => up.permission.name);
     const permissions = [...new Set([...rolePermissions, ...directPermissions])];
 
-    // Get accessible company IDs
     const accessibleCompanyIds = await this.getAccessibleCompanyIds(user, roles);
-
-    // Get company features for user's company
     const companyFeatures = await this.getCompanyFeatures(user.employee?.company_id, roles);
 
-    // Build auth user response
     const authUser: AuthUser = {
       id: user.id,
       email: user.email,
@@ -150,11 +149,9 @@ export class AuthService {
       companyFeatures,
     };
 
-    // Generate tokens
     const token = this.generateToken(user.id, user.email);
     const refreshToken = this.generateRefreshToken(user.id, user.email);
 
-    // Log successful login
     await this.logAudit(user.id, 'login', 'User logged in successfully', ipAddress);
 
     return { token, refreshToken, user: authUser };
@@ -196,11 +193,10 @@ export class AuthService {
           include: { permission: true },
         },
       },
-      // force_password_change is included automatically
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundError('User');
     }
 
     const roles = user.userRoles.map((ur) => ur.role.name);
@@ -229,26 +225,26 @@ export class AuthService {
    * Refresh access token using refresh token
    */
   async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }> {
+    let decoded: JWTPayload;
     try {
-      const decoded = jwt.verify(refreshToken, config.jwtSecret + '_refresh') as JWTPayload;
-
-      // Verify user still exists and is active
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { id: true, email: true, is_active: true },
-      });
-
-      if (!user || !user.is_active) {
-        throw new Error('Invalid refresh token');
-      }
-
-      const newToken = this.generateToken(user.id, user.email);
-      const newRefreshToken = this.generateRefreshToken(user.id, user.email);
-
-      return { token: newToken, refreshToken: newRefreshToken };
-    } catch (error) {
-      throw new Error('Invalid or expired refresh token');
+      decoded = jwt.verify(refreshToken, config.jwtSecret + '_refresh') as JWTPayload;
+    } catch {
+      throw new UnauthorizedError('Invalid or expired refresh token');
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, is_active: true },
+    });
+
+    if (!user || !user.is_active) {
+      throw new UnauthorizedError('Invalid refresh token');
+    }
+
+    const newToken = this.generateToken(user.id, user.email);
+    const newRefreshToken = this.generateRefreshToken(user.id, user.email);
+
+    return { token: newToken, refreshToken: newRefreshToken };
   }
 
   /**
@@ -265,12 +261,12 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundError('User');
     }
 
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
-      throw new Error('Current password is incorrect');
+      throw new BadRequestError('Current password is incorrect');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -289,7 +285,7 @@ export class AuthService {
   }
 
   /**
-   * Logout (invalidate refresh token - for now just audit log)
+   * Logout
    */
   async logout(userId: number, ipAddress?: string): Promise<void> {
     await this.logAudit(userId, 'logout', 'User logged out', ipAddress);
@@ -308,36 +304,31 @@ export class AuthService {
       },
     });
 
-    // Always return success to prevent email enumeration
+    // Always return silently to prevent email enumeration
     if (!user) {
       return;
     }
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Store reset token in database
     await prisma.user.update({
       where: { id: user.id },
       data: {
         remember_token: resetTokenHash,
-        password_expires_at: resetTokenExpiry, // Reuse this field for reset expiry
+        password_expires_at: resetTokenExpiry,
       },
     });
 
-    // Send reset email (fire and forget - don't wait for SMTP)
     const resetUrl = `${config.app.url}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
-    // Non-blocking email send
     emailService.sendResetPasswordEmail(email, {
       name: user.employee?.name || email,
       resetUrl,
       expiresIn: '1 jam',
     }).catch(err => console.error('Failed to send reset email:', err));
 
-    // Non-blocking audit log
     this.logAudit(user.id, 'forgot_password', 'Password reset requested', ipAddress)
       .catch(err => console.error('Failed to log audit:', err));
   }
@@ -351,7 +342,6 @@ export class AuthService {
     newPassword: string,
     ipAddress?: string
   ): Promise<void> {
-    // Hash the token to compare
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await prisma.user.findFirst({
@@ -359,19 +349,17 @@ export class AuthService {
         email,
         remember_token: tokenHash,
         password_expires_at: {
-          gt: new Date(), // Token not expired
+          gt: new Date(),
         },
       },
     });
 
     if (!user) {
-      throw new Error('Invalid or expired reset token');
+      throw new BadRequestError('Invalid or expired reset token');
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update password and clear reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -386,29 +374,19 @@ export class AuthService {
     await this.logAudit(user.id, 'password_reset', 'Password reset successfully', ipAddress);
   }
 
-  /**
-   * Generate JWT access token
-   */
   private generateToken(userId: number, email: string): string {
     return jwt.sign({ id: userId, email }, config.jwtSecret, {
       expiresIn: TOKEN_EXPIRY,
     });
   }
 
-  /**
-   * Generate JWT refresh token
-   */
   private generateRefreshToken(userId: number, email: string): string {
     return jwt.sign({ id: userId, email }, config.jwtSecret + '_refresh', {
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
   }
 
-  /**
-   * Get accessible company IDs based on role
-   */
   private async getAccessibleCompanyIds(user: any, roles: string[]): Promise<number[]> {
-    // Super Admin: all companies
     if (roles.includes('Super Admin')) {
       const companies = await prisma.company.findMany({
         where: { status: 'active' },
@@ -417,7 +395,6 @@ export class AuthService {
       return companies.map((c) => c.id);
     }
 
-    // Group CEO: all companies in group
     if (roles.includes('Group CEO') && user.employee?.company_id) {
       const userCompany = await prisma.company.findUnique({
         where: { id: user.employee.company_id },
@@ -436,7 +413,6 @@ export class AuthService {
       return groupCompanies.map((c) => c.id);
     }
 
-    // HR Staff: multiple assigned companies
     if (roles.includes('HR Staff') && user.employee) {
       const assignments = await prisma.hrStaffCompanyAssignment.findMany({
         where: {
@@ -454,7 +430,6 @@ export class AuthService {
       return [...new Set(companyIds)];
     }
 
-    // Other roles: own company only
     if (user.employee?.company_id) {
       return [user.employee.company_id];
     }
@@ -462,14 +437,10 @@ export class AuthService {
     return [];
   }
 
-  /**
-   * Get company feature toggles
-   */
   private async getCompanyFeatures(
     companyId: number | null | undefined,
     roles: string[]
   ): Promise<CompanyFeatures | undefined> {
-    // Super Admin sees all features enabled (no restrictions)
     if (roles.includes('Super Admin')) {
       return {
         attendance_enabled: true,
@@ -479,7 +450,6 @@ export class AuthService {
       };
     }
 
-    // If no company ID, return all features enabled by default
     if (!companyId) {
       return {
         attendance_enabled: true,
@@ -489,7 +459,6 @@ export class AuthService {
       };
     }
 
-    // Get company feature settings
     const company = await prisma.company.findUnique({
       where: { id: companyId },
       select: {
@@ -517,9 +486,6 @@ export class AuthService {
     };
   }
 
-  /**
-   * Log audit trail
-   */
   private async logAudit(
     userId: number,
     action: string,

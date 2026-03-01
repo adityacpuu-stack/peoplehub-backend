@@ -365,7 +365,7 @@ export class UserService {
    * - If username provided: create M365 mailbox, set as login email
    * - Generate temp password, update DB, send credential to personal email
    */
-  async sendCredentials(id: number, authUser: AuthUser, username?: string) {
+  async sendCredentials(id: number, authUser: AuthUser, username?: string, licenseSkuId?: string) {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
@@ -435,9 +435,14 @@ export class UserService {
           // M365 already exists → only reset PeopleHub password
           console.log(`[SendCredentials] M365 user ${officeEmail} already exists, skipping creation`);
           isNewM365Account = false;
+
+          // Assign license to existing user if requested
+          if (licenseSkuId) {
+            await microsoft365Service.assignLicense(existingM365.id, licenseSkuId);
+          }
         } else {
           // M365 doesn't exist → create with same password
-          await microsoft365Service.createUser({
+          const m365User = await microsoft365Service.createUser({
             displayName: user.employee.name,
             mailNickname: username,
             email: officeEmail,
@@ -445,6 +450,11 @@ export class UserService {
           });
           isNewM365Account = true;
           console.log(`[SendCredentials] M365 user ${officeEmail} created`);
+
+          // Assign license to newly created user
+          if (licenseSkuId) {
+            await microsoft365Service.assignLicense(m365User.id, licenseSkuId);
+          }
         }
       }
 

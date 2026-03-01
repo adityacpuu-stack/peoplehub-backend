@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { userService } from './user.service';
 import { UserListQuery, CreateUserDTO, UpdateUserDTO } from './user.types';
 import { AuthUser } from '../../middlewares/auth.middleware';
+import { microsoft365Service } from '../microsoft365/microsoft365.service';
 
 export class UserController {
   /**
@@ -111,12 +112,28 @@ export class UserController {
   async sendCredentials(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id as string);
-      const { username } = req.body; // optional: office email username
-      const result = await userService.sendCredentials(id, req.user as AuthUser, username);
+      const { username, licenseSkuId } = req.body;
+      const result = await userService.sendCredentials(id, req.user as AuthUser, username, licenseSkuId);
       res.json({
         message: `Credentials sent to ${result.sentTo}`,
         ...result,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get available M365 licenses
+   */
+  async getM365Licenses(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!microsoft365Service.isReady()) {
+        res.json({ available: false, licenses: [] });
+        return;
+      }
+      const licenses = await microsoft365Service.getAvailableLicenses();
+      res.json({ available: true, licenses });
     } catch (error) {
       next(error);
     }

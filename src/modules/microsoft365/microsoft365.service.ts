@@ -17,6 +17,15 @@ interface M365User {
   userPrincipalName: string;
 }
 
+export interface M365License {
+  skuId: string;
+  skuPartNumber: string;
+  displayName: string;
+  totalUnits: number;
+  consumedUnits: number;
+  availableUnits: number;
+}
+
 class Microsoft365Service {
   private client: Client | null = null;
   private isConfigured: boolean = false;
@@ -110,6 +119,58 @@ class Microsoft365Service {
     } catch (error: any) {
       if (error.statusCode === 404) return null;
       throw error;
+    }
+  }
+
+  /**
+   * Get available licenses from the tenant
+   */
+  async getAvailableLicenses(): Promise<M365License[]> {
+    if (!this.client) {
+      throw new Error('Microsoft 365 not configured');
+    }
+
+    try {
+      const result = await this.client.api('/subscribedSkus').get();
+      const skus = result.value || [];
+
+      // Map friendly display names for common SKUs
+      const skuDisplayNames: Record<string, string> = {
+        'O365_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
+        'O365_BUSINESS_PREMIUM': 'Microsoft 365 Business Standard',
+        'SPB': 'Microsoft 365 Business Premium',
+        'ENTERPRISEPACK': 'Office 365 E3',
+        'ENTERPRISEPREMIUM': 'Office 365 E5',
+        'SMB_BUSINESS': 'Microsoft 365 Apps for Business',
+        'SMB_BUSINESS_ESSENTIALS': 'Microsoft 365 Business Basic',
+        'EXCHANGESTANDARD': 'Exchange Online (Plan 1)',
+        'EXCHANGEENTERPRISE': 'Exchange Online (Plan 2)',
+        'AAD_PREMIUM': 'Azure AD Premium P1',
+        'AAD_PREMIUM_P2': 'Azure AD Premium P2',
+        'FLOW_FREE': 'Microsoft Power Automate Free',
+        'POWER_BI_STANDARD': 'Power BI (Free)',
+        'TEAMS_EXPLORATORY': 'Microsoft Teams Exploratory',
+        'STREAM': 'Microsoft Stream',
+      };
+
+      return skus
+        .filter((sku: any) => sku.capabilityStatus === 'Enabled')
+        .map((sku: any) => {
+          const total = sku.prepaidUnits?.enabled || 0;
+          const consumed = sku.consumedUnits || 0;
+          return {
+            skuId: sku.skuId,
+            skuPartNumber: sku.skuPartNumber,
+            displayName: skuDisplayNames[sku.skuPartNumber] || sku.skuPartNumber,
+            totalUnits: total,
+            consumedUnits: consumed,
+            availableUnits: total - consumed,
+          };
+        })
+        .sort((a: M365License, b: M365License) => a.displayName.localeCompare(b.displayName));
+    } catch (error: any) {
+      console.error('[M365] Failed to get licenses:', error.message);
+      throw new Error(`Failed to get Microsoft 365 licenses: ${error.message}`);
     }
   }
 

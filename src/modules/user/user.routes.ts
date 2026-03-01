@@ -24,6 +24,9 @@ router.put('/me/preferences', userController.updateMyPreferences.bind(userContro
 // Get user statistics
 router.get('/stats', authorize(['Super Admin', 'HR Manager']), userController.getStats.bind(userController));
 
+// Get available M365 licenses
+router.get('/m365-licenses', authorize(['Super Admin', 'HR Manager']), userController.getM365Licenses.bind(userController));
+
 // List users
 router.get('/', authorize(['Super Admin', 'HR Manager']), userController.list.bind(userController));
 

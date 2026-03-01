@@ -350,12 +350,13 @@ export class EmployeeService {
       medical_insurance: data.medical_insurance,
       life_insurance: data.life_insurance,
       // Relations - user is required for Employee
+      // Login email priority: office email > personal email > temp placeholder
       user: data.user_id
         ? { connect: { id: data.user_id } }
         : {
             create: {
-              email: data.email || `temp-${Date.now()}@temp.local`,
-              password: data.email ? await bcrypt.hash(this.generateRandomPassword(), 10) : 'temp',
+              email: data.email || data.personal_email || `temp-${Date.now()}@temp.local`,
+              password: (data.email || data.personal_email) ? await bcrypt.hash(this.generateRandomPassword(), 10) : 'temp',
               force_password_change: true,
             },
           },

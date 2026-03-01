@@ -403,6 +403,7 @@ model Company {
   employee_count          Int?
   founded_date            DateTime?
   status                  String?   @default("active")
+  email_domain            String?   // e.g. pfigroups.com, aggrecapital.com
   settings                Json?
 
   // Feature toggles

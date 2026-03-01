@@ -30,4 +30,9 @@ export const config = {
         name: process.env.APP_NAME || 'PeopleHub',
         url: process.env.APP_URL || process.env.FRONTEND_URL || 'http://localhost:5173',
     },
+    microsoft365: {
+        tenantId: process.env.M365_TENANT_ID || '',
+        clientId: process.env.M365_CLIENT_ID || '',
+        clientSecret: process.env.M365_CLIENT_SECRET || '',
+    },
 };

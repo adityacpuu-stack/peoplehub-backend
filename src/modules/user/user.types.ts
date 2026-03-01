@@ -39,11 +39,13 @@ export const USER_LIST_SELECT = {
       employee_id: true,
       name: true,
       email: true,
+      personal_email: true,
       company: {
         select: {
           id: true,
           name: true,
           code: true,
+          email_domain: true,
         },
       },
       department: {

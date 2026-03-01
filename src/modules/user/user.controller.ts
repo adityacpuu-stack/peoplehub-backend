@@ -111,8 +111,12 @@ export class UserController {
   async sendCredentials(req: Request, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id as string);
-      const result = await userService.sendCredentials(id, req.user as AuthUser);
-      res.json({ message: `Credentials sent to ${result.email}`, ...result });
+      const { username } = req.body; // optional: office email username
+      const result = await userService.sendCredentials(id, req.user as AuthUser, username);
+      res.json({
+        message: `Credentials sent to ${result.sentTo}`,
+        ...result,
+      });
     } catch (error) {
       next(error);
     }

@@ -9,6 +9,7 @@ import {
 } from './user.types';
 import { AuthUser } from '../../middlewares/auth.middleware';
 import { emailService } from '../email/email.service';
+import { microsoft365Service } from '../microsoft365/microsoft365.service';
 import { config } from '../../config/env';
 
 const prisma = new PrismaClient();
@@ -360,13 +361,24 @@ export class UserService {
   }
 
   /**
-   * Send credentials to user (generate new temp password & send welcome email)
+   * Send credentials to user
+   * - If username provided: create M365 mailbox, set as login email
+   * - Generate temp password, update DB, send credential to personal email
    */
-  async sendCredentials(id: number, authUser: AuthUser) {
+  async sendCredentials(id: number, authUser: AuthUser, username?: string) {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        employee: { select: { name: true, company_id: true } },
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            personal_email: true,
+            email: true,
+            company_id: true,
+            company: { select: { id: true, name: true, email_domain: true } },
+          },
+        },
       },
     });
 
@@ -374,46 +386,91 @@ export class UserService {
       throw new Error('User not found');
     }
 
+    if (!user.employee) {
+      throw new Error('User has no linked employee. Please link an employee first.');
+    }
+
     // Check access for non-super admin
     if (!authUser.roles.includes('Super Admin')) {
-      if (user.employee && !authUser.accessibleCompanyIds.includes(user.employee.company_id || 0)) {
+      if (!authUser.accessibleCompanyIds.includes(user.employee.company_id || 0)) {
         throw new Error('Access denied');
       }
     }
 
-    // Don't send to temp emails
-    if (user.email.endsWith('@temp.local')) {
-      throw new Error('Cannot send credentials to temporary email. Please update user email first.');
+    // Determine send-to email (personal email)
+    const personalEmail = user.employee.personal_email || user.employee.email;
+    if (!personalEmail || personalEmail.endsWith('@temp.local')) {
+      throw new Error('Employee has no personal email. Please update employee personal email first.');
     }
 
     // Generate random temporary password
     const tempPassword = this.generateRandomPassword();
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    // Update password & force password change
+    let officeEmail = user.email;
+
+    // If username provided, create M365 mailbox and set office email
+    if (username) {
+      const company = user.employee.company;
+      if (!company?.email_domain) {
+        throw new Error(`Company "${company?.name || 'Unknown'}" has no email domain configured.`);
+      }
+
+      officeEmail = `${username}@${company.email_domain}`;
+
+      // Check if another user already uses this email
+      const existingUser = await prisma.user.findFirst({
+        where: { email: officeEmail, id: { not: id } },
+      });
+      if (existingUser) {
+        throw new Error(`Email ${officeEmail} is already used by another user.`);
+      }
+
+      // Create mailbox in Microsoft 365
+      if (microsoft365Service.isReady()) {
+        await microsoft365Service.createUser({
+          displayName: user.employee.name,
+          mailNickname: username,
+          email: officeEmail,
+          password: tempPassword,
+        });
+      }
+
+      // Update employee work email
+      await prisma.employee.update({
+        where: { id: user.employee.id },
+        data: { email: officeEmail },
+      });
+    }
+
+    // Update user login email + password
     await prisma.user.update({
       where: { id },
       data: {
+        email: officeEmail,
         password: hashedPassword,
         force_password_change: true,
         last_password_change: new Date(),
       },
     });
 
-    // Send welcome email with new credentials
-    const employeeName = user.employee?.name || 'User';
-    const sent = await emailService.sendWelcomeEmail(user.email, {
-      name: employeeName,
-      email: user.email,
+    // Send credentials to personal email
+    const sent = await emailService.sendWelcomeEmail(personalEmail, {
+      name: user.employee.name,
+      email: officeEmail,
       temporaryPassword: tempPassword,
       loginUrl: `${config.app.url}/login`,
     });
 
     if (!sent) {
-      throw new Error('Failed to send credential email. Please check email configuration.');
+      throw new Error('Account created but failed to send email. Please check email configuration.');
     }
 
-    return { success: true, email: user.email };
+    return {
+      success: true,
+      officeEmail,
+      sentTo: personalEmail,
+    };
   }
 
   /**

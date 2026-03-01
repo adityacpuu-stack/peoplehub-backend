@@ -224,6 +224,45 @@ class Microsoft365Service {
       // Don't throw - license assignment failure shouldn't block credential sending
     }
   }
+  /**
+   * Add user to a distribution list / group
+   */
+  async addToGroup(userId: string, groupId: string): Promise<boolean> {
+    if (!this.client) return false;
+
+    try {
+      await this.client.api(`/groups/${groupId}/members/$ref`).post({
+        '@odata.id': `https://graph.microsoft.com/v1.0/directoryObjects/${userId}`,
+      });
+      console.log(`[M365] User ${userId} added to group ${groupId}`);
+      return true;
+    } catch (error: any) {
+      // Already a member — not an error
+      if (error.statusCode === 400 && error.message?.includes('already exist')) {
+        console.log(`[M365] User ${userId} already in group ${groupId}`);
+        return true;
+      }
+      console.error(`[M365] Failed to add user to group:`, error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Auto-add user to distribution lists based on company + email pattern
+   */
+  async autoAddToDistributionLists(userId: string, email: string, companyDLGroupId?: string | null): Promise<void> {
+    if (!this.client) return;
+
+    // 1. Add to company DL
+    if (companyDLGroupId) {
+      await this.addToGroup(userId, companyDLGroupId);
+    }
+
+    // 2. Pattern-based: *.impact@pfigroups.com → Impact DL
+    if (email.includes('.impact@pfigroups.com')) {
+      await this.addToGroup(userId, 'c9ce3be1-8167-449a-a7cb-c307739d1cb4'); // all.impact@pfigroups.com
+    }
+  }
 }
 
 export const microsoft365Service = new Microsoft365Service();

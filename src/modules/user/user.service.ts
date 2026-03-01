@@ -378,7 +378,7 @@ export class UserService {
             email: true,
             company_id: true,
             join_date: true,
-            company: { select: { id: true, name: true, email_domain: true } },
+            company: { select: { id: true, name: true, email_domain: true, distribution_list_group_id: true } },
             position: { select: { id: true, name: true } },
             department: { select: { id: true, name: true } },
           },
@@ -445,6 +445,11 @@ export class UserService {
           if (licenseSkuId) {
             await microsoft365Service.assignLicense(existingM365.id, licenseSkuId);
           }
+
+          // Auto-add to distribution lists
+          await microsoft365Service.autoAddToDistributionLists(
+            existingM365.id, officeEmail, company?.distribution_list_group_id
+          );
         } else {
           const m365User = await microsoft365Service.createUser({
             displayName: user.employee.name,
@@ -458,6 +463,11 @@ export class UserService {
           if (licenseSkuId) {
             await microsoft365Service.assignLicense(m365User.id, licenseSkuId);
           }
+
+          // Auto-add to distribution lists
+          await microsoft365Service.autoAddToDistributionLists(
+            m365User.id, officeEmail, company?.distribution_list_group_id
+          );
         }
       }
 

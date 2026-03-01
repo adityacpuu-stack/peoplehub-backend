@@ -404,6 +404,7 @@ model Company {
   founded_date            DateTime?
   status                  String?   @default("active")
   email_domain            String?   // e.g. pfigroups.com, aggrecapital.com
+  distribution_list_group_id String? // M365 DL group ID for auto-assignment
   settings                Json?
 
   // Feature toggles

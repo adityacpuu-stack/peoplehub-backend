@@ -496,11 +496,16 @@ export class UserService {
       sendTo = personalEmail;
     }
 
+    // Use sendTo as login if office email is temp/invalid
+    const loginEmail = (officeEmail && !officeEmail.endsWith('@temp.local'))
+      ? officeEmail
+      : sendTo;
+
     // Update user login email + password in PeopleHub
     await prisma.user.update({
       where: { id },
       data: {
-        email: officeEmail,
+        email: loginEmail,
         password: hashedPassword,
         force_password_change: true,
         last_password_change: new Date(),
@@ -515,7 +520,7 @@ export class UserService {
     // Send credentials email
     const sent = await emailService.sendWelcomeEmail(sendTo, {
       name: user.employee.name,
-      email: officeEmail,
+      email: loginEmail,
       temporaryPassword: peoplehubPassword,
       loginUrl: `${config.app.url}/login`,
       isNewM365Account,
@@ -534,7 +539,7 @@ export class UserService {
 
     return {
       success: true,
-      officeEmail,
+      officeEmail: loginEmail,
       sentTo: sendTo,
       isNewM365Account,
       isPeopleHubOnly,

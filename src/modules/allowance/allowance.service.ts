@@ -174,6 +174,8 @@ export class AllowanceService {
       data: {
         ...data,
         status: data.status || 'active',
+        effective_date: data.effective_date ? new Date(data.effective_date) : undefined,
+        end_date: data.end_date ? new Date(data.end_date) : undefined,
       },
       select: ALLOWANCE_DETAIL_SELECT,
     });

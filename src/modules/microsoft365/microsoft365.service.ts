@@ -104,9 +104,16 @@ class Microsoft365Service {
         return existing;
       }
 
+      // Split display name into first/last name
+      const nameParts = params.displayName.trim().split(/\s+/);
+      const givenName = nameParts[0];
+      const surname = nameParts.length > 1 ? nameParts.slice(1).join(' ') : givenName;
+
       const user = await this.client.api('/users').post({
         accountEnabled: true,
         displayName: params.displayName,
+        givenName,
+        surname,
         mailNickname: params.mailNickname,
         userPrincipalName: params.email,
         passwordProfile: {

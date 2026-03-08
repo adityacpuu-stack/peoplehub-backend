@@ -52,10 +52,10 @@ export class AllowanceService {
       where.AND = [
         {
           OR: [
-            { name: { contains: search } },
-            { description: { contains: search } },
-            { employee: { name: { contains: search } } },
-            { employee: { employee_id: { contains: search } } },
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+            { employee: { name: { contains: search, mode: 'insensitive' } } },
+            { employee: { employee_id: { contains: search, mode: 'insensitive' } } },
           ],
         },
       ];

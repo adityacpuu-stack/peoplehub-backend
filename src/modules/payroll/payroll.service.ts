@@ -2195,6 +2195,8 @@ export class PayrollService {
         other_deductions: true,
         deductions_detail: true,
         net_salary: true,
+        thr: true,
+        bonus: true,
         thp: true,
         working_days: true,
         actual_working_days: true,

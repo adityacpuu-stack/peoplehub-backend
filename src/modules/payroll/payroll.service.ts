@@ -260,8 +260,11 @@ export class PayrollService {
     const errors = [];
     const oneTimeAllowanceIds: number[] = [];
 
-    // Calculate working days in this period (excluding weekends and holidays)
-    const workingDaysInPeriod = await this.getWorkingDays(payrollPeriodStart, payrollPeriodEnd, data.company_id);
+    // Standard working days per month (for salary rate calculation)
+    const standardWorkingDays = 22;
+
+    // Fixed 22 standard working days per month
+    const workingDaysInPeriod = 22;
 
     for (const employee of employees) {
       try {
@@ -1066,9 +1069,11 @@ export class PayrollService {
       totalDays = this.getCalendarDays(periodStart, periodEnd);
       actualDays = this.getCalendarDays(employeeStart, employeeEnd);
     } else {
-      // Working days method (default)
-      totalDays = await this.getWorkingDays(periodStart, periodEnd, company_id);
+      // Working days method — always use 22 as standard base
+      totalDays = 22;
       actualDays = await this.getWorkingDays(employeeStart, employeeEnd, company_id);
+      // Cap actual days to total days
+      if (actualDays > totalDays) actualDays = totalDays;
     }
 
     // Subtract unpaid leave days

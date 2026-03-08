@@ -1,5 +1,57 @@
 # Session Log
 
+## 2026-03-07 — Auth Refactor, M365 Fix, Allowance Frequency Logic
+
+### What Was Done
+
+#### 1. Auth Module Refactored (NEW pattern)
+- `auth.controller.ts` → `asyncHandler()`, no try-catch, `req.user!`
+- `auth.service.ts` → typed errors (UnauthorizedError, ForbiddenError, NotFoundError, BadRequestError)
+- `auth.routes.ts` → `validateBody()` middleware on all POST routes
+- `auth.schema.ts` → synced to camelCase field names, removed unused registerSchema
+
+#### 2. M365 User Creation Fix
+- **Problem**: First Name/Last Name not set in M365 when creating users
+- **Fix** (`microsoft365.service.ts`): Split `displayName` into `givenName` + `surname` and pass to Graph API
+
+#### 3. Allowance Create 400 Fix
+- **Problem**: `effective_date: "2026-03-06"` rejected by Prisma (expects DateTime)
+- **Fix** (`allowance.service.ts`): Wrap with `new Date()` conversion
+
+#### 4. Allowance Frequency Logic in Payroll
+- **Problem**: Frequency field (monthly/weekly/daily/one_time) was just metadata — payroll didn't differentiate
+- **Fix** (`payroll.service.ts`):
+  - Added `id` and `frequency` to allowance query
+  - Check previous payrolls for already-paid one_time allowances (via `allowance_id` in `allowances_detail` JSON)
+  - Filter out already-paid one_time allowances from current payroll
+  - Store `allowance_id` and `frequency` in allowance details JSON
+  - Auto-deactivate one_time allowances (status → 'paid') after payroll generation
+  - Fixed Prisma Json null filter: `Prisma.JsonNull` instead of plain `null`
+
+#### 5. Leave Type Visibility Fix
+- **Problem**: 3 leave types (Paternity, Marriage, Bereavement) had `company_id: 1` instead of null → only visible to one company
+- **Fix**: Set `company_id = null` to make them global
+
+#### 6. Documentation Created
+- `CLAUDE.md` (backend + frontend)
+- `docs/PROGRESS.md` — full module tracking
+- `docs/M365_INTEGRATION.md`, `docs/EMAIL_LIFECYCLE.md`
+
+### Files Modified
+- `src/modules/auth/auth.controller.ts` (rewritten)
+- `src/modules/auth/auth.service.ts` (rewritten)
+- `src/modules/auth/auth.routes.ts` (rewritten)
+- `src/validations/auth.schema.ts` (rewritten)
+- `src/modules/microsoft365/microsoft365.service.ts` (givenName/surname)
+- `src/modules/allowance/allowance.service.ts` (date conversion)
+- `src/modules/payroll/payroll.service.ts` (frequency logic)
+
+### Pending / Discussed
+- **Manager leave approval**: Stella can't approve Atyanta's leave (leave_approver_id=60 Rahmi overrides manager_id=46 Stella) — not resolved
+- **Sentry DOM errors**: Browser extension noise (removeChild/insertBefore) — not critical
+
+---
+
 ## 2026-03-02 — Email Cleanup, M365 DL, Credential Fix
 
 ### What Was Done

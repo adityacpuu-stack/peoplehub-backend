@@ -258,6 +258,7 @@ export class PayrollService {
 
     const results = [];
     const errors = [];
+    const oneTimeAllowanceIds: number[] = [];
 
     // Calculate working days in this period (excluding weekends and holidays)
     const workingDaysInPeriod = await this.getWorkingDays(payrollPeriodStart, payrollPeriodEnd, data.company_id);
@@ -317,11 +318,51 @@ export class PayrollService {
             ],
           },
           select: {
+            id: true,
             name: true,
             type: true,
             amount: true,
+            frequency: true,
             is_taxable: true,
           },
+        });
+
+        // Filter out one_time allowances already paid in a previous payroll
+        const oneTimeIds = approvedAllowances
+          .filter(al => al.frequency === 'one_time')
+          .map(al => al.id);
+
+        let paidOneTimeIds: Set<number> = new Set();
+        if (oneTimeIds.length > 0) {
+          // Check previous payrolls for this employee that already included these allowances
+          const previousPayrolls = await prisma.payroll.findMany({
+            where: {
+              employee_id: employee.id,
+              period: { not: data.period },
+              status: { notIn: ['cancelled', 'rejected'] },
+              allowances_detail: { not: Prisma.JsonNull },
+            },
+            select: { allowances_detail: true },
+          });
+
+          for (const pp of previousPayrolls) {
+            const details = pp.allowances_detail as any[];
+            if (Array.isArray(details)) {
+              for (const d of details) {
+                if (d.allowance_id && oneTimeIds.includes(d.allowance_id)) {
+                  paidOneTimeIds.add(d.allowance_id);
+                }
+              }
+            }
+          }
+        }
+
+        // Filter: exclude already-paid one_time allowances
+        const filteredAllowances = approvedAllowances.filter(al => {
+          if (al.frequency === 'one_time' && paidOneTimeIds.has(al.id)) {
+            return false;
+          }
+          return true;
         });
 
         // Categorize allowances by type
@@ -338,7 +379,7 @@ export class PayrollService {
           bonus: 0,
           other: 0,
         };
-        for (const al of approvedAllowances) {
+        for (const al of filteredAllowances) {
           const amount = Number(al.amount || 0);
           const type = (al.type || 'other').toLowerCase();
           if (type in allowancesByType) {
@@ -352,13 +393,23 @@ export class PayrollService {
         // Exclude basic typed allowances from details (they have their own DB columns)
         // Keep performance, medical, attendance in details so Excel can parse them into separate columns
         const basicTypedAllowances = ['position', 'transport', 'meal', 'housing', 'communication', 'telecom'];
-        const allowanceDetails = approvedAllowances
+        const allowanceDetails = filteredAllowances
           .filter(al => !basicTypedAllowances.includes((al.type || '').toLowerCase()))
           .map(al => ({
+            allowance_id: al.id,
             name: al.name,
             type: al.type,
             amount: Number(al.amount || 0),
+            frequency: al.frequency,
           }));
+
+        // Track one_time allowance IDs to deactivate after payroll generation
+        const oneTimeToDeactivate = filteredAllowances
+          .filter(al => al.frequency === 'one_time')
+          .map(al => al.id);
+        if (oneTimeToDeactivate.length > 0) {
+          oneTimeAllowanceIds.push(...oneTimeToDeactivate);
+        }
 
         // Fetch attendance summary for deductions (absence, late)
         const attendanceSummary = await this.getAttendanceSummary(employee.id, payrollPeriodStart, payrollPeriodEnd);
@@ -386,6 +437,14 @@ export class PayrollService {
       } catch (error: any) {
         errors.push({ employee_id: employee.id, error: error.message });
       }
+    }
+
+    // Deactivate one_time allowances that were included in this payroll
+    if (oneTimeAllowanceIds.length > 0) {
+      await prisma.allowance.updateMany({
+        where: { id: { in: oneTimeAllowanceIds } },
+        data: { status: 'paid' },
+      });
     }
 
     return {

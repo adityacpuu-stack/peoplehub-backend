@@ -1065,15 +1065,24 @@ export class PayrollService {
     let totalDays: number;
     let actualDays: number;
 
+    // Check if employee works the full period (no join mid-month, no resign mid-month)
+    const isFullPeriod = (!employeeJoinDate || employeeJoinDate <= periodStart) &&
+                         (!employeeResignDate || employeeResignDate >= periodEnd);
+
     if (prorate_method === PRORATE_METHODS.CALENDAR_DAYS) {
       totalDays = this.getCalendarDays(periodStart, periodEnd);
-      actualDays = this.getCalendarDays(employeeStart, employeeEnd);
+      actualDays = isFullPeriod ? totalDays : this.getCalendarDays(employeeStart, employeeEnd);
     } else {
       // Working days method — always use 22 as standard base
       totalDays = 22;
-      actualDays = await this.getWorkingDays(employeeStart, employeeEnd, company_id);
-      // Cap actual days to total days
-      if (actualDays > totalDays) actualDays = totalDays;
+      if (isFullPeriod) {
+        // Full period employee: no prorate
+        actualDays = totalDays;
+      } else {
+        // Partial period: count actual working days employee worked
+        actualDays = await this.getWorkingDays(employeeStart, employeeEnd, company_id);
+        if (actualDays > totalDays) actualDays = totalDays;
+      }
     }
 
     // Subtract unpaid leave days

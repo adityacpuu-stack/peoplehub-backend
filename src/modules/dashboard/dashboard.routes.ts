@@ -22,6 +22,13 @@ router.get('/team', (req, res) => controller.getTeamDashboard(req, res));
 router.get('/calendar', (req, res) => controller.getCalendarEvents(req, res));
 
 // ==========================================
+// SUPER ADMIN ROUTES
+// ==========================================
+
+// GET /api/v1/dashboard/super-admin-stats - Get super admin stats
+router.get('/super-admin-stats', authorize(['Super Admin']), (req, res) => controller.getSuperAdminStats(req, res));
+
+// ==========================================
 // ADMIN DASHBOARD ROUTES
 // ==========================================
 

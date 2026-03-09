@@ -87,7 +87,7 @@ Reference implementation: `employee` module
 |--------|-----------|---------|----------|
 | `dashboard` | Overview, quick stats, summaries | OLD | Personal/team/CEO dashboards, workforce/turnover/headcount analytics |
 | `setting` | CRUD + bulk update | OLD | Settings groups, maintenance mode, public settings, seed defaults |
-| `audit-log` | List, filter, export, cleanup | OLD | By model/user, my activity, statistics, IP tracking |
+| `audit-log` | List, filter, export, cleanup | **NEW** | Auto-audit middleware, by model/user, my activity, statistics, IP tracking |
 | `upload` | Single/multi upload, delete, presigned URL | OLD | S3/DigitalOcean Spaces, folder-based (templates, documents, avatars) |
 | `microsoft365` | Create user, assign license, manage DLs | N/A (service only) | Auto-add to company DL + Impact DL |
 | `email` | Send various email types | N/A (service only) | Resend API, templates for credentials/reset/notifications |
@@ -99,9 +99,9 @@ Reference implementation: `employee` module
 
 | Status | Count | Modules |
 |--------|-------|---------|
-| **NEW** (fully refactored) | 2 | `employee`, `auth` |
+| **NEW** (fully refactored) | 3 | `employee`, `auth`, `audit-log` |
 | **PARTIAL** | 1 | `user` |
-| **OLD** (needs refactoring) | 38 | All others |
+| **OLD** (needs refactoring) | 37 | All others |
 | **Service-only** (no controller) | 2 | `microsoft365`, `email` |
 
 ### Next Priority
@@ -162,6 +162,17 @@ Zod schemas in `src/validations/`:
 
 | Date | Type | Description |
 |------|------|-------------|
+| 2026-03-09 | feat | Frontend: KPIDashboardPage connected to real KPI API (was mock data) |
+| 2026-03-09 | feat | Frontend: AttendanceReportsPage connected to real attendance + dashboard API (was mock data) |
+| 2026-03-09 | feat | Frontend: ContractsPage, TeamAttendancePage, GoalsOKRsPage connected to real APIs |
+| 2026-03-09 | feat | Frontend: CEOCompanyGoalsPage connected to real goal API (was mock data) |
+| 2026-03-09 | feat | Frontend: PerformancePage connected to real performance review API (was mock data) |
+| 2026-03-09 | feat | Frontend: CEOPerformanceSummaryPage connected to real performance API (was mock data) |
+| 2026-03-09 | feat | Auto-audit middleware — logs all mutations (POST/PUT/PATCH/DELETE) across 40+ modules |
+| 2026-03-09 | refactor | Audit-log module → new pattern (asyncHandler + typed errors + consistent response format) |
+| 2026-03-09 | feat | Frontend: AuditLogsPage connected to real API (was mock data) |
+| 2026-03-09 | feat | Frontend: RolesPage connected to real RBAC API (was mock data) |
+| 2026-03-09 | feat | Frontend: TeamOvertimePage connected to real overtime API (was mock data) |
 | 2026-03-02 | refactor | Auth module → new pattern (asyncHandler + typed errors + validateBody) |
 | 2026-03-02 | docs | Added CLAUDE.md, PROGRESS.md, SESSION_LOG.md, M365_INTEGRATION.md, EMAIL_LIFECYCLE.md |
 | 2026-03-01 | feat | M365 Distribution List auto-assignment on credential send |
@@ -189,5 +200,5 @@ Zod schemas in `src/validations/`:
 
 - **Edit Approval Workflow** — HR Manager needs Group CEO approval to edit employee data (discussed, not implemented)
 - **React Query migration** — Frontend has it installed but unused
-- **Refactor remaining 38 modules** to new pattern
+- **Refactor remaining 37 modules** to new pattern
 - **Wire validation schemas** to routes for all modules

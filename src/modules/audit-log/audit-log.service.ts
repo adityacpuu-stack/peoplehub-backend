@@ -1,4 +1,5 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { prisma } from '../../config/prisma';
 import {
   AuditLogListQuery,
   CreateAuditLogDTO,
@@ -7,8 +8,7 @@ import {
   AUDIT_LOG_DETAIL_SELECT,
 } from './audit-log.types';
 import { AuthUser } from '../../middlewares/auth.middleware';
-
-const prisma = new PrismaClient();
+import { NotFoundError } from '../../middlewares/error.middleware';
 
 export class AuditLogService {
   async list(query: AuditLogListQuery) {
@@ -48,7 +48,7 @@ export class AuditLogService {
       where: { id },
       select: AUDIT_LOG_DETAIL_SELECT,
     });
-    if (!log) throw new Error('Audit log not found');
+    if (!log) throw new NotFoundError('Audit log');
     return log;
   }
 

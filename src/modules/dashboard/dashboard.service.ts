@@ -24,6 +24,24 @@ const HIDDEN_EMPLOYEE_IDS = ['EMP-001', 'PFI-PDR-HRSTAFF'];
 
 export class DashboardService {
   // ==========================================
+  // SUPER ADMIN STATS
+  // ==========================================
+
+  async getSuperAdminStats() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [total_users, total_companies, total_employees, audit_entries_today] = await Promise.all([
+      prisma.user.count(),
+      prisma.company.count(),
+      prisma.employee.count(),
+      prisma.auditLog.count({ where: { created_at: { gte: today } } }),
+    ]);
+
+    return { total_users, total_companies, total_employees, audit_entries_today };
+  }
+
+  // ==========================================
   // MAIN DASHBOARD
   // ==========================================
 

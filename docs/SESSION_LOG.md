@@ -1,5 +1,146 @@
 # Session Log
 
+## 2026-03-09 (Part 3) — Connect KPI + Attendance Reports to Real API
+
+### What Was Done
+
+#### 1. KPIDashboardPage Connected to Real KPI API
+- **File**: `hr-next-frontend/src/pages/performance/KPIDashboardPage.tsx`
+- Removed 4 mock data arrays: `kpiCategories` (12 KPIs), `departmentPerformance` (6 entries), `topPerformers` (5 entries), `quarterlyTrend` (5 entries)
+- Connected to `kpiService.list({ limit: 100, is_active: true })` — groups KPIs by category dynamically
+- KPI status derived from `benchmark_value` vs `threshold_green/yellow/red`
+- Department section uses real `department_distribution` from group dashboard
+- Company table shows real attendance/headcount data
+- Created `src/services/kpi.service.ts` (new frontend service)
+
+#### 2. AttendanceReportsPage Connected to Real Attendance API
+- **File**: `hr-next-frontend/src/pages/analytics/AttendanceReportsPage.tsx`
+- Removed 4 mock data arrays: `weeklyAttendance` (5 days), `monthlyTrend` (6 months), `departmentAttendance` (6 entries), `lateArrivals` (5 entries)
+- Weekly attendance chart: fetches real attendance records for current week via `attendanceService.getAll()`, computes present/late/absent percentages per day
+- Stats cards: derived from `dashboardService.getGroupOverview()` summary (total employees, avg attendance rate, on leave today)
+- Department section: uses real `department_distribution` from group dashboard
+- Company table: already used real data, improved to handle N/A attendance rates
+
+### Files Created (Frontend)
+- `src/services/kpi.service.ts` (NEW)
+
+### Files Modified (Frontend)
+- `src/pages/performance/KPIDashboardPage.tsx` (rewritten)
+- `src/pages/analytics/AttendanceReportsPage.tsx` (rewritten)
+
+### Pages Connected This Session (Total: 8 pages across 3 sessions)
+- ContractsPage → contract API
+- TeamAttendancePage → attendance API
+- GoalsOKRsPage → goal API
+- KPIDashboardPage → KPI API + dashboard API
+- AttendanceReportsPage → attendance API + dashboard API
+
+---
+
+## 2026-03-09 (Part 2) — Connect Remaining Mock Pages to Real API
+
+### What Was Done
+
+#### 1. CEOCompanyGoalsPage Connected to Real Goal API
+- **File**: `hr-next-frontend/src/pages/ceo/CEOCompanyGoalsPage.tsx`
+- Removed all mock data (5 hardcoded goals)
+- Connected to `goalService.list()` with status filtering
+- Real stats (total, completed, active/in_progress, deferred/cancelled)
+- Loading state, empty state
+- Created `src/services/goal.service.ts` (new frontend service)
+
+#### 2. PerformancePage Connected to Real Performance API
+- **File**: `hr-next-frontend/src/pages/performance/PerformancePage.tsx`
+- Removed all mock data (7 hardcoded reviews, 3 mock companies, 5 mock employees, 3 mock reviewers)
+- Connected to `performanceService.listReviews()` with company/status filtering
+- Connected to `companyService.getCompanies()` for company selector
+- Real stats, detail modal, search
+- Created `src/services/performance.service.ts` (new frontend service)
+
+#### 3. CEOPerformanceSummaryPage Connected to Real API
+- **File**: `hr-next-frontend/src/pages/ceo/CEOPerformanceSummaryPage.tsx`
+- Removed all mock performance data (ratings array, department scores)
+- Connected to `performanceService.listReviews()` to calculate real rating distribution
+- Real avg rating, completion rate, top performers count, needs improvement count
+- Rating distribution pie chart and department bar chart from real data
+
+### Files Created (Frontend)
+- `src/services/goal.service.ts` (NEW)
+- `src/services/performance.service.ts` (NEW)
+
+### Files Modified (Frontend)
+- `src/pages/ceo/CEOCompanyGoalsPage.tsx` (rewritten)
+- `src/pages/performance/PerformancePage.tsx` (rewritten)
+- `src/pages/ceo/CEOPerformanceSummaryPage.tsx` (rewritten)
+
+### Remaining Mock Data Pages (no backend API exists)
+- **Tax module**: 6 pages (ESPT, eBupot, BPJS, NPWP, Annual/Monthly Reports)
+- **CEO**: CEOTalentOverview, CEOOKRTracking, CEOBudgetRequests, CEOSuccessionPlanning
+- **System Settings**: sub-pages (Coming Soon placeholders)
+- **Security**: sub-pages (API Keys, Active Sessions, Login History)
+
+---
+
+## 2026-03-09 — Audit Trail Middleware + Frontend Mock Data Cleanup
+
+### What Was Done
+
+#### 1. Auto-Audit Trail Middleware (NEW)
+- **File**: `src/middlewares/audit.middleware.ts`
+- Automatically logs all mutating requests (POST/PUT/PATCH/DELETE) across 40+ modules
+- Uses `res.on('finish')` pattern — runs after response, non-blocking
+- Only logs successful responses (status < 400)
+- Skips auth login/refresh, audit-logs, health, docs routes
+- Maps 35 URL paths to model names
+- Fire-and-forget `prisma.auditLog.create()` with silent catch
+- Registered in `app.ts` after `requestLogger`
+
+#### 2. Audit-Log Module Refactored (NEW pattern)
+- **Controller** → `asyncHandler()`, arrow function properties, consistent `{ success, data }` response format
+- **Service** → `NotFoundError` instead of generic `Error`, shared prisma client
+- **Routes** → direct controller references (no wrapper functions)
+
+#### 3. Frontend: AuditLogsPage Connected to Real API
+- **File**: `hr-next-frontend/src/pages/admin/AuditLogsPage.tsx`
+- Removed all mock data (8 hardcoded entries)
+- Connected to `GET /audit-logs` (paginated list), `GET /audit-logs/statistics`, `GET /audit-logs/:id` (detail), `GET /audit-logs/export` (CSV export)
+- Added pagination, server-side filtering by model/action, client-side search
+- Created `src/services/audit-log.service.ts` (new frontend service)
+
+#### 4. Frontend: RolesPage Connected to Real RBAC API
+- **File**: `hr-next-frontend/src/pages/admin/RolesPage.tsx`
+- Removed all mock data (7 hardcoded roles + permission modules)
+- Connected to `rbacService.getRoles()`, `rbacService.getPermissions()`, `rbacService.getUserPermissions()`
+- Real permission grouping from API data
+- Working delete with confirmation
+
+#### 5. Frontend: TeamOvertimePage Connected to Real API
+- **File**: `hr-next-frontend/src/pages/manager/TeamOvertimePage.tsx`
+- Removed all mock data (7 hardcoded overtime requests)
+- Connected to `overtimeService.list()`, `overtimeService.approve()`, `overtimeService.reject()`
+- Real stats from API data, loading states, action feedback
+
+### Files Modified (Backend)
+- `src/middlewares/audit.middleware.ts` (NEW)
+- `src/app.ts` (added audit middleware)
+- `src/modules/audit-log/audit-log.controller.ts` (rewritten)
+- `src/modules/audit-log/audit-log.service.ts` (updated imports + error class)
+- `src/modules/audit-log/audit-log.routes.ts` (simplified)
+
+### Files Modified (Frontend)
+- `src/services/audit-log.service.ts` (NEW)
+- `src/pages/admin/AuditLogsPage.tsx` (rewritten)
+- `src/pages/admin/RolesPage.tsx` (rewritten)
+- `src/pages/manager/TeamOvertimePage.tsx` (rewritten)
+
+### Remaining Mock Data Pages (not addressed this session)
+- **Tax module**: 6 pages (no backend API exists)
+- **CEO module**: 5 pages (partial backend)
+- **System Settings**: 4 pages (Coming Soon)
+- **Security**: 3 pages (Coming Soon)
+
+---
+
 ## 2026-03-07 — Auth Refactor, M365 Fix, Allowance Frequency Logic
 
 ### What Was Done

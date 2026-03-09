@@ -8,6 +8,7 @@ import { swaggerSpec } from './config/swagger';
 import { requestLogger } from './utils/logger';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import { generalLimiter, authLimiter } from './middlewares/rate-limit.middleware';
+import { auditMiddleware } from './middlewares/audit.middleware';
 import { checkRedisHealth } from './config/redis';
 import { getCacheStats } from './utils/cache';
 
@@ -39,6 +40,9 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') {
   app.use(requestLogger);
 }
+
+// Audit trail — auto-log all mutations (POST/PUT/PATCH/DELETE)
+app.use(auditMiddleware);
 
 // General rate limiting
 app.use(generalLimiter);

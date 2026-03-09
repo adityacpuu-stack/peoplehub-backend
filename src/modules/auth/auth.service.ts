@@ -493,9 +493,17 @@ export class AuthService {
     ipAddress?: string
   ): Promise<void> {
     try {
+      // Fetch user email and employee name for audit display
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, employee: { select: { name: true } } },
+      });
+
       await prisma.auditLog.create({
         data: {
           user_id: userId,
+          user_email: user?.email || null,
+          employee_name: user?.employee?.name || null,
           action,
           model: 'auth',
           description,

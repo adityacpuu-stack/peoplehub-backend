@@ -295,7 +295,7 @@ export class EmployeeService {
       nationality: data.nationality,
       phone: data.phone,
       mobile_number: data.mobile_number,
-      email: data.email,
+      email: data.email || null,
       personal_email: data.personal_email,
       // Alamat KTP
       address: data.address,
